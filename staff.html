@@ -1,472 +1,707 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LAXMI — Staff Management</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
   <style>
-    .role-matrix { width:100%; border-collapse:collapse; font-size:0.82rem; }
-    .role-matrix th { padding:10px 14px; text-align:left; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); font-weight:600; background:var(--surface2); }
-    .role-matrix td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
-    .role-matrix tr:last-child td { border-bottom:none; }
-    .role-matrix tr:hover td { background:rgba(255,255,255,0.02); }
-    .perm-yes { color:var(--accent-bright); font-size:1.1rem; }
-    .perm-no  { color:var(--text-muted);   font-size:1.1rem; }
-    .staff-avatar {
-      width:38px; height:38px; border-radius:50%;
-      display:flex; align-items:center; justify-content:center;
-      font-weight:700; font-size:1rem; flex-shrink:0;
+    .role-matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
     }
+
+    .role-matrix th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      font-weight: 600;
+      background: var(--surface2);
+    }
+
+    .role-matrix td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .role-matrix tr:last-child td {
+      border-bottom: none;
+    }
+
+    .role-matrix tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .perm-yes {
+      color: var(--accent-bright);
+      font-size: 1.1rem;
+    }
+
+    .perm-no {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .staff-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
     .invite-box {
-      background:var(--accent-dim); border:1px solid var(--accent);
-      border-radius:var(--radius); padding:16px 20px;
-      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-      margin-bottom:20px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
     }
   </style>
 </head>
+
 <body>
 
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-<div class="offline-banner" id="offlineBanner">⚠️ Connection lost — reconnecting…</div>
-<div class="auth-gate" id="authGate" style="display:none;"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="offline-banner" id="offlineBanner">⚠️ Connection lost — reconnecting…</div>
+  <div class="auth-gate" id="authGate" style="display:none;"></div>
 
-<div id="appContent" style="display:none;">
-  <div class="app-layout">
+  <div id="appContent" style="display:none;">
+    <div class="app-layout">
 
-    <!-- ── SIDEBAR ── -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo">
-        <div class="sidebar-logo-name">🍃 LAXMI</div>
-        <div class="sidebar-logo-sub">Staff Management</div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="nav-section-label">Operations</div>
-        <a class="nav-item" href="kitchen.html"><span class="nav-item-icon">🍳</span> Kitchen</a>
-        <a class="nav-item" href="admin.html"><span class="nav-item-icon">📊</span> Admin Panel</a>
-        <a class="nav-item" href="menu-manager.html"><span class="nav-item-icon">📋</span> Menu Manager</a>
-        <a class="nav-item" href="reports.html"><span class="nav-item-icon">📈</span> Reports</a>
-        <div class="nav-section-label" style="margin-top:8px;">Management</div>
-        <a class="nav-item active" href="staff.html"><span class="nav-item-icon">👥</span> Staff</a>
-        <div class="nav-section-label" style="margin-top:8px;">Customer</div>
-        <a class="nav-item" href="waiter.html"><span class="nav-item-icon">🛎️</span> Waiter</a>
-        <a class="nav-item" href="payment-manager.html"><span class="nav-item-icon">💳</span> Payments</a>
-        <a class="nav-item" href="index.html" target="_blank"><span class="nav-item-icon">🛒</span> Order Page ↗</a>
-      </nav>
-      <div class="sidebar-footer">
-        <div class="sidebar-user">
-          <div class="sidebar-avatar" id="sidebarAvatar">?</div>
-          <div class="sidebar-user-info">
-            <div class="sidebar-user-name" id="sidebarUserName">Loading…</div>
-            <div class="sidebar-user-role" id="sidebarUserRole">—</div>
+      <!-- ── SIDEBAR ── -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-name">🍃 LAXMI</div>
+          <div class="sidebar-logo-sub">Staff Management</div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-section-label">Operations</div>
+          <a class="nav-item" href="kitchen.html"><span class="nav-item-icon">🍳</span> Kitchen</a>
+          <a class="nav-item" href="admin.html"><span class="nav-item-icon">📊</span> Admin Panel</a>
+          <a class="nav-item" href="menu-manager.html"><span class="nav-item-icon">📋</span> Menu Manager</a>
+          <a class="nav-item" href="reports.html"><span class="nav-item-icon">📈</span> Reports</a>
+          <div class="nav-section-label" style="margin-top:8px;">Management</div>
+          <a class="nav-item active" href="staff.html"><span class="nav-item-icon">👥</span> Staff</a>
+          <div class="nav-section-label" style="margin-top:8px;">Customer</div>
+          <a class="nav-item" href="waiter.html"><span class="nav-item-icon">🛎️</span> Waiter</a>
+          <a class="nav-item" href="payment-manager.html"><span class="nav-item-icon">💳</span> Payments</a>
+          <a class="nav-item" href="index.html" target="_blank"><span class="nav-item-icon">🛒</span> Order Page ↗</a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatar">?</div>
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="sidebarUserName">Loading…</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">—</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost w-full btn-sm" onclick="window.rmsSignOut()">⏏ Sign Out</button>
+        </div>
+      </aside>
+
+      <!-- ── MAIN ── -->
+      <main class="main-content">
+
+        <div class="page-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="hamburger" onclick="toggleSidebar()">
+              <span></span><span></span><span></span>
+            </button>
+            <div>
+              <h1 class="page-title">👥 Staff Management</h1>
+              <div class="page-subtitle">Manage staff accounts and permissions</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="openStaffModal()">+ Add Staff</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:24px;">
+          <div class="stat-card">
+            <div class="stat-label">Total Staff</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Admins</div>
+            <div class="stat-value gold" id="statAdmins">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Managers</div>
+            <div class="stat-value blue" id="statManagers">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Kitchen</div>
+            <div class="stat-value green" id="statKitchen">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Waiters</div>
+            <div class="stat-value" id="statWaiters">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Inactive</div>
+            <div class="stat-value red" id="statInactive">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Delivery Boys</div>
+            <div class="stat-value" id="statDeliveryBoys" style="color:#00bcd4">0</div>
           </div>
         </div>
-        <button class="btn btn-ghost w-full btn-sm" onclick="window.rmsSignOut()">⏏ Sign Out</button>
-      </div>
-    </aside>
 
-    <!-- ── MAIN ── -->
-    <main class="main-content">
-
-      <div class="page-header">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <button class="hamburger" onclick="toggleSidebar()">
-            <span></span><span></span><span></span>
-          </button>
-          <div>
-            <h1 class="page-title">👥 Staff Management</h1>
-            <div class="page-subtitle">Manage staff accounts and permissions</div>
+        <!-- How to add staff info box -->
+        <div class="invite-box">
+          <span style="font-size:1.4rem;">💡</span>
+          <div style="flex:1;">
+            <div style="font-weight:600;color:var(--accent-bright);font-size:0.875rem;">How to add staff</div>
+            <div style="font-size:0.8rem;color:var(--text-mid);margin-top:2px;">
+              First take staff Firebase UID from <strong> Developer </strong>, then add them here with their Firebase
+              UID and assign a role.
+            </div>
           </div>
+          <a href="#" class="btn btn-secondary btn-sm">Contact Developer ↗</a>
         </div>
-        <button class="btn btn-primary" onclick="openStaffModal()">+ Add Staff</button>
-      </div>
 
-      <!-- Stats -->
-      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:24px;">
-        <div class="stat-card"><div class="stat-label">Total Staff</div><div class="stat-value" id="statTotal">0</div></div>
-        <div class="stat-card"><div class="stat-label">Admins</div><div class="stat-value gold" id="statAdmins">0</div></div>
-        <div class="stat-card"><div class="stat-label">Managers</div><div class="stat-value blue" id="statManagers">0</div></div>
-        <div class="stat-card"><div class="stat-label">Kitchen</div><div class="stat-value green" id="statKitchen">0</div></div>
-        <div class="stat-card"><div class="stat-label">Waiters</div><div class="stat-value" id="statWaiters">0</div></div>
-        <div class="stat-card"><div class="stat-label">Inactive</div><div class="stat-value red" id="statInactive">0</div></div>
-      </div>
-
-      <!-- How to add staff info box -->
-      <div class="invite-box">
-        <span style="font-size:1.4rem;">💡</span>
-        <div style="flex:1;">
-          <div style="font-weight:600;color:var(--accent-bright);font-size:0.875rem;">How to add staff</div>
-          <div style="font-size:0.8rem;color:var(--text-mid);margin-top:2px;">
-            First take staff Firebase UID from <strong> Developer </strong>, then add them here with their Firebase UID and assign a role.
+        <!-- Search & Filter -->
+        <div class="search-bar" style="margin-bottom:16px;">
+          <div class="search-input-wrap" style="flex:1;position:relative;">
+            <span
+              style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-dim);">🔍</span>
+            <input type="text" id="staffSearch" class="input" placeholder="Search by name or email…"
+              oninput="filterStaff()" style="padding-left:36px;">
           </div>
+          <select id="roleFilter" class="input" style="max-width:150px;" onchange="filterStaff()">
+            <option value="all">All Roles</option>
+            <option value="superadmin">Superadmin</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="payment_manager">Payment Manager</option>
+            <option value="kitchen">Kitchen</option>
+            <option value="waiter">Waiter</option>
+            <option value="delivery_boy">🚚 Delivery Boy</option>
+          </select>
+          <select id="statusFilter" class="input" style="max-width:140px;" onchange="filterStaff()">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
         </div>
-        <a href="#" class="btn btn-secondary btn-sm">Contact Developer ↗</a>
-      </div>
 
-      <!-- Search & Filter -->
-      <div class="search-bar" style="margin-bottom:16px;">
-        <div class="search-input-wrap" style="flex:1;position:relative;">
-          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-dim);">🔍</span>
-          <input type="text" id="staffSearch" class="input" placeholder="Search by name or email…" oninput="filterStaff()" style="padding-left:36px;">
+        <!-- Staff Table -->
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Staff Member</th>
+                <th>Role</th>
+                <th>Email</th>
+                <th>Firebase UID</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="staffTableBody">
+              <tr>
+                <td colspan="6" style="text-align:center;padding:40px;color:var(--text-dim);">Loading…</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <select id="roleFilter" class="input" style="max-width:150px;" onchange="filterStaff()">
-          <option value="all">All Roles</option>
-          <option value="superadmin">Superadmin</option>
-          <option value="admin">Admin</option>
-          <option value="manager">Manager</option>
-          <option value="payment_manager">Payment Manager</option>
-          <option value="kitchen">Kitchen</option>
-          <option value="waiter">Waiter</option>
-        </select>
-        <select id="statusFilter" class="input" style="max-width:140px;" onchange="filterStaff()">
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </div>
 
-      <!-- Staff Table -->
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Staff Member</th>
-              <th>Role</th>
-              <th>Email</th>
-              <th>Firebase UID</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="staffTableBody">
-            <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-dim);">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
+        <!-- Role Permission Matrix -->
+        <div class="section-title" style="margin-top:32px;">🔐 Role Permission Matrix</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table class="role-matrix">
+            <thead>
+              <tr>
+                <th>Permission</th>
+                <th><span class="badge badge-superadmin">Superadmin</span></th>
+                <th><span class="badge badge-admin">Admin</span></th>
+                <th><span class="badge badge-manager">Manager</span></th>
+                <th><span class="badge badge-kitchen">Kitchen</span></th>
+                <th><span class="badge badge-waiter">Waiter</span></th>
+                <th><span class="badge badge-payment_manager">Pay Mgr</span></th>
+                <th><span class="badge" style="background:rgba(0,188,212,0.15);color:#00bcd4">🚚 Delivery</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>View Kitchen Dashboard</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Update Order Status</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Assign Waiter to Order</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>View Admin Panel</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Manage Menu Items</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>View Reports</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Manage Staff</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Open / Close Store</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Change Settings</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>View Payment Manager</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Collect & Confirm Payment</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Mark Order Delivered</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Place Order (Waiter)</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Transfer Order to Waiter</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Customer Ratings & Reviews</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Export Reports / CSV</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr>
+                <td>Superadmin Panel</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <!-- NEW: Delivery boy rows -->
+              <tr style="background:rgba(0,188,212,0.04)">
+                <td>View Delivery Dashboard</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-yes" style="color:#00bcd4">✓</td>
+              </tr>
+              <tr style="background:rgba(0,188,212,0.04)">
+                <td>Assign Delivery Boy</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-yes">✓</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+              </tr>
+              <tr style="background:rgba(0,188,212,0.04)">
+                <td>Pick Up & Mark Delivered (OTP)</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-yes" style="color:#00bcd4">✓</td>
+              </tr>
+              <tr style="background:rgba(0,188,212,0.04)">
+                <td>GPS Location Sharing</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-no">—</td>
+                <td class="perm-yes" style="color:#00bcd4">✓</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <!-- Role Permission Matrix -->
-      <div class="section-title" style="margin-top:32px;">🔐 Role Permission Matrix</div>
-      <div class="card" style="padding:0;overflow:hidden;">
-        <table class="role-matrix">
-          <thead>
-            <tr>
-              <th>Permission</th>
-              <th><span class="badge badge-superadmin">Superadmin</span></th>
-              <th><span class="badge badge-admin">Admin</span></th>
-              <th><span class="badge badge-manager">Manager</span></th>
-              <th><span class="badge badge-kitchen">Kitchen</span></th>
-              <th><span class="badge badge-waiter">Waiter</span></th>
-              <th><span class="badge badge-payment_manager">Pay Mgr</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>View Kitchen Dashboard</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>Update Order Status</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>Assign Waiter to Order</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>View Admin Panel</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>Manage Menu Items</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>View Reports</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>Manage Staff</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>Open / Close Store</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>Change Settings</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>View Payment Manager</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-yes">✓</td>
-            </tr>
-            <tr>
-              <td>Collect & Confirm Payment</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-yes">✓</td>
-            </tr>
-            <tr>
-              <td>Mark Order Delivered</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>Place Order (Waiter)</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>Transfer Order to Waiter</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>Customer Ratings & Reviews</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-yes">✓</td>
-            </tr>
-            <tr>
-              <td>Export Reports / CSV</td>
-              <td class="perm-yes">✓</td><td class="perm-yes">✓</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-            <tr>
-              <td>Superadmin Panel</td>
-              <td class="perm-yes">✓</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-              <td class="perm-no">—</td><td class="perm-no">—</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-    </main>
-  </div>
-</div>
-
-<!-- ── STAFF MODAL ── -->
-<div class="modal-overlay" id="staffModal" style="display:none;" onclick="if(event.target===this)closeStaffModal()">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <h2 class="modal-title" id="staffModalTitle">Add Staff Member</h2>
-      <button class="modal-close" onclick="closeStaffModal()">×</button>
+      </main>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="input-group">
-        <label class="input-label">Full Name *</label>
-        <input type="text" id="staffName" class="input" placeholder="e.g. Rahul Sharma">
+  </div>
+
+  <!-- ── STAFF MODAL ── -->
+  <div class="modal-overlay" id="staffModal" style="display:none;" onclick="if(event.target===this)closeStaffModal()">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title" id="staffModalTitle">Add Staff Member</h2>
+        <button class="modal-close" onclick="closeStaffModal()">×</button>
       </div>
-      <div class="input-group">
-        <label class="input-label">Email *</label>
-        <input type="email" id="staffEmail" class="input" placeholder="rahul@laxmi.com">
-      </div>
-      <div class="input-group" style="grid-column:1/-1;">
-        <label class="input-label">Firebase UID *
-          <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);font-size:0.75rem;">
-            — Get from Firebase Console → Authentication → Users
-          </span>
-        </label>
-        <input type="text" id="staffUid" class="input" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxx">
-      </div>
-      <div class="input-group">
-        <label class="input-label">Role *</label>
-        <select id="staffRole" class="input">
-          <option value="waiter">Waiter</option>
-          <option value="kitchen">Kitchen Staff</option>
-          <option value="manager">Manager</option>
-          <option value="admin">Admin</option>
-          <option value="superadmin">Superadmin</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <label class="input-label">Status</label>
-        <div class="toggle-wrap" style="margin-top:10px;">
-          <label class="toggle">
-            <input type="checkbox" id="staffActive" checked>
-            <span class="toggle-slider"></span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="input-group">
+          <label class="input-label">Full Name *</label>
+          <input type="text" id="staffName" class="input" placeholder="e.g. Rahul Sharma">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Email *</label>
+          <input type="email" id="staffEmail" class="input" placeholder="rahul@laxmi.com">
+        </div>
+        <div class="input-group" style="grid-column:1/-1;">
+          <label class="input-label">Firebase UID *
+            <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);font-size:0.75rem;">
+              — Get from Firebase Console → Authentication → Users
+            </span>
           </label>
-          <span class="toggle-label">Active</span>
+          <input type="text" id="staffUid" class="input" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxx">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Role *</label>
+          <select id="staffRole" class="input" onchange="toggleDeliveryFields(this.value)">
+            <option value="waiter">Waiter</option>
+            <option value="kitchen">Kitchen Staff</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+            <option value="superadmin">Superadmin</option>
+            <option value="payment_manager">Payment Manager</option>
+            <option value="delivery_boy">🚚 Delivery Boy</option>
+          </select>
+        </div>
+        <!-- DELIVERY BOY FIELDS — shown only when role = delivery_boy -->
+        <div id="deliveryBoyFields" style="display:none;grid-column:1/-1;">
+          <div
+            style="background:rgba(0,188,212,0.06);border:1px solid rgba(0,188,212,0.25);border-radius:var(--radius);padding:16px;margin-bottom:4px;">
+            <div
+              style="font-size:0.8rem;font-weight:700;color:#00bcd4;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.06em">
+              🚚 Delivery Boy Details</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div class="input-group" style="margin:0">
+                <label class="input-label">Phone Number *</label>
+                <input type="tel" id="staffPhone" class="input" placeholder="10-digit mobile" maxlength="10"
+                  inputmode="numeric">
+              </div>
+              <div class="input-group" style="margin:0">
+                <label class="input-label">Vehicle Type</label>
+                <select id="staffVehicleType" class="input">
+                  <option value="">Select…</option>
+                  <option value="Motorcycle">🏍️ Motorcycle</option>
+                  <option value="Scooter">🛵 Scooter</option>
+                  <option value="Bicycle">🚲 Bicycle</option>
+                  <option value="Car">🚗 Car</option>
+                </select>
+              </div>
+              <div class="input-group" style="margin:0">
+                <label class="input-label">Vehicle Number</label>
+                <input type="text" id="staffVehicleNumber" class="input" placeholder="e.g. RJ20AB1234"
+                  style="text-transform:uppercase">
+              </div>
+              <div class="input-group" style="margin:0">
+                <label class="input-label">
+                  Login PIN (4–6 digits) *
+                  <span
+                    style="font-weight:400;text-transform:none;color:var(--text-dim);font-size:0.72rem;letter-spacing:0">
+                    — used to login at delivery.html</span>
+                </label>
+                <input type="password" id="staffPin" class="input" placeholder="Leave blank to keep existing PIN"
+                  maxlength="6" inputmode="numeric">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Status</label>
+          <div class="toggle-wrap" style="margin-top:10px;">
+            <label class="toggle">
+              <input type="checkbox" id="staffActive" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Active</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- UID Helper -->
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:16px;font-size:0.82rem;color:var(--text-dim);line-height:1.7;">
-      <strong style="color:var(--text-mid);">📋 How to get Firebase UID:</strong><br>
-      1. Go to <a href="#" target="_blank" style="color:var(--accent-bright);">Contact Developer</a>
-      <br>
-      2. Find the staff member's email<br>
-      3. Paste the <strong style="color:var(--text);">User UID</strong> <br>
-      4. If they don't have an account yet, click <strong style="color:var(--text);">Add User</strong> first
-    </div>
+      <!-- UID Helper -->
+      <div
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:16px;font-size:0.82rem;color:var(--text-dim);line-height:1.7;">
+        <strong style="color:var(--text-mid);">📋 How to get Firebase UID:</strong><br>
+        1. Go to <a href="#" target="_blank" style="color:var(--accent-bright);">Contact Developer</a>
+        <br>
+        2. Find the staff member's email<br>
+        3. Paste the <strong style="color:var(--text);">User UID</strong> <br>
+        4. If they don't have an account yet, click <strong style="color:var(--text);">Add User</strong> first
+      </div>
 
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeStaffModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveStaff()" id="staffSaveBtn">Save Staff</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── DELETE CONFIRM ── -->
-<div class="modal-overlay" id="deleteModal" style="display:none;" onclick="if(event.target===this)closeDeleteModal()">
-  <div class="modal" style="max-width:360px;text-align:center;">
-    <div style="font-size:2.5rem;margin-bottom:12px;">⚠️</div>
-    <h2 class="modal-title" style="margin-bottom:8px;" id="deleteTitle">Remove Staff?</h2>
-    <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:24px;" id="deleteMsg">This will deactivate the staff account.</p>
-    <div style="display:flex;gap:10px;justify-content:center;">
-      <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
-      <button class="btn btn-danger" id="deleteConfirmBtn">Confirm</button>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeStaffModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStaff()" id="staffSaveBtn">Save Staff</button>
+      </div>
     </div>
   </div>
-</div>
 
-<div id="toast-container"></div>
+  <!-- ── DELETE CONFIRM ── -->
+  <div class="modal-overlay" id="deleteModal" style="display:none;" onclick="if(event.target===this)closeDeleteModal()">
+    <div class="modal" style="max-width:360px;text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:12px;">⚠️</div>
+      <h2 class="modal-title" style="margin-bottom:8px;" id="deleteTitle">Remove Staff?</h2>
+      <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:24px;" id="deleteMsg">This will deactivate the
+        staff account.</p>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-danger" id="deleteConfirmBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
 
-<script type="module" src="assets/auth.js?v=3"></script>
-<script type="module">
+  <div id="toast-container"></div>
 
-  let allStaff = [];
-  let filteredStaff = [];
-  let editingStaffId = null;
+  <script type="module" src="assets/auth.js?v=3"></script>
+  <script type="module">
 
-  // ── appInit
-  window.appInit = async function() {
-    window.renderStaffUI && window.renderStaffUI();
-    await loadStaff();
-    window.startHeartbeat && window.startHeartbeat();
-    window.listenToSettings && window.listenToSettings();
-    subscribeRealtime();
-  };
+    let allStaff = [];
+    let filteredStaff = [];
+    let editingStaffId = null;
 
-  // ── REALTIME
-  function subscribeRealtime() {
-    const sb = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    sb.channel('staff-changes')
-      .on('postgres_changes', {event:'*', schema:'public', table:'staff', filter:`branch_id=eq.${bid}`}, async () => {
-         await loadStaff();
-      })
-      .subscribe();
-  }
-
-  // ── Load staff
-  async function loadStaff() {
-    const sb  = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    const { data, error } = await sb.from('staff').select('*')
-      .eq('branch_id', bid).order('name');
-    if (error) { window.showToast('Error loading staff', error.message, 'error'); return; }
-    allStaff = data || [];
-    updateStats();
-    filterStaff();
-  }
-
-  function updateStats() {
-    const active = allStaff.filter(s => s.is_active);
-    document.getElementById('statTotal').textContent    = allStaff.length;
-    document.getElementById('statAdmins').textContent   = active.filter(s => s.role==='admin'||s.role==='superadmin').length;
-    document.getElementById('statManagers').textContent = active.filter(s => s.role==='manager').length;
-    document.getElementById('statKitchen').textContent  = active.filter(s => s.role==='kitchen').length;
-    document.getElementById('statWaiters').textContent  = active.filter(s => s.role==='waiter').length;
-    document.getElementById('statInactive').textContent = allStaff.filter(s => !s.is_active).length;
-  }
-
-// ── Permission helpers
-function canEdit(targetStaff) {
-  const me = window.currentStaff;
-  if (!me) return false;
-  // Superadmin can edit anyone
-  if (me.role === 'superadmin') return true;
-  // Admin cannot edit superadmin
-  if (targetStaff.role === 'superadmin') return false;
-  // Admin cannot edit themselves
-  if (targetStaff.firebase_uid === me.uid) return false;
-  // Admin can edit manager, kitchen, waiter only
-  if (me.role === 'admin') {
-    return ['manager', 'kitchen', 'waiter', 'payment_manager'].includes(targetStaff.role);
-  }
-  return false;
-}
-
-function canDelete(targetStaff) {
-  const me = window.currentStaff;
-  if (!me) return false;
-  // Nobody can delete themselves
-  if (targetStaff.firebase_uid === me.uid) return false;
-  // Only superadmin can delete superadmin or admin
-  if (['superadmin', 'admin'].includes(targetStaff.role) && me.role !== 'superadmin') return false;
-  return true;
-}
-
-  // ── Filter
-  window.filterStaff = function() {
-    const search = document.getElementById('staffSearch').value.toLowerCase();
-    const role   = document.getElementById('roleFilter').value;
-    const status = document.getElementById('statusFilter').value;
-
-    filteredStaff = allStaff.filter(s => {
-      const matchSearch = !search || s.name?.toLowerCase().includes(search) || s.email?.toLowerCase().includes(search);
-      const matchRole   = role   === 'all' || s.role   === role;
-      const matchStatus = status === 'all' || (status==='active' ? s.is_active : !s.is_active);
-      return matchSearch && matchRole && matchStatus;
-    });
-    renderStaffTable();
-  };
-
-  // ── Render table
-  function renderStaffTable() {
-    const tbody = document.getElementById('staffTableBody');
-    if (!filteredStaff.length) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-dim);">No staff found.</td></tr>`;
-      return;
-    }
-
-    const roleColors = {
-      superadmin:'#FFB347', admin:'#f44336', manager:'#42a5f5',
-      kitchen:'#66bb6a', waiter:'#81c784'
+    // ── appInit
+    window.appInit = async function () {
+      window.renderStaffUI && window.renderStaffUI();
+      await loadStaff();
+      window.startHeartbeat && window.startHeartbeat();
+      window.listenToSettings && window.listenToSettings();
+      subscribeRealtime();
     };
 
-    tbody.innerHTML = filteredStaff.map(s => {
-      const initial = (s.name || s.email || '?')[0].toUpperCase();
-      const color   = roleColors[s.role] || '#4a6b4a';
-      const shortUid = s.firebase_uid ? s.firebase_uid.slice(0,8)+'…' : '—';
+    // ── REALTIME
+    function subscribeRealtime() {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      sb.channel('staff-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'staff', filter: `branch_id=eq.${bid}` }, async () => {
+          await loadStaff();
+        })
+        .subscribe();
+    }
 
-      return `<tr style="${!s.is_active?'opacity:0.5;':''}">
+    // ── Load staff
+    async function loadStaff() {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const { data, error } = await sb.from('staff').select('*')
+        .eq('branch_id', bid).order('name');
+      if (error) { window.showToast('Error loading staff', error.message, 'error'); return; }
+      allStaff = data || [];
+      updateStats();
+      filterStaff();
+    }
+
+    function updateStats() {
+      const active = allStaff.filter(s => s.is_active);
+      document.getElementById('statTotal').textContent = allStaff.length;
+      document.getElementById('statAdmins').textContent = active.filter(s => s.role === 'admin' || s.role === 'superadmin').length;
+      document.getElementById('statManagers').textContent = active.filter(s => s.role === 'manager').length;
+      document.getElementById('statKitchen').textContent = active.filter(s => s.role === 'kitchen').length;
+      document.getElementById('statWaiters').textContent = active.filter(s => s.role === 'waiter').length;
+      document.getElementById('statInactive').textContent = allStaff.filter(s => !s.is_active).length;
+      document.getElementById('statDeliveryBoys').textContent = active.filter(s => s.role === 'delivery_boy').length;
+    }
+
+    // ── Permission helpers
+    function canEdit(targetStaff) {
+      const me = window.currentStaff;
+      if (!me) return false;
+      // Superadmin can edit anyone
+      if (me.role === 'superadmin') return true;
+      // Admin cannot edit superadmin
+      if (targetStaff.role === 'superadmin') return false;
+      // Admin cannot edit themselves
+      if (targetStaff.firebase_uid === me.uid) return false;
+      // Admin can edit manager, kitchen, waiter only
+      if (me.role === 'admin') {
+        return ['manager', 'kitchen', 'waiter', 'payment_manager', 'delivery_boy'].includes(targetStaff.role);
+      }
+      return false;
+    }
+
+    function canDelete(targetStaff) {
+      const me = window.currentStaff;
+      if (!me) return false;
+      // Nobody can delete themselves
+      if (targetStaff.firebase_uid === me.uid) return false;
+      // Only superadmin can delete superadmin or admin
+      if (['superadmin', 'admin'].includes(targetStaff.role) && me.role !== 'superadmin') return false;
+      return true;
+    }
+
+    // ── Filter
+    window.filterStaff = function () {
+      const search = document.getElementById('staffSearch').value.toLowerCase();
+      const role = document.getElementById('roleFilter').value;
+      const status = document.getElementById('statusFilter').value;
+
+      filteredStaff = allStaff.filter(s => {
+        const matchSearch = !search || s.name?.toLowerCase().includes(search) || s.email?.toLowerCase().includes(search);
+        const matchRole = role === 'all' || s.role === role;
+        const matchStatus = status === 'all' || (status === 'active' ? s.is_active : !s.is_active);
+        return matchSearch && matchRole && matchStatus;
+      });
+      renderStaffTable();
+    };
+
+    // ── Render table
+    function renderStaffTable() {
+      const tbody = document.getElementById('staffTableBody');
+      if (!filteredStaff.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-dim);">No staff found.</td></tr>`;
+        return;
+      }
+
+      const roleColors = {
+        superadmin: '#FFB347', admin: '#f44336', manager: '#42a5f5',
+        kitchen: '#66bb6a', waiter: '#81c784', delivery_boy: '#00bcd4'
+      };
+
+      tbody.innerHTML = filteredStaff.map(s => {
+        const initial = (s.name || s.email || '?')[0].toUpperCase();
+        const color = roleColors[s.role] || '#4a6b4a';
+        const shortUid = s.firebase_uid ? s.firebase_uid.slice(0, 8) + '…' : '—';
+
+        return `<tr style="${!s.is_active ? 'opacity:0.5;' : ''}">
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
             <div class="staff-avatar" style="background:${color}22;color:${color};">${initial}</div>
             <div>
               <div style="font-weight:600;font-size:0.9rem;">${s.name || '—'}</div>
-              ${!s.is_active?`<div style="font-size:0.72rem;color:var(--red);">Inactive</div>`:''}
+              ${!s.is_active ? `<div style="font-size:0.72rem;color:var(--red);">Inactive</div>` : ''}
             </div>
           </div>
         </td>
@@ -474,214 +709,263 @@ function canDelete(targetStaff) {
         <td style="font-size:0.82rem;color:var(--text-dim);">${s.email}</td>
         <td>
           <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-dim);cursor:pointer;"
-            title="${s.firebase_uid||'—'}" onclick="copyUID('${s.firebase_uid||''}')">
+            title="${s.firebase_uid || '—'}" onclick="copyUID('${s.firebase_uid || ''}')">
             ${shortUid} 📋
           </span>
         </td>
         <td>
-          <span class="badge ${s.is_active?'badge-done':'badge-cancelled'}">${s.is_active?'Active':'Inactive'}</span>
+          <span class="badge ${s.is_active ? 'badge-done' : 'badge-cancelled'}">${s.is_active ? 'Active' : 'Inactive'}</span>
         </td>
         <td>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <button class="btn btn-secondary btn-sm" onclick="openStaffModal('${s.id}')">✏️ Edit</button>
             <button class="btn btn-ghost btn-sm" onclick="toggleActive('${s.id}',${!s.is_active})">
-              ${s.is_active?'🚫 Deactivate':'✅ Activate'}
+              ${s.is_active ? '🚫 Deactivate' : '✅ Activate'}
             </button>
             <td>
   <div style="display:flex;gap:6px;flex-wrap:wrap;">
     ${canEdit(s) ? `<button class="btn btn-secondary btn-sm" onclick="openStaffModal('${s.id}')">✏️ Edit</button>` : ''}
     ${canEdit(s) ? `<button class="btn btn-ghost btn-sm" onclick="toggleActive('${s.id}',${!s.is_active})">
-      ${s.is_active?'🚫 Deactivate':'✅ Activate'}
+      ${s.is_active ? '🚫 Deactivate' : '✅ Activate'}
     </button>` : ''}
-    ${canDelete(s) ? `<button class="btn btn-danger btn-sm" onclick="confirmDelete('${s.id}','${(s.name||'').replace(/'/g,"\\'")}')">🗑</button>` : ''}
+    ${canDelete(s) ? `<button class="btn btn-danger btn-sm" onclick="confirmDelete('${s.id}','${(s.name || '').replace(/'/g, "\\'")}')">🗑</button>` : ''}
     ${!canEdit(s) ? `<span style="font-size:0.78rem;color:var(--text-dim);">🔒 Protected</span>` : ''}
   </div>
 </td>
           </div>
         </td>
       </tr>`;
-    }).join('');
-  }
-
-  // ── Copy UID
-  window.copyUID = function(uid) {
-    if (!uid) return;
-    navigator.clipboard.writeText(uid).then(() => {
-      window.showToast('📋 UID copied!','','success',2000);
-    }).catch(() => {
-      window.showToast('Could not copy','Select and copy manually','warning');
-    });
-  };
-
-  // ── Open modal
-  window.openStaffModal = function(staffId = null) {
-    editingStaffId = staffId;
-    const title = document.getElementById('staffModalTitle');
-
-    if (staffId) {
-      const s = allStaff.find(s => s.id === staffId);
-      if (!s) return;
-      title.textContent = 'Edit Staff Member';
-      document.getElementById('staffName').value   = s.name || '';
-      document.getElementById('staffEmail').value  = s.email || '';
-      document.getElementById('staffUid').value    = s.firebase_uid || '';
-      document.getElementById('staffRole').value   = s.role || 'waiter';
-      document.getElementById('staffActive').checked = s.is_active !== false;
-      // Disable UID field when editing (can't change UID)
-      document.getElementById('staffUid').disabled = true;
-      document.getElementById('staffEmail').disabled = true;
-    } else {
-      title.textContent = 'Add Staff Member';
-      document.getElementById('staffName').value   = '';
-      document.getElementById('staffEmail').value  = '';
-      document.getElementById('staffUid').value    = '';
-      document.getElementById('staffRole').value   = 'waiter';
-      document.getElementById('staffActive').checked = true;
-      document.getElementById('staffUid').disabled = false;
-      document.getElementById('staffEmail').disabled = false;
-    }
-    document.getElementById('staffModal').style.display = 'flex';
-  };
-
-  window.closeStaffModal = function() {
-    document.getElementById('staffModal').style.display = 'none';
-    document.getElementById('staffUid').disabled   = false;
-    document.getElementById('staffEmail').disabled = false;
-    editingStaffId = null;
-  };
-
-  // ── Save staff
-  window.saveStaff = async function() {
-    const name     = document.getElementById('staffName').value.trim();
-    const email    = document.getElementById('staffEmail').value.trim();
-    const uid      = document.getElementById('staffUid').value.trim();
-    const role     = document.getElementById('staffRole').value;
-    const isActive = document.getElementById('staffActive').checked;
-
-    // ── Server-side style permission check before saving
-    if (editingStaffId) {
-      const target = allStaff.find(s => s.id === editingStaffId);
-      if (target && !canEdit(target)) {
-        window.showToast('🔒 Permission denied', 'You cannot edit this staff member.', 'error');
-        return;
-      }
+      }).join('');
     }
 
-    if (!name)  { window.showToast('Name is required','','error'); return; }
-    if (!email) { window.showToast('Email is required','','error'); return; }
-    if (!editingStaffId && !uid) { window.showToast('Firebase UID is required','','error'); return; }
-
-    const sb  = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    const btn = document.getElementById('staffSaveBtn');
-    btn.disabled = true; btn.textContent = 'Saving…';
-
-    const payload = {
-      name, email, role,
-      branch_id: bid,
-      is_active: isActive,
+    // ── Copy UID
+    window.copyUID = function (uid) {
+      if (!uid) return;
+      navigator.clipboard.writeText(uid).then(() => {
+        window.showToast('📋 UID copied!', '', 'success', 2000);
+      }).catch(() => {
+        window.showToast('Could not copy', 'Select and copy manually', 'warning');
+      });
     };
 
-    let error;
-    if (editingStaffId) {
-      // Only update editable fields
-      ({error} = await sb.from('staff').update({ name, role, is_active:isActive }).eq('id', editingStaffId));
-    } else {
-      // Check if UID already exists
-      const { data: existing } = await sb.from('staff').select('id').eq('firebase_uid', uid).maybeSingle();
-      if (existing) {
-        window.showToast('UID already registered','This Firebase UID is already in the system','error');
-        btn.disabled=false; btn.textContent='Save Staff';
+    // ── Open modal
+    window.openStaffModal = function (staffId = null) {
+      editingStaffId = staffId;
+      const title = document.getElementById('staffModalTitle');
+
+      if (staffId) {
+        const s = allStaff.find(s => s.id === staffId);
+        if (!s) return;
+        title.textContent = 'Edit Staff Member';
+        document.getElementById('staffName').value = s.name || '';
+        document.getElementById('staffEmail').value = s.email || '';
+        document.getElementById('staffUid').value = s.firebase_uid || '';
+        document.getElementById('staffRole').value = s.role || 'waiter';
+        document.getElementById('staffActive').checked = s.is_active !== false;
+        document.getElementById('staffUid').disabled = true;
+        document.getElementById('staffEmail').disabled = true;
+        // Delivery boy fields
+        document.getElementById('staffPhone').value = s.phone || '';
+        document.getElementById('staffVehicleType').value = s.vehicle_type || '';
+        document.getElementById('staffVehicleNumber').value = s.vehicle_number || '';
+        document.getElementById('staffPin').value = '';
+        toggleDeliveryFields(s.role);
+      } else {
+        title.textContent = 'Add Staff Member';
+        document.getElementById('staffName').value = '';
+        document.getElementById('staffEmail').value = '';
+        document.getElementById('staffUid').value = '';
+        document.getElementById('staffRole').value = 'waiter';
+        document.getElementById('staffActive').checked = true;
+        document.getElementById('staffUid').disabled = false;
+        document.getElementById('staffEmail').disabled = false;
+        // Reset delivery boy fields
+        document.getElementById('staffPhone').value = '';
+        document.getElementById('staffVehicleType').value = '';
+        document.getElementById('staffVehicleNumber').value = '';
+        document.getElementById('staffPin').value = '';
+        toggleDeliveryFields('waiter');
+      }
+      document.getElementById('staffModal').style.display = 'flex';
+    };
+
+    window.closeStaffModal = function () {
+      document.getElementById('staffModal').style.display = 'none';
+      document.getElementById('staffUid').disabled = false;
+      document.getElementById('staffEmail').disabled = false;
+      editingStaffId = null;
+    };
+
+    // ── Save staff
+    window.saveStaff = async function () {
+      const name = document.getElementById('staffName').value.trim();
+      const email = document.getElementById('staffEmail').value.trim();
+      const uid = document.getElementById('staffUid').value.trim();
+      const role = document.getElementById('staffRole').value;
+      const isActive = document.getElementById('staffActive').checked;
+
+      // ── Server-side style permission check before saving
+      if (editingStaffId) {
+        const target = allStaff.find(s => s.id === editingStaffId);
+        if (target && !canEdit(target)) {
+          window.showToast('🔒 Permission denied', 'You cannot edit this staff member.', 'error');
+          return;
+        }
+      }
+
+      if (!name) { window.showToast('Name is required', '', 'error'); return; }
+      if (!email) { window.showToast('Email is required', '', 'error'); return; }
+      if (!editingStaffId && !uid) { window.showToast('Firebase UID is required', '', 'error'); return; }
+
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const btn = document.getElementById('staffSaveBtn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+
+      // ── Delivery boy validation & PIN hash
+      let pin_hash = undefined;
+      if (role === 'delivery_boy') {
+        const phone = document.getElementById('staffPhone').value.trim();
+        if (!phone || phone.length !== 10) {
+          window.showToast('Phone required', '10-digit mobile number for delivery boy', 'error');
+          btn.disabled = false; btn.textContent = 'Save Staff';
+          return;
+        }
+        const pinVal = document.getElementById('staffPin').value.trim();
+        if (pinVal) {
+          if (pinVal.length < 4) {
+            window.showToast('PIN too short', 'PIN must be 4–6 digits', 'error');
+            btn.disabled = false; btn.textContent = 'Save Staff';
+            return;
+          }
+          const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pinVal));
+          pin_hash = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+        } else if (!editingStaffId) {
+          window.showToast('PIN required', 'Set a login PIN for the delivery boy', 'error');
+          btn.disabled = false; btn.textContent = 'Save Staff';
+          return;
+        }
+      }
+
+      const deliveryFields = role === 'delivery_boy' ? {
+        phone: document.getElementById('staffPhone').value.trim(),
+        vehicle_type: document.getElementById('staffVehicleType').value || null,
+        vehicle_number: document.getElementById('staffVehicleNumber').value.toUpperCase() || null,
+        ...(pin_hash && { pin_hash }),
+      } : {};
+
+      const payload = {
+        name, email, role,
+        branch_id: bid,
+        is_active: isActive,
+        ...deliveryFields,
+      };
+
+      let error;
+      if (editingStaffId) {
+        ({ error } = await sb.from('staff').update({ name, role, is_active: isActive, ...deliveryFields }).eq('id', editingStaffId));
+      } else {
+        const { data: existing } = await sb.from('staff').select('id').eq('firebase_uid', uid).maybeSingle();
+        if (existing) {
+          window.showToast('UID already registered', 'This Firebase UID is already in the system', 'error');
+          btn.disabled = false; btn.textContent = 'Save Staff';
+          return;
+        }
+        ({ error } = await sb.from('staff').insert({ ...payload, firebase_uid: uid }));
+      }
+
+      btn.disabled = false; btn.textContent = 'Save Staff';
+
+      if (error) { window.showToast('Error saving staff', error.message, 'error'); return; }
+      window.showToast('✅ Staff saved!', '', 'success');
+
+      window.logActivity && window.logActivity(
+        'staff',
+        `${editingStaffId ? 'Updated' : 'Added'} staff: ${name} (${role})`,
+        window.currentStaff?.name || '',
+        bid
+      );
+
+      closeStaffModal();
+      await loadStaff();
+    };
+
+    // ── Toggle active
+    window.toggleActive = async function (staffId, isActive) {
+      const target = allStaff.find(s => s.id === staffId);
+      if (target && !canEdit(target)) {
+        window.showToast('🔒 Permission denied', 'You cannot change this staff member.', 'error');
         return;
       }
-      ({error} = await sb.from('staff').insert({ ...payload, firebase_uid: uid }));
-    }
+      const sb = window.supabaseClient;
+      const { error } = await sb.from('staff').update({ is_active: isActive }).eq('id', staffId);
+      if (!error) {
+        const s = allStaff.find(s => s.id === staffId);
+        window.showToast(isActive ? '✅ Staff activated' : '🚫 Staff deactivated', s?.name || '', 'success');
+        window.logActivity && window.logActivity(
+          'staff', `${isActive ? 'Activated' : 'Deactivated'}: ${s?.name}`,
+          window.currentStaff?.name || '', window.getActiveBranchId()
+        );
+        await loadStaff();
+      }
+    };
 
-    btn.disabled=false; btn.textContent='Save Staff';
+    // ── Confirm delete
+    window.confirmDelete = function (staffId, name) {
+      document.getElementById('deleteTitle').textContent = `Remove "${name}"?`;
+      document.getElementById('deleteMsg').textContent = 'This will permanently delete the staff record. Their Firebase account will remain.';
+      document.getElementById('deleteConfirmBtn').onclick = () => deleteStaff(staffId, name);
+      document.getElementById('deleteModal').style.display = 'flex';
+    };
 
-    if (error) { window.showToast('Error saving staff', error.message, 'error'); return; }
-    window.showToast('✅ Staff saved!','','success');
-
-    window.logActivity && window.logActivity(
-      'staff',
-      `${editingStaffId?'Updated':'Added'} staff: ${name} (${role})`,
-      window.currentStaff?.name || '',
-      bid
-    );
-
-    closeStaffModal();
-    await loadStaff();
-  };
-
-  // ── Toggle active
-  window.toggleActive = async function(staffId, isActive) {
-    const target = allStaff.find(s => s.id === staffId);
-    if (target && !canEdit(target)) {
-      window.showToast('🔒 Permission denied', 'You cannot change this staff member.', 'error');
-      return;
-    }
-    const sb = window.supabaseClient;
-    const { error } = await sb.from('staff').update({ is_active: isActive }).eq('id', staffId);
-    if (!error) {
-      const s = allStaff.find(s => s.id === staffId);
-      window.showToast(isActive ? '✅ Staff activated' : '🚫 Staff deactivated', s?.name || '', 'success');
+    async function deleteStaff(staffId, name) {
+      const target = allStaff.find(s => s.id === staffId);
+      if (target && !canDelete(target)) {
+        window.showToast('🔒 Permission denied', 'You cannot delete this staff member.', 'error');
+        closeDeleteModal();
+        return;
+      }
+      const sb = window.supabaseClient;
+      const { error } = await sb.from('staff').delete().eq('id', staffId);
+      closeDeleteModal();
+      if (error) { window.showToast('Error deleting staff', error.message, 'error'); return; }
+      window.showToast('🗑 Staff removed', name, 'success');
       window.logActivity && window.logActivity(
-        'staff', `${isActive?'Activated':'Deactivated'}: ${s?.name}`,
+        'staff', `Removed staff: ${name}`,
         window.currentStaff?.name || '', window.getActiveBranchId()
       );
       await loadStaff();
     }
-  };
 
-  // ── Confirm delete
-  window.confirmDelete = function(staffId, name) {
-    document.getElementById('deleteTitle').textContent = `Remove "${name}"?`;
-    document.getElementById('deleteMsg').textContent   = 'This will permanently delete the staff record. Their Firebase account will remain.';
-    document.getElementById('deleteConfirmBtn').onclick = () => deleteStaff(staffId, name);
-    document.getElementById('deleteModal').style.display = 'flex';
-  };
+    window.closeDeleteModal = () => document.getElementById('deleteModal').style.display = 'none';
 
-  async function deleteStaff(staffId, name) {
-    const target = allStaff.find(s => s.id === staffId);
-    if (target && !canDelete(target)) {
-      window.showToast('🔒 Permission denied', 'You cannot delete this staff member.', 'error');
-      closeDeleteModal();
-      return;
+    // ── Show/hide delivery boy fields based on role
+    window.toggleDeliveryFields = function (role) {
+      document.getElementById('deliveryBoyFields').style.display =
+        role === 'delivery_boy' ? 'block' : 'none';
+    };
+
+  </script>
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('open');
+      if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('open'));
     }
-    const sb = window.supabaseClient;
-    const { error } = await sb.from('staff').delete().eq('id', staffId);
-    closeDeleteModal();
-    if (error) { window.showToast('Error deleting staff', error.message, 'error'); return; }
-    window.showToast('🗑 Staff removed', name, 'success');
-    window.logActivity && window.logActivity(
-      'staff', `Removed staff: ${name}`,
-      window.currentStaff?.name || '', window.getActiveBranchId()
-    );
-    await loadStaff();
-  }
-
-  window.closeDeleteModal = () => document.getElementById('deleteModal').style.display = 'none';
-
-</script>
-<script>
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.toggle('open');
-    if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('open'));
-  }
-  function closeSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('show');
-  }
-  // Close sidebar on nav link click (mobile)
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.nav-item').forEach(function(el) {
-      el.addEventListener('click', closeSidebar);
+    function closeSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.remove('open');
+      if (overlay) overlay.classList.remove('show');
+    }
+    // Close sidebar on nav link click (mobile)
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.nav-item').forEach(function (el) {
+        el.addEventListener('click', closeSidebar);
+      });
     });
-  });
-</script>
+  </script>
 </body>
+
 </html>

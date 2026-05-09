@@ -1,0 +1,963 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LAXMI — Menu Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .menu-table-img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+    .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; max-height: 200px; overflow-y: auto; padding: 4px; }
+    .emoji-btn { font-size: 1.4rem; padding: 6px; border-radius: 6px; background: var(--surface2); border: 1px solid transparent; cursor: pointer; text-align: center; transition: all 0.15s; }
+    .emoji-btn:hover { background: var(--surface3); border-color: var(--border); }
+    .emoji-btn.selected { border-color: var(--accent); background: var(--accent-dim); }
+    .drag-handle { cursor: grab; color: var(--text-dim); padding: 0 8px; font-size: 1rem; }
+    .drag-handle:active { cursor: grabbing; }
+    .dragging { opacity: 0.5; }
+    .drag-over { border-top: 2px solid var(--accent); }
+    .bulk-bar {
+      background: var(--accent-dim); border: 1px solid var(--accent);
+      border-radius: var(--radius); padding: 12px 16px;
+      display: none; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .bulk-bar.show { display: flex; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .page-tabs { display: flex; gap: 4px; background: var(--surface2); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 24px; width: fit-content; }
+    .page-tab { padding: 8px 20px; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; color: var(--text-dim); transition: all 0.2s; border: none; background: none; }
+    .page-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+    .avail-toggle { display: flex; align-items: center; gap: 6px; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="offline-banner" id="offlineBanner">⚠️ Connection lost — reconnecting…</div>
+<div class="auth-gate" id="authGate" style="display:none;"></div>
+
+<div id="appContent" style="display:none;">
+  <div class="app-layout">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-name">🍃 LAXMI</div>
+        <div class="sidebar-logo-sub">Menu Manager</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Operations</div>
+        <a class="nav-item" href="kitchen.html"><span class="nav-item-icon">🍳</span> Kitchen</a>
+        <a class="nav-item" href="admin.html"><span class="nav-item-icon">📊</span> Admin Panel</a>
+        <a class="nav-item active" href="menu-manager.html"><span class="nav-item-icon">📋</span> Menu Manager</a>
+        <a class="nav-item" href="reports.html"><span class="nav-item-icon">📈</span> Reports</a>
+        <div class="nav-section-label" style="margin-top:8px;">Management</div>
+        <a class="nav-item" href="staff.html"><span class="nav-item-icon">👥</span> Staff</a>
+        <div class="nav-section-label" style="margin-top:8px;">Customer</div>
+        <a class="nav-item" href="waiter.html"><span class="nav-item-icon">🛎️</span> Waiter</a>
+        <a class="nav-item" href="payment-manager.html"><span class="nav-item-icon">💳</span> Payments</a>
+        <a class="nav-item" href="index.html" target="_blank"><span class="nav-item-icon">🛒</span> Order Page ↗</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="sidebarAvatar">?</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Loading…</div>
+            <div class="sidebar-user-role" id="sidebarUserRole">—</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost w-full btn-sm" onclick="window.rmsSignOut()">⏏ Sign Out</button>
+      </div>
+    </aside>
+
+    <!-- ── MAIN ── -->
+    <main class="main-content">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+          <div>
+            <h1 class="page-title">📋 Menu Manager</h1>
+            <div class="page-subtitle">Manage categories and menu items</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="exportMenuCSV()">📥 Export CSV</button>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('importFile').click()">📤 Import CSV</button>
+          <input type="file" id="importFile" accept=".csv" style="display:none" onchange="importCSV(this)">
+        </div>
+      </div>
+
+      <!-- Page Tabs -->
+      <div class="page-tabs">
+        <button class="page-tab active" onclick="switchPanel('categories',this)">🗂 Categories</button>
+        <button class="page-tab" onclick="switchPanel('items',this)">🍽️ Menu Items</button>
+      </div>
+
+      <!-- ══ CATEGORIES PANEL ══ -->
+      <div class="tab-panel active" id="panel-categories">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div class="section-title">🗂 Categories</div>
+          <button class="btn btn-primary" onclick="openCatModal()">+ Add Category</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="catTable">
+            <thead>
+              <tr>
+                <th style="width:40px;"></th>
+                <th>Emoji</th>
+                <th>Category Name</th>
+                <th>Items</th>
+                <th>Status</th>
+                <th>Sort</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="catTableBody">
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-dim);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ MENU ITEMS PANEL ══ -->
+      <div class="tab-panel" id="panel-items">
+        <!-- Bulk bar -->
+        <div class="bulk-bar" id="bulkBar">
+          <span style="color:var(--accent-bright);font-size:0.875rem;">
+            <span id="bulkCount">0</span> item(s) selected
+          </span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="bulkToggleAvailable(true)">✅ Mark Available</button>
+            <button class="btn btn-secondary btn-sm" onclick="bulkToggleAvailable(false)">🔴 Mark Unavailable</button>
+            <button class="btn btn-danger btn-sm" onclick="bulkDelete()">🗑 Delete Selected</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearSelection()">✕ Clear</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div class="search-bar" style="flex:1;min-width:200px;margin:0;">
+            <div class="search-input-wrap" style="flex:1;">
+              <span class="search-icon" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;">🔍</span>
+              <input type="text" class="input" id="itemSearch" placeholder="Search items…" oninput="filterItems()" style="padding-left:36px;">
+            </div>
+            <select class="input" id="catFilter" onchange="filterItems()" style="max-width:160px;">
+              <option value="all">All Categories</option>
+            </select>
+            <select class="input" id="availFilter" onchange="filterItems()" style="max-width:140px;">
+              <option value="all">All Status</option>
+              <option value="available">Available</option>
+              <option value="unavailable">Unavailable</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="openItemModal()">+ Add Item</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="itemsTable">
+            <thead>
+              <tr>
+                <th style="width:40px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)" style="cursor:pointer;"></th>
+                <th>Item</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Type</th>
+                <th>Available</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="itemsTableBody">
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-dim);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="itemsPagination"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── CATEGORY MODAL ── -->
+<div class="modal-overlay" id="catModal" style="display:none;" onclick="if(event.target===this)closeCatModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="catModalTitle">Add Category</h2>
+      <button class="modal-close" onclick="closeCatModal()">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="input-group">
+        <label class="input-label">Category Name *</label>
+        <input type="text" id="catName" class="input" placeholder="e.g. Starters">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Emoji</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <span id="catEmojiPreview" style="font-size:2rem;">🍽️</span>
+          <input type="text" id="catEmoji" class="input" placeholder="Paste emoji" maxlength="4" style="width:100px;"
+            oninput="document.getElementById('catEmojiPreview').textContent=this.value||'🍽️'">
+        </div>
+        <div class="emoji-grid" id="catEmojiGrid"></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Sort Order</label>
+        <input type="number" id="catSort" class="input" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCatModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCategory()" id="catSaveBtn">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MENU ITEM MODAL ── -->
+<div class="modal-overlay" id="itemModal" style="display:none;" onclick="if(event.target===this)closeItemModal()">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title" id="itemModalTitle">Add Menu Item</h2>
+      <button class="modal-close" onclick="closeItemModal()">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="input-group" style="grid-column:1/-1;">
+        <label class="input-label">Item Name *</label>
+        <input type="text" id="itemName" class="input" placeholder="e.g. Paneer Butter Masala">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Category *</label>
+        <select id="itemCategory" class="input"></select>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Price (Rs. ) *</label>
+        <input type="number" id="itemPrice" class="input" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="input-group" style="grid-column:1/-1;">
+        <label class="input-label">Description</label>
+        <textarea id="itemDesc" class="input" rows="2" placeholder="Short description…"></textarea>
+      </div>
+
+      <!-- Tag 1 -->
+      <div class="input-group">
+        <label class="input-label">Tag 1 Text <span style="font-weight:400;color:var(--text-dim);">(e.g. Highly Ordered)</span></label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="itemTag1Text" class="input" placeholder="e.g. Must Try" maxlength="20" style="flex:1;">
+          <input type="color" id="itemTag1Color" value="#e53935" title="Tag color"
+            style="width:44px;height:40px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;">
+        </div>
+      </div>
+
+      <!-- Tag 2 -->
+      <div class="input-group">
+        <label class="input-label">Tag 2 Text <span style="font-weight:400;color:var(--text-dim);">(optional)</span></label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="itemTag2Text" class="input" placeholder="e.g. Chef's Pick" maxlength="20" style="flex:1;">
+          <input type="color" id="itemTag2Color" value="#1e88e5" title="Tag color"
+            style="width:44px;height:40px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Emoji</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <span id="itemEmojiPreview" style="font-size:2rem;">🍽️</span>
+          <input type="text" id="itemEmoji" class="input" placeholder="Paste emoji" maxlength="4" style="width:100px;"
+            oninput="document.getElementById('itemEmojiPreview').textContent=this.value||'🍽️'">
+        </div>
+        <div class="emoji-grid" id="itemEmojiGrid"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="input-group">
+          <label class="input-label">Sort Order</label>
+          <input type="number" id="itemSort" class="input" placeholder="0" min="0">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+          <label class="toggle-wrap">
+            <label class="toggle"><input type="checkbox" id="itemVeg" checked><span class="toggle-slider"></span></label>
+            <span class="toggle-label">Vegetarian</span>
+          </label>
+          <label class="toggle-wrap">
+            <label class="toggle"><input type="checkbox" id="itemAvailable" checked><span class="toggle-slider"></span></label>
+            <span class="toggle-label">Available</span>
+          </label>
+          <label class="toggle-wrap">
+            <label class="toggle"><input type="checkbox" id="itemChefsSpecial"><span class="toggle-slider"></span></label>
+            <span class="toggle-label">👨‍🍳 Chef's Special</span>
+          </label>
+          <label class="toggle-wrap">
+            <label class="toggle"><input type="checkbox" id="itemTodaysSpecial"><span class="toggle-slider"></span></label>
+            <span class="toggle-label">⏰ Today's Special</span>
+          </label>
+          <div id="specialTimeWrap" style="display:none;gap:8px;flex-direction:column;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="time" id="itemSpecialStart" class="input" style="flex:1;" placeholder="Start time">
+              <span style="color:var(--text-dim);font-size:0.8rem;">to</span>
+              <input type="time" id="itemSpecialEnd" class="input" style="flex:1;" placeholder="End time">
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-dim);">Tag shows only during these hours. Leave empty to show all day.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeItemModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveItem()" id="itemSaveBtn">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE CONFIRM MODAL ── -->
+<div class="modal-overlay" id="deleteModal" style="display:none;" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="modal" style="max-width:360px;text-align:center;">
+    <div style="font-size:2.5rem;margin-bottom:12px;">🗑️</div>
+    <h2 class="modal-title" style="margin-bottom:8px;" id="deleteTitle">Delete Item?</h2>
+    <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:24px;" id="deleteMsg">This action cannot be undone.</p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module" src="assets/auth.js?v=3"></script>
+<script type="module">
+
+  // ── Common emojis for picker
+  const FOOD_EMOJIS = ['🍽️','🍛','🍜','🍝','🍲','🥘','🍱','🍣','🍤','🍗','🍖','🥩','🍔','🍟','🌮','🌯','🥙','🧆','🥚','🍳','🥞','🧇','🥓','🥗','🥦','🌽','🥕','🍅','🫑','🧅','🧄','🍠','🍆','🥑','🫒','🍞','🫓','🥐','🥖','🫕','🧀','🥣','🍲','🍜','🍝','🍛','🍚','🍙','🍘','🍥','🥮','🍡','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍩','🍪','🌰','🥜','🍦','🍨','🍧','🍺','🍻','☕','🍵','🧃','🥤','🧋','🍹','🍸','🥂','🍾','🫖','🧊','🫙','🍴','🥄','🔪','🫙'];
+
+  function buildEmojiGrid(gridId, inputId, previewId) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    grid.innerHTML = '';
+    FOOD_EMOJIS.forEach(e => {
+      const btn = document.createElement('button');
+      btn.className = 'emoji-btn';
+      btn.textContent = e;
+      btn.type = 'button';
+      btn.onclick = () => {
+        document.getElementById(inputId).value = e;
+        document.getElementById(previewId).textContent = e;
+        grid.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      };
+      grid.appendChild(btn);
+    });
+  }
+
+  // ── State
+  let categories = [];
+  let menuItems = [];
+  let filteredItems = [];
+  let currentPage = 1;
+  const PAGE_SIZE = 20;
+  let editingCatId = null;
+  let editingItemId = null;
+  let selectedItems = new Set();
+
+
+  
+
+
+  // ── appInit called by auth.js
+window.appInit = async function() {
+    window.renderStaffUI && window.renderStaffUI();
+    window.buildAuthGate && window.buildAuthGate('Menu Manager');
+    buildEmojiGrid('catEmojiGrid', 'catEmoji', 'catEmojiPreview');
+    buildEmojiGrid('itemEmojiGrid', 'itemEmoji', 'itemEmojiPreview');
+    // Load items FIRST so category table shows correct count
+    await loadMenuItems();
+    await loadCategories();
+    // Attach today's special toggle listener
+    document.getElementById('itemTodaysSpecial')?.addEventListener('change', function() {
+      document.getElementById('specialTimeWrap').style.display = this.checked ? 'flex' : 'none';
+    });
+    window.startHeartbeat && window.startHeartbeat();
+    window.listenToSettings && window.listenToSettings();
+  };
+
+  // ── Load categories
+  async function loadCategories() {
+    const sb = window.supabaseClient;
+    const bid = window.getActiveBranchId();
+    const { data, error } = await sb.from('categories').select('*').eq('branch_id', bid).order('sort_order');
+    if (error) { window.showToast('Error loading categories', '', 'error'); return; }
+    categories = data || [];
+    renderCatTable();
+    populateCatFilter();
+    populateItemCategorySelect();
+  }
+
+  // ── Load menu items
+  async function loadMenuItems() {
+    const sb = window.supabaseClient;
+    const bid = window.getActiveBranchId();
+    const { data, error } = await sb.from('menu_items').select('*').eq('branch_id', bid).order('sort_order').order('id');
+    if (error) { window.showToast('Error loading items', '', 'error'); return; }
+    menuItems = data || [];
+    filterItems();
+  }
+
+  // ── Render categories table
+  function renderCatTable() {
+    const tbody = document.getElementById('catTableBody');
+    if (categories.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-dim);">No categories yet. Add your first one!</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = categories.map((cat, idx) => {
+      const itemCount = menuItems.filter(i => i.category_id === cat.id).length;
+      return `<tr id="cat-row-${cat.id}" draggable="true"
+        ondragstart="dragStart(event,'cat',${cat.id})"
+        ondragover="dragOver(event)"
+        ondrop="dropCat(event,${cat.id})"
+        ondragleave="dragLeave(event)">
+        <td><span class="drag-handle" title="Drag to reorder">⠿</span></td>
+        <td><span style="font-size:1.6rem;">${cat.emoji || '🍽️'}</span></td>
+        <td style="font-weight:600;">${cat.name}</td>
+        <td><span class="chip">${itemCount} items</span></td>
+        <td>
+          <span class="badge ${cat.is_active ? 'badge-done' : 'badge-cancelled'}">${cat.is_active ? 'Active' : 'Hidden'}</span>
+        </td>
+        <td><span style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-dim);">${cat.sort_order}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-secondary btn-sm" onclick="openCatModal(${cat.id})">✏️ Edit</button>
+            <button class="btn btn-ghost btn-sm" onclick="toggleCatActive(${cat.id},${!cat.is_active})">${cat.is_active ? '🙈 Hide' : '👁 Show'}</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDeleteCat(${cat.id},'${cat.name.replace(/'/g,"\\'")}')">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Populate category filter dropdown
+  function populateCatFilter() {
+    const sel = document.getElementById('catFilter');
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="all">All Categories</option>';
+    categories.forEach(c => {
+      sel.innerHTML += `<option value="${c.id}">${c.emoji} ${c.name}</option>`;
+    });
+    sel.value = currentVal || 'all';
+  }
+
+  function populateItemCategorySelect() {
+    const sel = document.getElementById('itemCategory');
+    sel.innerHTML = categories.map(c => `<option value="${c.id}">${c.emoji} ${c.name}</option>`).join('');
+  }
+
+  // ── Filter items
+  window.filterItems = function() {
+    const search = document.getElementById('itemSearch').value.toLowerCase();
+    const catId = document.getElementById('catFilter').value;
+    const avail = document.getElementById('availFilter').value;
+
+    filteredItems = menuItems.filter(item => {
+      const matchSearch = !search || item.name.toLowerCase().includes(search) || (item.description || '').toLowerCase().includes(search);
+      const matchCat = catId === 'all' || item.category_id == catId;
+      const matchAvail = avail === 'all' || (avail === 'available' ? item.is_available : !item.is_available);
+      return matchSearch && matchCat && matchAvail;
+    });
+    currentPage = 1;
+    renderItemsTable();
+    renderPagination();
+  };
+
+  // ── Render items table
+  function renderItemsTable() {
+    const tbody = document.getElementById('itemsTableBody');
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filteredItems.slice(start, start + PAGE_SIZE);
+
+    if (pageItems.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-dim);">No items found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = pageItems.map(item => {
+      const cat = categories.find(c => c.id === item.category_id);
+      const checked = selectedItems.has(item.id) ? 'checked' : '';
+      return `<tr>
+        <td><input type="checkbox" ${checked} onchange="toggleItemSelect(${item.id},this.checked)" style="cursor:pointer;"></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.5rem;">${item.emoji || '🍽️'}</span>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;">${item.name}</div>
+              ${item.description ? `<div style="font-size:0.75rem;color:var(--text-dim);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.description}</div>` : ''}
+            </div>
+          </div>
+        </td>
+        <td>${cat ? `<span class="chip">${cat.emoji} ${cat.name}</span>` : '<span style="color:var(--text-dim)">—</span>'}</td>
+        <td><span style="font-family:var(--font-mono);color:var(--accent-bright);">Rs. ${parseFloat(item.price).toFixed(2)}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div class="veg-dot ${item.is_veg ? 'veg' : 'nonveg'}"></div>
+            <span style="font-size:0.8rem;color:var(--text-dim);">${item.is_veg ? 'Veg' : 'Non-Veg'}</span>
+          </div>
+        </td>
+        <td>
+          <label class="toggle" title="${item.is_available ? 'Click to mark unavailable' : 'Click to mark available'}">
+            <input type="checkbox" ${item.is_available ? 'checked' : ''} onchange="quickToggleAvailable(${item.id},this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-secondary btn-sm" onclick="openItemModal(${item.id})">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDeleteItem(${item.id},'${item.name.replace(/'/g,"\\'")}')">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Pagination
+  function renderPagination() {
+    const total = Math.ceil(filteredItems.length / PAGE_SIZE);
+    const el = document.getElementById('itemsPagination');
+    if (total <= 1) { el.innerHTML = ''; return; }
+    let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || Math.abs(i - currentPage) <= 1) {
+        html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      } else if (Math.abs(i - currentPage) === 2) {
+        html += `<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
+      }
+    }
+    html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
+    el.innerHTML = html;
+  }
+
+  window.goPage = function(p) {
+    const total = Math.ceil(filteredItems.length / PAGE_SIZE);
+    if (p < 1 || p > total) return;
+    currentPage = p;
+    renderItemsTable();
+    renderPagination();
+  };
+
+  // ── Category CRUD
+  window.openCatModal = function(catId = null) {
+    editingCatId = catId;
+    const modal = document.getElementById('catModal');
+    const title = document.getElementById('catModalTitle');
+
+    if (catId) {
+      const cat = categories.find(c => c.id === catId);
+      if (!cat) return;
+      title.textContent = 'Edit Category';
+      document.getElementById('catName').value = cat.name;
+      document.getElementById('catEmoji').value = cat.emoji || '🍽️';
+      document.getElementById('catEmojiPreview').textContent = cat.emoji || '🍽️';
+      document.getElementById('catSort').value = cat.sort_order || 0;
+    } else {
+      title.textContent = 'Add Category';
+      document.getElementById('catName').value = '';
+      document.getElementById('catEmoji').value = '🍽️';
+      document.getElementById('catEmojiPreview').textContent = '🍽️';
+      document.getElementById('catSort').value = categories.length;
+    }
+    modal.style.display = 'flex';
+  };
+
+  window.closeCatModal = function() {
+    document.getElementById('catModal').style.display = 'none';
+    editingCatId = null;
+  };
+
+  window.saveCategory = async function() {
+    const name = document.getElementById('catName').value.trim();
+    const emoji = document.getElementById('catEmoji').value.trim() || '🍽️';
+    const sortOrder = parseInt(document.getElementById('catSort').value) || 0;
+
+    if (!name) { window.showToast('Category name is required', '', 'error'); return; }
+
+    const sb = window.supabaseClient;
+    const bid = window.getActiveBranchId();
+    const btn = document.getElementById('catSaveBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    const payload = { branch_id: bid, name, emoji, sort_order: sortOrder };
+    let error;
+
+    if (editingCatId) {
+      ({ error } = await sb.from('categories').update(payload).eq('id', editingCatId));
+    } else {
+      ({ error } = await sb.from('categories').insert({ ...payload, is_active: true }));
+    }
+
+    btn.disabled = false; btn.textContent = 'Save Category';
+
+    if (error) { window.showToast('Error saving category', error.message, 'error'); return; }
+    window.showToast('✅ Category saved!', '', 'success');
+    closeCatModal();
+    await loadCategories();
+    renderCatTable();
+  };
+
+  window.toggleCatActive = async function(catId, isActive) {
+    const sb = window.supabaseClient;
+    const { error } = await sb.from('categories').update({ is_active: isActive }).eq('id', catId);
+    if (!error) {
+      window.showToast(isActive ? '👁 Category visible' : '🙈 Category hidden', '', 'success');
+      await loadCategories();
+      renderCatTable();
+    }
+  };
+
+  window.confirmDeleteCat = function(catId, name) {
+    const itemCount = menuItems.filter(i => i.category_id === catId).length;
+    document.getElementById('deleteTitle').textContent = `Delete "${name}"?`;
+    document.getElementById('deleteMsg').textContent = itemCount > 0
+      ? `This category has ${itemCount} item(s). Deleting it will leave those items uncategorized.`
+      : 'This action cannot be undone.';
+    document.getElementById('deleteConfirmBtn').onclick = () => deleteCategory(catId);
+    document.getElementById('deleteModal').style.display = 'flex';
+  };
+
+  async function deleteCategory(catId) {
+    const sb = window.supabaseClient;
+    const { error } = await sb.from('categories').delete().eq('id', catId);
+    closeDeleteModal();
+    if (error) { window.showToast('Error deleting category', error.message, 'error'); return; }
+    window.showToast('🗑 Category deleted', '', 'success');
+    await loadCategories();
+    renderCatTable();
+  }
+
+  // ── Drag & drop category reorder
+  let dragSrcCatId = null;
+
+  window.dragStart = function(e, type, id) {
+    dragSrcCatId = id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.classList.add('dragging');
+  };
+
+  window.dragOver = function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    e.currentTarget.classList.add('drag-over');
+  };
+
+  window.dragLeave = function(e) {
+    e.currentTarget.classList.remove('drag-over');
+  };
+
+  window.dropCat = async function(e, targetCatId) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+
+    if (dragSrcCatId === targetCatId) return;
+
+    const srcIdx = categories.findIndex(c => c.id === dragSrcCatId);
+    const tgtIdx = categories.findIndex(c => c.id === targetCatId);
+    if (srcIdx === -1 || tgtIdx === -1) return;
+
+    const reordered = [...categories];
+    const [moved] = reordered.splice(srcIdx, 1);
+    reordered.splice(tgtIdx, 0, moved);
+
+    const sb = window.supabaseClient;
+    await Promise.all(reordered.map((cat, idx) =>
+      sb.from('categories').update({ sort_order: idx }).eq('id', cat.id)
+    ));
+
+    await loadCategories();
+    renderCatTable();
+    window.showToast('✅ Order saved', '', 'success');
+  };
+
+  // ── Menu Item CRUD
+  window.openItemModal = function(itemId = null) {
+    editingItemId = itemId;
+    const title = document.getElementById('itemModalTitle');
+
+    if (itemId) {
+      const item = menuItems.find(i => i.id === itemId);
+      if (!item) return;
+      title.textContent = 'Edit Item';
+      document.getElementById('itemName').value = item.name;
+      document.getElementById('itemCategory').value = item.category_id || '';
+      document.getElementById('itemPrice').value = item.price;
+      document.getElementById('itemDesc').value = item.description || '';
+      document.getElementById('itemEmoji').value = item.emoji || '🍽️';
+      document.getElementById('itemEmojiPreview').textContent = item.emoji || '🍽️';
+      document.getElementById('itemSort').value          = item.sort_order || 0;
+      document.getElementById('itemVeg').checked         = item.is_veg !== false;
+      document.getElementById('itemAvailable').checked   = item.is_available !== false;
+      document.getElementById('itemChefsSpecial').checked   = item.is_chefs_special || false;
+      document.getElementById('itemTodaysSpecial').checked  = item.is_todays_special || false;
+      document.getElementById('itemTag1Text').value      = item.tag1_text || '';
+      document.getElementById('itemTag1Color').value     = item.tag1_color || '#e53935';
+      document.getElementById('itemTag2Text').value      = item.tag2_text || '';
+      document.getElementById('itemTag2Color').value     = item.tag2_color || '#1e88e5';
+      document.getElementById('itemSpecialStart').value  = item.special_start_time || '';
+      document.getElementById('itemSpecialEnd').value    = item.special_end_time || '';
+      document.getElementById('specialTimeWrap').style.display = item.is_todays_special ? 'flex' : 'none';
+    } else {
+      title.textContent = 'Add Menu Item';
+      document.getElementById('itemName').value = '';
+      document.getElementById('itemPrice').value = '';
+      document.getElementById('itemDesc').value = '';
+      document.getElementById('itemEmoji').value = '🍽️';
+      document.getElementById('itemEmojiPreview').textContent = '🍽️';
+      document.getElementById('itemSort').value            = menuItems.length;
+      document.getElementById('itemVeg').checked           = true;
+      document.getElementById('itemAvailable').checked     = true;
+      document.getElementById('itemChefsSpecial').checked  = false;
+      document.getElementById('itemTodaysSpecial').checked = false;
+      document.getElementById('itemTag1Text').value        = '';
+      document.getElementById('itemTag1Color').value       = '#e53935';
+      document.getElementById('itemTag2Text').value        = '';
+      document.getElementById('itemTag2Color').value       = '#1e88e5';
+      document.getElementById('itemSpecialStart').value    = '';
+      document.getElementById('itemSpecialEnd').value      = '';
+      document.getElementById('specialTimeWrap').style.display = 'none';
+      if (categories.length > 0) document.getElementById('itemCategory').value = categories[0].id;
+    }
+    document.getElementById('itemModal').style.display = 'flex';
+  };
+
+  window.closeItemModal = function() {
+    document.getElementById('itemModal').style.display = 'none';
+    editingItemId = null;
+  };
+
+  window.saveItem = async function() {
+    const name = document.getElementById('itemName').value.trim();
+    const catId = document.getElementById('itemCategory').value;
+    const price = parseFloat(document.getElementById('itemPrice').value);
+    const desc = document.getElementById('itemDesc').value.trim();
+    const emoji = document.getElementById('itemEmoji').value.trim() || '🍽️';
+    const sortOrder = parseInt(document.getElementById('itemSort').value) || 0;
+    const isVeg = document.getElementById('itemVeg').checked;
+    const isAvailable = document.getElementById('itemAvailable').checked;
+
+    if (!name) { window.showToast('Item name is required', '', 'error'); return; }
+    if (!catId) { window.showToast('Please select a category', '', 'error'); return; }
+    if (isNaN(price) || price < 0) { window.showToast('Enter a valid price', '', 'error'); return; }
+
+    const sb = window.supabaseClient;
+    const bid = window.getActiveBranchId();
+    const btn = document.getElementById('itemSaveBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    const tag1Text  = document.getElementById('itemTag1Text').value.trim();
+    const tag1Color = document.getElementById('itemTag1Color').value;
+    const tag2Text  = document.getElementById('itemTag2Text').value.trim();
+    const tag2Color = document.getElementById('itemTag2Color').value;
+    const isChefsSpecial   = document.getElementById('itemChefsSpecial').checked;
+    const isTodaysSpecial  = document.getElementById('itemTodaysSpecial').checked;
+    const specialStart     = document.getElementById('itemSpecialStart').value || null;
+    const specialEnd       = document.getElementById('itemSpecialEnd').value || null;
+
+    const payload = {
+      branch_id: bid, category_id: parseInt(catId), name,
+      description: desc || null, emoji, price, sort_order: sortOrder,
+      is_veg: isVeg, is_available: isAvailable,
+      tag1_text: tag1Text || null, tag1_color: tag1Color,
+      tag2_text: tag2Text || null, tag2_color: tag2Color,
+      is_chefs_special:    isChefsSpecial,
+      is_todays_special:   isTodaysSpecial,
+      special_start_time:  specialStart,
+      special_end_time:    specialEnd
+    };
+
+    let error;
+    if (editingItemId) {
+      ({ error } = await sb.from('menu_items').update(payload).eq('id', editingItemId));
+    } else {
+      ({ error } = await sb.from('menu_items').insert(payload));
+    }
+
+    btn.disabled = false; btn.textContent = 'Save Item';
+
+    if (error) { window.showToast('Error saving item', error.message, 'error'); return; }
+    window.showToast('✅ Item saved!', '', 'success');
+    closeItemModal();
+    await loadMenuItems();
+  };
+
+  window.quickToggleAvailable = async function(itemId, isAvailable) {
+    const sb = window.supabaseClient;
+    const { error } = await sb.from('menu_items').update({ is_available: isAvailable }).eq('id', itemId);
+    if (!error) {
+      const item = menuItems.find(i => i.id === itemId);
+      if (item) item.is_available = isAvailable;
+      window.showToast(isAvailable ? '✅ Marked available' : '🔴 Marked unavailable', '', 'success');
+    }
+  };
+
+  window.confirmDeleteItem = function(itemId, name) {
+    document.getElementById('deleteTitle').textContent = `Delete "${name}"?`;
+    document.getElementById('deleteMsg').textContent = 'This action cannot be undone.';
+    document.getElementById('deleteConfirmBtn').onclick = () => deleteItem(itemId);
+    document.getElementById('deleteModal').style.display = 'flex';
+  };
+
+  async function deleteItem(itemId) {
+    const sb = window.supabaseClient;
+    const { error } = await sb.from('menu_items').delete().eq('id', itemId);
+    closeDeleteModal();
+    if (error) { window.showToast('Error deleting item', error.message, 'error'); return; }
+    window.showToast('🗑 Item deleted', '', 'success');
+    await loadMenuItems();
+  }
+
+  // ── Bulk actions
+  window.toggleItemSelect = function(itemId, checked) {
+    if (checked) selectedItems.add(itemId);
+    else selectedItems.delete(itemId);
+    updateBulkBar();
+  };
+
+  window.toggleSelectAll = function(checked) {
+    const pageStart = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filteredItems.slice(pageStart, pageStart + PAGE_SIZE);
+    pageItems.forEach(item => {
+      if (checked) selectedItems.add(item.id);
+      else selectedItems.delete(item.id);
+    });
+    renderItemsTable();
+    updateBulkBar();
+  };
+
+  function updateBulkBar() {
+    const bar = document.getElementById('bulkBar');
+    const count = document.getElementById('bulkCount');
+    count.textContent = selectedItems.size;
+    bar.classList.toggle('show', selectedItems.size > 0);
+  }
+
+  window.clearSelection = function() {
+    selectedItems.clear();
+    renderItemsTable();
+    updateBulkBar();
+    document.getElementById('selectAll').checked = false;
+  };
+
+  window.bulkToggleAvailable = async function(isAvailable) {
+    if (selectedItems.size === 0) return;
+    const sb = window.supabaseClient;
+    const ids = [...selectedItems];
+    const { error } = await sb.from('menu_items').update({ is_available: isAvailable }).in('id', ids);
+    if (!error) {
+      window.showToast(`✅ ${ids.length} items updated`, '', 'success');
+      clearSelection();
+      await loadMenuItems();
+    }
+  };
+
+  window.bulkDelete = async function() {
+    if (selectedItems.size === 0) return;
+    const count = selectedItems.size;
+    document.getElementById('deleteTitle').textContent = `Delete ${count} items?`;
+    document.getElementById('deleteMsg').textContent = 'This action cannot be undone.';
+    document.getElementById('deleteConfirmBtn').onclick = async () => {
+      const sb = window.supabaseClient;
+      const ids = [...selectedItems];
+      const { error } = await sb.from('menu_items').delete().in('id', ids);
+      closeDeleteModal();
+      if (!error) {
+        window.showToast(`🗑 ${count} items deleted`, '', 'success');
+        clearSelection();
+        await loadMenuItems();
+      }
+    };
+    document.getElementById('deleteModal').style.display = 'flex';
+  };
+
+  // ── Export CSV
+  window.exportMenuCSV = function() {
+    if (menuItems.length === 0) { window.showToast('No items to export', '', 'warning'); return; }
+    let csv = 'Name,Category,Price,Description,Emoji,Veg,Available,Sort Order\n';
+    menuItems.forEach(item => {
+      const cat = categories.find(c => c.id === item.category_id);
+      csv += `"${item.name}","${cat?.name || ''}",${item.price},"${item.description || ''}","${item.emoji || ''}",${item.is_veg},${item.is_available},${item.sort_order}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `LAXMI_Menu_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.showToast('✅ Menu exported', '', 'success');
+  };
+
+  // ── Import CSV
+  window.importCSV = async function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.split('\n').slice(1).filter(l => l.trim());
+    const sb = window.supabaseClient;
+    const bid = window.getActiveBranchId();
+    let imported = 0;
+
+    for (const line of lines) {
+      const [name, catName, price, description, emoji, isVeg, isAvailable, sortOrder] = line.split(',').map(v => v.replace(/^"|"$/g, '').trim());
+      if (!name || !price) continue;
+      const cat = categories.find(c => c.name.toLowerCase() === (catName || '').toLowerCase());
+      const payload = {
+        branch_id: bid, name,
+        category_id: cat?.id || null,
+        price: parseFloat(price) || 0,
+        description: description || null,
+        emoji: emoji || '🍽️',
+        is_veg: isVeg !== 'false',
+        is_available: isAvailable !== 'false',
+        sort_order: parseInt(sortOrder) || 0
+      };
+      const { error } = await sb.from('menu_items').insert(payload);
+      if (!error) imported++;
+    }
+
+    input.value = '';
+    window.showToast(`✅ Imported ${imported} items`, '', 'success');
+    await loadMenuItems();
+  };
+
+  // ── Delete modal
+  window.closeDeleteModal = function() {
+    document.getElementById('deleteModal').style.display = 'none';
+  };
+
+  // ── Panel switch
+  window.switchPanel = function(panel, el) {
+    document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.getElementById(`panel-${panel}`).classList.add('active');
+    if (panel === 'items') filterItems();
+    if (panel === 'categories') renderCatTable();
+  };
+
+</script>
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('open'));
+  }
+  function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('show');
+  }
+  // Close sidebar on nav link click (mobile)
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.nav-item').forEach(function(el) {
+      el.addEventListener('click', closeSidebar);
+    });
+  });
+</script>
+</body>
+</html>
+

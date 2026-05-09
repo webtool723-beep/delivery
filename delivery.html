@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LAXMI Delivery</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d2e;
+      --surface2: #252840;
+      --accent: #6c63ff;
+      --teal: #00bcd4;
+      --green: #4caf50;
+      --orange: #ff9800;
+      --red: #f44336;
+      --text: #e8eaf6;
+      --text-dim: #9e9fc4;
+      --border: #2a2d45;
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+
+    /* ── TOAST ── */
+    #toast {
+      position:fixed; bottom:88px; left:50%; transform:translateX(-50%);
+      background:#333; color:white; padding:12px 20px; border-radius:12px;
+      font-size:14px; z-index:9999; opacity:0; transition:opacity 0.3s;
+      max-width:90%; text-align:center; pointer-events:none;
+    }
+    #toast.show { opacity:1; }
+    #toast.success { background:var(--green); }
+    #toast.error   { background:var(--red); }
+    #toast.info    { background:var(--accent); }
+
+    /* ── BUTTONS ── */
+    .btn { display:block; width:100%; padding:15px; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .btn-primary { background:linear-gradient(135deg,var(--teal),var(--accent)); color:white; }
+    .btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
+    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+    .btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+    .btn-danger { background:var(--red); color:white; }
+    .btn-sm { padding:10px 16px; font-size:13px; width:auto; }
+
+    /* ── FORM ── */
+    .form-group { margin-bottom:16px; }
+    .form-label { font-size:12px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px; display:block; }
+    .form-input {
+      width:100%; background:var(--surface2); border:1px solid var(--border);
+      border-radius:12px; padding:14px 16px; color:var(--text); font-size:16px; outline:none; transition:border-color 0.2s;
+    }
+    .form-input:focus { border-color:var(--teal); }
+    .branch-select { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:14px; color:var(--text); font-size:16px; margin-bottom:16px; outline:none; }
+
+    /* ── SPINNER ── */
+    .loading { display:flex; justify-content:center; padding:48px; }
+    .spinner { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--teal); border-radius:50%; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── LOGIN ── */
+    #loginScreen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+    .login-logo { font-size:64px; margin-bottom:12px; }
+    .login-title { font-size:26px; font-weight:800; color:var(--teal); margin-bottom:4px; }
+    .login-sub { font-size:14px; color:var(--text-dim); margin-bottom:32px; }
+    .login-card { background:var(--surface); border-radius:20px; padding:28px; width:100%; max-width:380px; box-shadow:var(--shadow); border:1px solid var(--border); }
+
+    /* ── APP ── */
+    #appContent { display:none; flex-direction:column; min-height:100vh; }
+
+    /* ── HEADER ── */
+    .app-header {
+      background:var(--surface); padding:14px 16px; display:flex;
+      align-items:center; justify-content:space-between;
+      border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100;
+    }
+    .header-info h2 { font-size:16px; font-weight:700; }
+    .header-info p  { font-size:12px; color:var(--text-dim); }
+    .status-pill { display:flex; align-items:center; gap:6px; background:rgba(76,175,80,0.15); border-radius:20px; padding:5px 12px; }
+    .status-dot { width:8px; height:8px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── STATS ── */
+    .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:14px; }
+    .stat-card { background:var(--surface); border-radius:14px; padding:14px 8px; text-align:center; border:1px solid var(--border); }
+    .stat-number { font-size:26px; font-weight:800; line-height:1; }
+    .stat-label  { font-size:10px; color:var(--text-dim); margin-top:4px; text-transform:uppercase; letter-spacing:0.5px; }
+
+    /* ── TAB BAR ── */
+    .tab-bar { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); display:grid; grid-template-columns:repeat(3,1fr); z-index:100; }
+    .tab-btn { padding:10px 4px 6px; background:none; border:none; color:var(--text-dim); font-size:10px; font-weight:600; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; transition:color 0.2s; text-transform:uppercase; letter-spacing:0.5px; }
+    .tab-btn .tab-icon { font-size:22px; }
+    .tab-btn.active { color:var(--teal); }
+
+    /* ── TAB PANELS ── */
+    .tab-content { display:none; padding:12px 14px 80px; }
+    .tab-content.active { display:block; }
+
+    /* ── ORDER CARDS ── */
+    .order-card { background:var(--surface); border-radius:18px; padding:18px; margin-bottom:14px; border:1px solid var(--border); box-shadow:var(--shadow); border-left:4px solid var(--teal); }
+    .order-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+    .order-id { font-size:13px; color:var(--text-dim); font-family:monospace; }
+    .status-badge { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+    .s-picked  { background:rgba(108,99,255,0.2); color:var(--accent); }
+    .s-out     { background:rgba(255,152,0,0.2);  color:var(--orange); }
+    .s-delivered { background:rgba(76,175,80,0.2); color:var(--green); }
+
+    .customer-name { font-size:19px; font-weight:700; margin-bottom:4px; }
+    .customer-phone { font-size:14px; color:var(--teal); text-decoration:none; display:flex; align-items:center; gap:6px; margin-bottom:12px; font-weight:600; }
+    .address-box { background:var(--surface2); border-radius:10px; padding:10px 14px; font-size:13px; color:var(--text-dim); display:flex; gap:8px; align-items:flex-start; margin-bottom:12px; }
+    .items-list { margin-bottom:12px; }
+    .item-row { display:flex; justify-content:space-between; font-size:13px; color:var(--text-dim); padding:3px 0; }
+    .order-footer { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-top:1px solid var(--border); padding-top:12px; }
+    .elapsed { font-size:12px; color:var(--text-dim); }
+    .total   { font-size:18px; font-weight:800; color:var(--teal); }
+    .action-btns { display:flex; flex-direction:column; gap:10px; }
+    .maps-link { display:flex; align-items:center; justify-content:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:13px; color:var(--text); text-decoration:none; font-size:14px; font-weight:600; }
+    .maps-link:hover { border-color:var(--teal); }
+
+    /* ── HISTORY ── */
+    .history-card { background:var(--surface); border-radius:14px; padding:14px 16px; margin-bottom:10px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .history-info h4 { font-size:14px; font-weight:700; }
+    .history-info p  { font-size:12px; color:var(--text-dim); margin-top:2px; }
+    .history-amount  { font-size:17px; font-weight:800; color:var(--green); white-space:nowrap; }
+
+    /* ── PROFILE ── */
+    .profile-card { background:var(--surface); border-radius:18px; padding:24px; margin-bottom:14px; text-align:center; border:1px solid var(--border); }
+    .profile-avatar { font-size:60px; margin-bottom:12px; }
+    .profile-name   { font-size:22px; font-weight:800; }
+    .profile-role   { font-size:14px; color:var(--teal); font-weight:600; margin-top:4px; }
+    .profile-item   { display:flex; justify-content:space-between; padding:14px 16px; background:var(--surface); border-radius:12px; margin-bottom:8px; border:1px solid var(--border); }
+    .profile-lbl    { font-size:13px; color:var(--text-dim); }
+    .profile-val    { font-size:13px; font-weight:700; }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align:center; padding:60px 20px; }
+    .empty-icon  { font-size:56px; margin-bottom:16px; }
+    .empty-title { font-size:18px; font-weight:700; margin-bottom:8px; }
+    .empty-sub   { font-size:14px; color:var(--text-dim); }
+
+    /* ── OTP MODAL ── */
+    .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:500; align-items:flex-end; }
+    .modal-bg.show { display:flex; }
+    .modal-sheet { background:var(--surface); border-radius:24px 24px 0 0; padding:28px; width:100%; }
+    .modal-title { font-size:20px; font-weight:800; margin-bottom:6px; }
+    .modal-sub   { font-size:14px; color:var(--text-dim); margin-bottom:24px; }
+    .otp-input   { font-size:32px; letter-spacing:14px; text-align:center; font-weight:800; }
+    .modal-row   { display:flex; gap:12px; margin-top:20px; }
+  </style>
+</head>
+<body>
+
+<!-- ────────────────────────────────────────────────── -->
+<!--  TOAST                                             -->
+<!-- ────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ────────────────────────────────────────────────── -->
+<!--  OTP VERIFICATION MODAL                            -->
+<!-- ────────────────────────────────────────────────── -->
+<div class="modal-bg" id="otpModal">
+  <div class="modal-sheet">
+    <div class="modal-title">✅ Verify Delivery</div>
+    <div class="modal-sub">Ask the customer to show the 4-digit OTP displayed on their order screen.</div>
+    <div class="form-group">
+      <label class="form-label">Enter OTP from Customer</label>
+      <input type="tel" id="otpInput" class="form-input otp-input"
+             maxlength="4" placeholder="• • • •" inputmode="numeric"
+             onkeydown="if(event.key==='Enter') submitOtp()">
+    </div>
+    <div class="modal-row">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeOtpModal()">Cancel</button>
+      <button class="btn btn-primary"   style="flex:2" onclick="submitOtp()">✅ Confirm Delivered</button>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────────── -->
+<!--  LOGIN SCREEN                                      -->
+<!-- ────────────────────────────────────────────────── -->
+<div id="loginScreen">
+  <div class="login-logo">🚚</div>
+  <div class="login-title">LAXMI Delivery</div>
+  <div class="login-sub">Delivery Partner Portal</div>
+
+  <div class="login-card">
+    <div class="form-group">
+      <label class="form-label">Branch</label>
+      <select id="loginBranch" class="branch-select">
+        <option value="">Select Branch…</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Phone Number</label>
+      <input type="tel" id="loginPhone" class="form-input"
+             placeholder="10-digit mobile number" maxlength="10" inputmode="numeric">
+    </div>
+    <div class="form-group">
+      <label class="form-label">PIN</label>
+      <input type="password" id="loginPin" class="form-input"
+             placeholder="Your PIN" maxlength="6" inputmode="numeric"
+             onkeydown="if(event.key==='Enter') deliveryLogin()">
+    </div>
+    <button class="btn btn-primary" id="loginBtn" onclick="deliveryLogin()">
+      Sign In →
+    </button>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────────── -->
+<!--  APP CONTENT                                       -->
+<!-- ────────────────────────────────────────────────── -->
+<div id="appContent">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-info">
+      <h2 id="hdrName">Delivery Partner</h2>
+      <p  id="hdrBranch">Branch</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <span style="font-size:12px;font-weight:600;color:var(--green)">Online</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="logout()">Out</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-number" id="statPicked" style="color:var(--accent)">0</div>
+      <div class="stat-label">Assigned</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="statOut" style="color:var(--orange)">0</div>
+      <div class="stat-label">En Route</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="statDone" style="color:var(--green)">0</div>
+      <div class="stat-label">Delivered</div>
+    </div>
+  </div>
+
+  <!-- Active Tab -->
+  <div class="tab-content active" id="tabActive">
+    <div id="activeList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- History Tab -->
+  <div class="tab-content" id="tabHistory">
+    <div id="historyList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- Profile Tab -->
+  <div class="tab-content" id="tabProfile">
+    <div class="profile-card">
+      <div class="profile-avatar">🚚</div>
+      <div class="profile-name" id="profName">—</div>
+      <div class="profile-role">Delivery Partner</div>
+    </div>
+    <div id="profDetails"></div>
+    <button class="btn btn-danger" style="margin-top:16px" onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('Active',this)">
+      <span class="tab-icon">🚚</span>Active
+    </button>
+    <button class="tab-btn" onclick="switchTab('History',this)">
+      <span class="tab-icon">📋</span>History
+    </button>
+    <button class="tab-btn" onclick="switchTab('Profile',this)">
+      <span class="tab-icon">👤</span>Profile
+    </button>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────────── -->
+<!--  JAVASCRIPT                                        -->
+<!-- ────────────────────────────────────────────────── -->
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// ══════════════════════════════════════════════════════
+// ⚠️  REPLACE with your actual Supabase credentials
+//     (copy from your index.html / kitchen.html)
+// ══════════════════════════════════════════════════════
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ──────────────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────────────
+let currentBoy     = null;
+let activeOrders   = [];
+let realtimeCh     = null;
+let gpsWatchId     = null;
+let gpsIntervals   = {};
+let currentOtpId   = null;
+
+// ──────────────────────────────────────────────────────
+// UTILITIES
+// ──────────────────────────────────────────────────────
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => (t.className = ''), 3200);
+}
+
+function timeAgo(iso) {
+  if (!iso) return '—';
+  const mins = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (mins < 1)  return 'Just now';
+  if (mins < 60) return `${mins} min ago`;
+  return `${Math.floor(mins / 60)}h ${mins % 60}m ago`;
+}
+
+function fmtTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function statusBadge(s) {
+  const m = {
+    picked_up:       ['📦 Picked Up',        's-picked'],
+    out_for_delivery:['🚚 Out for Delivery',  's-out'],
+    delivered:       ['✅ Delivered',          's-delivered'],
+  };
+  const [lbl, cls] = m[s] || [s, ''];
+  return `<span class="status-badge ${cls}">${lbl}</span>`;
+}
+
+async function hashPin(pin) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ──────────────────────────────────────────────────────
+// BRANCHES
+// ──────────────────────────────────────────────────────
+async function loadBranches() {
+  const branchParam = new URLSearchParams(location.search).get('branch');
+  const { data } = await sb.from('branches').select('id,name').eq('is_active', true);
+  if (!data) return;
+  const sel = document.getElementById('loginBranch');
+  data.forEach(b => {
+    const o = document.createElement('option');
+    o.value = b.id;
+    o.textContent = b.name;
+    if (b.id === branchParam) o.selected = true;
+    sel.appendChild(o);
+  });
+  if (data.length === 1) sel.value = data[0].id;
+}
+
+// ──────────────────────────────────────────────────────
+// LOGIN
+// ──────────────────────────────────────────────────────
+window.deliveryLogin = async function () {
+  const branch_id = document.getElementById('loginBranch').value;
+  const phone     = document.getElementById('loginPhone').value.trim();
+  const pin       = document.getElementById('loginPin').value.trim();
+
+  if (!branch_id)        return showToast('❌ Select a branch', 'error');
+  if (phone.length !== 10) return showToast('❌ Enter 10-digit phone number', 'error');
+  if (pin.length < 4)    return showToast('❌ Enter your PIN (4–6 digits)', 'error');
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  try {
+    const pin_hash = await hashPin(pin);
+    const { data } = await sb
+      .from('staff')
+      .select('*')
+      .eq('role', 'delivery_boy')
+      .eq('phone', phone)
+      .eq('pin_hash', pin_hash)
+      .eq('is_active', true)
+      .eq('branch_id', branch_id)
+      .maybeSingle();
+
+    if (!data) {
+      showToast('❌ Invalid phone or PIN', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Sign In →';
+      return;
+    }
+
+    currentBoy = data;
+    sessionStorage.setItem('dl_boy', JSON.stringify(data));
+    showApp();
+  } catch {
+    showToast('❌ Login failed — check your connection', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Sign In →';
+  }
+};
+
+// ──────────────────────────────────────────────────────
+// SHOW / HIDE APP
+// ──────────────────────────────────────────────────────
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  const app = document.getElementById('appContent');
+  app.style.display = 'flex';
+  app.style.flexDirection = 'column';
+
+  document.getElementById('hdrName').textContent   = currentBoy.name;
+  document.getElementById('hdrBranch').textContent = currentBoy.branch_name || 'Branch';
+  document.getElementById('profName').textContent  = currentBoy.name;
+
+  renderProfileDetails();
+  subscribeOrders();
+  loadHistory();
+  refreshStats();
+}
+
+window.logout = function () {
+  sessionStorage.removeItem('dl_boy');
+  if (realtimeCh) sb.removeChannel(realtimeCh);
+  if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
+  Object.values(gpsIntervals).forEach(clearInterval);
+  gpsIntervals = {};
+  gpsWatchId = null;
+  currentBoy = null;
+  activeOrders = [];
+  document.getElementById('appContent').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPin').value = '';
+};
+
+// ──────────────────────────────────────────────────────
+// TABS
+// ──────────────────────────────────────────────────────
+window.switchTab = function (name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'History') loadHistory();
+};
+
+// ──────────────────────────────────────────────────────
+// REAL-TIME ORDERS
+// ──────────────────────────────────────────────────────
+function subscribeOrders() {
+  fetchActiveOrders();
+
+  realtimeCh = sb.channel('db_boy_' + currentBoy.id)
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'orders',
+      filter: `delivery_boy_id=eq.${currentBoy.id}`,
+    }, () => { fetchActiveOrders(); refreshStats(); })
+    .subscribe();
+}
+
+async function fetchActiveOrders() {
+  const { data } = await sb
+    .from('orders')
+    .select('*')
+    .eq('delivery_boy_id', currentBoy.id)
+    .in('status', ['picked_up', 'out_for_delivery'])
+    .order('created_at', { ascending: true });
+
+  activeOrders = data || [];
+  renderActiveOrders();
+  refreshStats();
+}
+
+async function refreshStats() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await sb
+    .from('orders')
+    .select('status')
+    .eq('delivery_boy_id', currentBoy.id)
+    .gte('created_at', today + 'T00:00:00');
+
+  if (!data) return;
+  document.getElementById('statPicked').textContent = data.filter(o => o.status === 'picked_up').length;
+  document.getElementById('statOut').textContent    = data.filter(o => o.status === 'out_for_delivery').length;
+  document.getElementById('statDone').textContent   = data.filter(o => o.status === 'delivered').length;
+}
+
+// ──────────────────────────────────────────────────────
+// RENDER ACTIVE ORDERS
+// ──────────────────────────────────────────────────────
+function renderActiveOrders() {
+  const el = document.getElementById('activeList');
+
+  if (!activeOrders.length) {
+    el.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">No Active Deliveries</div>
+        <div class="empty-sub">New assignments will appear here in real-time</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = activeOrders.map(order => {
+    let items = [];
+    try { items = JSON.parse(order.items || '[]'); } catch {}
+
+    const mapsUrl = (order.delivery_lat && order.delivery_lng)
+      ? `https://www.google.com/maps/dir/?api=1&destination=${order.delivery_lat},${order.delivery_lng}`
+      : null;
+
+    const actions = buildActions(order, mapsUrl);
+
+    return `
+    <div class="order-card" id="card-${order.id}">
+      <div class="order-card-header">
+        <span class="order-id">#${order.id.slice(-6).toUpperCase()}</span>
+        ${statusBadge(order.status)}
+      </div>
+
+      <div class="customer-name">${order.customer_name || 'Customer'}</div>
+      <a href="tel:${order.phone}" class="customer-phone">📞 ${order.phone}</a>
+
+      <div class="address-box">
+        <span>📍</span>
+        <span>${order.delivery_address || '—'}</span>
+      </div>
+
+      <div class="items-list">
+        ${items.slice(0, 3).map(i => `
+          <div class="item-row">
+            <span>${i.emoji || '🍽️'} ${i.name}</span>
+            <span>×${i.qty}</span>
+          </div>`).join('')}
+        ${items.length > 3 ? `<div style="color:var(--text-dim);font-size:12px;margin-top:4px">+${items.length - 3} more items</div>` : ''}
+      </div>
+
+      <div class="order-footer">
+        <span class="elapsed">🕐 ${timeAgo(order.picked_up_at || order.created_at)}</span>
+        <span class="total">₹${order.total_amount || 0}</span>
+      </div>
+
+      <div class="action-btns">${actions}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildActions(order, mapsUrl) {
+  let h = '';
+  if (mapsUrl) {
+    h += `<a href="${mapsUrl}" target="_blank" rel="noopener" class="maps-link">🗺️ Open in Google Maps</a>`;
+  }
+  if (order.status === 'picked_up') {
+    h += `<button class="btn btn-primary" onclick="markOutForDelivery('${order.id}')">🚚 Out for Delivery</button>`;
+  }
+  if (order.status === 'out_for_delivery') {
+    h += `<button class="btn btn-primary" style="background:linear-gradient(135deg,var(--green),#00897b)" onclick="openOtpModal('${order.id}')">✅ Mark as Delivered</button>`;
+  }
+  return h;
+}
+
+// ──────────────────────────────────────────────────────
+// STATUS UPDATES
+// ──────────────────────────────────────────────────────
+window.markOutForDelivery = async function (orderId) {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Updating…';
+
+  const { error } = await sb.from('orders').update({
+    status: 'out_for_delivery',
+    out_for_delivery_at: new Date().toISOString(),
+  }).eq('id', orderId);
+
+  if (error) {
+    showToast('❌ Failed to update status', 'error');
+    btn.disabled = false;
+    btn.textContent = '🚚 Out for Delivery';
+    return;
+  }
+
+  showToast('🚚 Status updated — Out for Delivery!', 'success');
+  startGps(orderId);
+};
+
+// ──────────────────────────────────────────────────────
+// GPS TRACKING
+// ──────────────────────────────────────────────────────
+function startGps(orderId) {
+  if (!navigator.geolocation) return;
+
+  const push = pos => sb.from('orders').update({
+    delivery_boy_lat: pos.coords.latitude,
+    delivery_boy_lng: pos.coords.longitude,
+  }).eq('id', orderId);
+
+  // watchPosition for instant updates
+  if (!gpsWatchId) {
+    gpsWatchId = navigator.geolocation.watchPosition(push, () => {}, {
+      enableHighAccuracy: true, maximumAge: 15000,
+    });
+  }
+
+  // Poll every 15 seconds as fallback
+  gpsIntervals[orderId] = setInterval(() => {
+    navigator.geolocation.getCurrentPosition(push, () => {});
+  }, 15000);
+}
+
+function stopGps(orderId) {
+  if (gpsIntervals[orderId]) { clearInterval(gpsIntervals[orderId]); delete gpsIntervals[orderId]; }
+  if (Object.keys(gpsIntervals).length === 0 && gpsWatchId) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+}
+
+// ──────────────────────────────────────────────────────
+// OTP VERIFICATION
+// ──────────────────────────────────────────────────────
+window.openOtpModal = function (orderId) {
+  currentOtpId = orderId;
+  document.getElementById('otpInput').value = '';
+  document.getElementById('otpModal').classList.add('show');
+  setTimeout(() => document.getElementById('otpInput').focus(), 150);
+};
+
+window.closeOtpModal = function () {
+  document.getElementById('otpModal').classList.remove('show');
+  currentOtpId = null;
+};
+
+window.submitOtp = async function () {
+  const entered = document.getElementById('otpInput').value.trim();
+  if (entered.length !== 4) return showToast('❌ Enter the 4-digit OTP', 'error');
+
+  const { data } = await sb.from('orders').select('otp').eq('id', currentOtpId).single();
+  if (!data) return showToast('❌ Order not found', 'error');
+
+  if (entered !== data.otp) {
+    showToast('❌ Wrong OTP — ask customer to show their screen', 'error');
+    document.getElementById('otpInput').value = '';
+    return;
+  }
+
+  const { error } = await sb.from('orders').update({
+    status: 'delivered',
+    delivered_at: new Date().toISOString(),
+  }).eq('id', currentOtpId);
+
+  if (error) return showToast('❌ Failed to mark delivered', 'error');
+
+  stopGps(currentOtpId);
+  closeOtpModal();
+  showToast('🎉 Order delivered successfully!', 'success');
+  fetchActiveOrders();
+  loadHistory();
+};
+
+// ──────────────────────────────────────────────────────
+// HISTORY
+// ──────────────────────────────────────────────────────
+async function loadHistory() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await sb
+    .from('orders')
+    .select('id,customer_name,delivery_address,total_amount,delivered_at')
+    .eq('delivery_boy_id', currentBoy.id)
+    .eq('status', 'delivered')
+    .gte('delivered_at', today + 'T00:00:00')
+    .order('delivered_at', { ascending: false });
+
+  const el = document.getElementById('historyList');
+
+  if (!data || !data.length) {
+    el.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">No Deliveries Yet Today</div>
+        <div class="empty-sub">Completed deliveries will appear here</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = data.map(o => `
+    <div class="history-card">
+      <div class="history-info">
+        <h4>${o.customer_name || 'Customer'}</h4>
+        <p>✅ ${fmtTime(o.delivered_at)}</p>
+        <p>${(o.delivery_address || '').substring(0, 45)}${(o.delivery_address || '').length > 45 ? '…' : ''}</p>
+      </div>
+      <div class="history-amount">₹${o.total_amount || 0}</div>
+    </div>`).join('');
+}
+
+// ──────────────────────────────────────────────────────
+// PROFILE
+// ──────────────────────────────────────────────────────
+function renderProfileDetails() {
+  document.getElementById('profDetails').innerHTML = `
+    <div class="profile-item"><span class="profile-lbl">📞 Phone</span><span class="profile-val">${currentBoy.phone || '—'}</span></div>
+    <div class="profile-item"><span class="profile-lbl">🛵 Vehicle</span><span class="profile-val">${currentBoy.vehicle_type || '—'}</span></div>
+    <div class="profile-item"><span class="profile-lbl">🔢 Vehicle No.</span><span class="profile-val">${currentBoy.vehicle_number || '—'}</span></div>
+    <div class="profile-item"><span class="profile-lbl">🏢 Branch</span><span class="profile-val">${currentBoy.branch_name || '—'}</span></div>`;
+}
+
+// ──────────────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────────────
+(async function init() {
+  await loadBranches();
+
+  const saved = sessionStorage.getItem('dl_boy');
+  if (saved) {
+    currentBoy = JSON.parse(saved);
+    showApp();
+  }
+})();
+</script>
+</body>
+</html>

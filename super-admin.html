@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LAXMI — Superadmin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .admin-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .admin-tab {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-dim);
+      transition: all 0.2s;
+      border: none;
+      background: none;
+      white-space: nowrap;
+    }
+
+    .admin-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .chart-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--text);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chart-svg {
+      width: 100%;
+      overflow: visible;
+    }
+
+    .chart-bar {
+      fill: var(--accent-dim);
+      transition: fill 0.2s;
+      cursor: pointer;
+    }
+
+    .chart-bar:hover {
+      fill: var(--accent);
+    }
+
+    .chart-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      fill: var(--text-dim);
+    }
+
+    .chart-value {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      fill: var(--accent-bright);
+    }
+
+    .branch-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .branch-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .branch-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .branch-card-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--text);
+    }
+
+    .branch-card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .branch-card-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      background: var(--surface2);
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .branch-card-stats div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .branch-card-stats span:first-child {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+    }
+
+    .branch-card-stats span:last-child {
+      font-family: var(--font-mono);
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .branch-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="offline-banner" id="offlineBanner">⚠️ Connection lost — reconnecting…</div>
+  <div class="auth-gate" id="authGate" style="display:none;"></div>
+
+  <div id="appContent" style="display:none;">
+    <div class="app-layout">
+
+      <!-- ── SIDEBAR ── -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-name">🏛️ LAXMI</div>
+          <div class="sidebar-logo-sub">Superadmin</div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-section-label">Chain Overview</div>
+          <a class="nav-item active" href="super-admin.html"><span class="nav-item-icon">🌐</span> Chain Overview</a>
+
+          <div class="nav-section-label" style="margin-top:16px;">Jump to Branch</div>
+          <div id="jumpToBranchList">
+            <div style="padding:10px 16px; font-size:0.8rem; color:var(--text-dim);">Loading branches...</div>
+          </div>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatar">S</div>
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="sidebarUserName">Superadmin</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">Chain Master</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost w-full btn-sm" onclick="window.rmsSignOut()">⏏ Sign Out</button>
+        </div>
+      </aside>
+
+      <!-- ── MAIN ── -->
+      <main class="main-content">
+
+        <!-- Header -->
+        <div class="page-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="hamburger" onclick="toggleSidebar()">
+              <span></span><span></span><span></span>
+            </button>
+            <div>
+              <h1 class="page-title">🌐 Chain Overview</h1>
+              <div class="page-subtitle" id="adminDate">—</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="live-dot" id="liveDot"></span>
+            <span id="liveText" style="font-size:0.8rem;color:var(--text-dim);">Connecting…</span>
+          </div>
+        </div>
+
+        <!-- ── STATS (ALL BRANCHES) ── -->
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-label">Total Revenue Today</div>
+            <div class="stat-value green" id="statTotalRev">Rs. 0</div>
+            <div class="stat-dot" style="background:var(--accent);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Orders Today</div>
+            <div class="stat-value" id="statTotalOrders">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Active Branches</div>
+            <div class="stat-value blue" id="statActiveBranches">0</div>
+            <div class="stat-dot" style="background:var(--blue);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Top Branch Today</div>
+            <div class="stat-value gold" id="statTopBranch">—</div>
+            <div class="stat-dot" style="background:var(--gold);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending Orders</div>
+            <div class="stat-value red" id="statPendingOrders">0</div>
+            <div class="stat-dot" style="background:var(--red);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Active Staff</div>
+            <div class="stat-value" id="statActiveStaff">0</div>
+          </div>
+        </div>
+
+        <!-- ── TABS ── -->
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="switchTab('overview',this)">🌐 Overview</button>
+          <button class="admin-tab" onclick="switchTab('branches',this)">🏪 Branches</button>
+          <button class="admin-tab" onclick="switchTab('staff',this)">👥 All Staff</button>
+          <button class="admin-tab" onclick="switchTab('orders',this)">📋 All Orders</button>
+          <button class="admin-tab" onclick="switchTab('reports',this)">📊 Reports</button>
+          <button class="admin-tab" onclick="switchTab('activity',this)">📜 Activity Log</button>
+          <button class="admin-tab" onclick="switchTab('system',this)">⚙️ System</button>
+        </div>
+
+        <!-- ══ OVERVIEW TAB ══ -->
+        <div class="tab-panel active" id="tab-overview">
+          <!-- Branch Comparison Chart -->
+          <div class="chart-wrap">
+            <div class="chart-title">
+              <span>📊 Branch Revenue Comparison — Today</span>
+            </div>
+            <svg class="chart-svg" id="branchChart" height="200" viewBox="0 0 700 200"></svg>
+          </div>
+
+          <div class="section-title">🏪 Branch Status</div>
+          <div class="branch-cards-grid" id="branchCardsGrid">
+            <div style="color:var(--text-dim);padding:20px;">Loading branches...</div>
+          </div>
+        </div>
+
+        <!-- ══ BRANCHES TAB ══ -->
+        <div class="tab-panel" id="tab-branches">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div class="section-title" style="margin:0;">🏪 Branch Management</div>
+            <button class="btn btn-primary" onclick="openBranchModal()">+ Add Branch</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Branch Name</th>
+                  <th>City</th>
+                  <th>Status</th>
+                  <th>Tables</th>
+                    <th>Rooms</th>
+                    <th>Staff</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="branchesTableBody">
+                  <tr>
+                    <td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim);">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══ STAFF TAB ══ -->
+        <div class="tab-panel" id="tab-staff">
+          <div
+            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <div class="section-title" style="margin:0;">👥 Chain-wide Staff</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <select id="staffBranchFilter" class="input" style="max-width:180px;" onchange="filterStaff()">
+                <option value="all">All Branches</option>
+              </select>
+              <select id="staffRoleFilter" class="input" style="max-width:140px;" onchange="filterStaff()">
+                <option value="all">All Roles</option>
+                <option value="superadmin">Superadmin</option>
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
+                <option value="kitchen">Kitchen</option>
+              </select>
+              <button class="btn btn-primary" onclick="openStaffModal()">+ Add Staff</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th>Branch</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="staffTableBody">
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim);">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══ ORDERS TAB ══ -->
+        <div class="tab-panel" id="tab-orders">
+          <div class="search-bar" style="margin-bottom:16px;">
+            <div class="search-input-wrap" style="flex:1;position:relative;">
+              <span
+                style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-dim);">🔍</span>
+              <input type="text" id="orderSearch" class="input" placeholder="Search order ID, phone..."
+                oninput="filterOrders()" style="padding-left:36px;">
+            </div>
+            <select id="orderBranchFilter" class="input" style="max-width:160px;" onchange="filterOrders()">
+              <option value="all">All Branches</option>
+            </select>
+            <select id="orderStatusFilter" class="input" style="max-width:140px;" onchange="filterOrders()">
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="preparing">Preparing</option>
+              <option value="delivered">Delivered</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <input type="date" id="orderDateFilter" class="input" style="max-width:160px;" onchange="loadAllOrders()">
+            <button class="btn btn-secondary btn-sm" onclick="exportOrdersCSV()">📥 Export</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Branch</th>
+                  <th>Order ID</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody">
+                <tr>
+                  <td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim);">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="ordersPagination"></div>
+        </div>
+
+        <!-- ══ REPORTS TAB ══ -->
+        <div class="tab-panel" id="tab-reports">
+          <div class="section-title">📊 Advanced Analytics & Reports</div>
+
+          <!-- Filter Bar -->
+          <div class="card" style="margin-bottom:20px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+            <div class="input-group" style="margin:0; flex:1; min-width:150px;">
+              <label class="input-label">Branch</label>
+              <select id="reportBranchFilter" class="input">
+                <option value="all">All Branches</option>
+              </select>
+            </div>
+            <div class="input-group" style="margin:0; flex:1; min-width:130px;">
+              <label class="input-label">Start Date</label>
+              <input type="date" id="reportStartDate" class="input">
+            </div>
+            <div class="input-group" style="margin:0; flex:1; min-width:130px;">
+              <label class="input-label">End Date</label>
+              <input type="date" id="reportEndDate" class="input">
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-secondary btn-sm" onclick="setReportRange('today')">Today</button>
+              <button class="btn btn-secondary btn-sm" onclick="setReportRange('month')">Month</button>
+              <button class="btn btn-secondary btn-sm" onclick="setReportRange('year')">Year</button>
+            </div>
+            <button class="btn btn-primary" onclick="generateReport()" id="genReportBtn" style="height:42px;">Generate
+              Report</button>
+          </div>
+
+          <!-- KPIs -->
+          <div class="stats-grid" style="margin-bottom:24px;">
+            <div class="stat-card">
+              <div class="stat-label">Total Revenue</div>
+              <div class="stat-value green" id="repTotalRevenue">Rs. 0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total Orders</div>
+              <div class="stat-value" id="repTotalOrders">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Avg Order Value</div>
+              <div class="stat-value gold" id="repAvgOrder">Rs. 0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Avg Rating</div>
+              <div class="stat-value blue" id="repAvgRating">0.0 ⭐</div>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div
+            style="display:grid; grid-template-columns:repeat(auto-fit, minmax(400px, 1fr)); gap:24px; margin-bottom:24px;">
+            <!-- Sales Trend Chart -->
+            <div class="chart-wrap">
+              <div class="chart-title">📈 Sales Trend</div>
+              <svg class="chart-svg" id="reportSalesTrendChart" height="200" viewBox="0 0 700 200"></svg>
+            </div>
+            <!-- Branch Leaderboard Chart -->
+            <div class="chart-wrap">
+              <div class="chart-title">🏆 Branch Leaderboard (Revenue)</div>
+              <svg class="chart-svg" id="reportBranchRankChart" height="200" viewBox="0 0 700 200"></svg>
+            </div>
+          </div>
+
+          <!-- Tables Grid -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(400px, 1fr)); gap:24px;">
+            <!-- Top Menu Items -->
+            <div class="card" style="padding:0; overflow:hidden;">
+              <div style="padding:16px; border-bottom:1px solid var(--border); font-weight:600;">🔥 Top Selling Items
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th style="text-align:right;">Qty Sold</th>
+                    <th style="text-align:right;">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody id="repTopItemsBody">
+                  <tr>
+                    <td colspan="3" style="text-align:center;color:var(--text-dim);padding:20px;">Generate report to
+                      view</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Top Branches Table -->
+            <div class="card" style="padding:0; overflow:hidden;">
+              <div style="padding:16px; border-bottom:1px solid var(--border); font-weight:600;">🏪 Branch Matrix</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Branch</th>
+                    <th style="text-align:right;">Orders</th>
+                    <th style="text-align:right;">Revenue</th>
+                    <th style="text-align:right;">Avg Rating</th>
+                  </tr>
+                </thead>
+                <tbody id="repBranchMatrixBody">
+                  <tr>
+                    <td colspan="4" style="text-align:center;color:var(--text-dim);padding:20px;">Generate report to
+                      view</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Best Waiter Table -->
+            <div class="card" style="padding:0; overflow:hidden;">
+              <div style="padding:16px; border-bottom:1px solid var(--border); font-weight:600;">🤵 Best Waiters</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Waiter Name</th>
+                    <th style="text-align:right;">Orders</th>
+                    <th style="text-align:right;">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody id="repBestWaitersBody">
+                  <tr>
+                    <td colspan="3" style="text-align:center;color:var(--text-dim);padding:20px;">Generate report to
+                      view</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ ACTIVITY TAB ══ -->
+        <div class="tab-panel" id="tab-activity">
+          <div
+            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <div class="section-title" style="margin:0;">📜 Cross-Branch Activity Log</div>
+            <div style="display:flex;gap:8px;">
+              <select id="activityBranchFilter" class="input" style="max-width:160px;" onchange="filterActivity()">
+                <option value="all">All Branches</option>
+              </select>
+              <select id="activityEventFilter" class="input" style="max-width:160px;" onchange="filterActivity()">
+                <option value="all">All Events</option>
+                <option value="settings">Settings</option>
+                <option value="staff">Staff</option>
+                <option value="branch">Branch</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="loadActivity()">🔄 Refresh</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Branch</th>
+                  <th>Event</th>
+                  <th>Description</th>
+                  <th>Staff</th>
+                </tr>
+              </thead>
+              <tbody id="activityBody">
+                <tr>
+                  <td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim);">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="activityPagination"></div>
+        </div>
+
+        <!-- ══ SYSTEM TAB ══ -->
+        <div class="tab-panel" id="tab-system">
+          <div class="section-title">⚙️ Chain-Wide Settings</div>
+          <div class="card" style="max-width:600px; margin-bottom:24px;">
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <div class="input-group">
+                <label class="input-label">App/Chain Name</label>
+                <input type="text" id="sysAppName" class="input" placeholder="e.g. LAXMI Restaurant Group">
+              </div>
+              <div class="input-group">
+                <label class="input-label">Support Email</label>
+                <input type="email" id="sysEmail" class="input" placeholder="support@laxmi.com">
+              </div>
+              <button class="btn btn-primary" onclick="saveSystemSettings()" style="align-self:flex-start;">💾 Save
+                Settings</button>
+            </div>
+          </div>
+
+          <div class="section-title" style="color:var(--red);">⚠️ Danger Zone</div>
+          <div class="card" style="max-width:600px; border-color:var(--red); background:rgba(239,68,68,0.05);">
+            <p style="font-size:0.875rem; color:var(--text-dim); margin-bottom:16px;">These actions affect the entire
+              chain and cannot be undone.</p>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div
+                style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:6px;">
+                <div>
+                  <strong style="display:block; color:var(--text); font-size:0.9rem;">Deactivate All Staff</strong>
+                  <span style="font-size:0.8rem; color:var(--text-dim);">Locks out all staff (except superadmins) across
+                    all branches.</span>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="deactivateAllStaff()">Deactivate All</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ── MODALS ── -->
+  <div class="modal-overlay" id="branchModal" style="display:none;" onclick="if(event.target===this)closeBranchModal()">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="branchModalTitle">Add Branch</h2>
+        <button class="modal-close" onclick="closeBranchModal()">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="input-group">
+          <label class="input-label">Branch Name *</label>
+          <input type="text" id="bmName" class="input" placeholder="e.g. LAXMI Main">
+        </div>
+        <div class="input-group">
+          <label class="input-label">City *</label>
+          <input type="text" id="bmCity" class="input" placeholder="e.g. Kota">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Address</label>
+          <textarea id="bmAddress" class="input" rows="2" placeholder="Full address..."></textarea>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Phone</label>
+          <input type="tel" id="bmPhone" class="input" placeholder="Contact number">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Status</label>
+          <div class="toggle-wrap" style="margin-top:6px;">
+            <label class="toggle">
+              <input type="checkbox" id="bmActive" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Is Active</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; width:100%;">
+        <button class="btn btn-danger" id="branchDeleteBtn" onclick="deleteBranch()" style="display:none; padding:8px 14px;">🗑️ Delete</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-ghost" onclick="closeBranchModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveBranch()" id="branchSaveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="staffModal" style="display:none;" onclick="if(event.target===this)closeStaffModal()">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="staffModalTitle">Add Staff</h2>
+        <button class="modal-close" onclick="closeStaffModal()">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="input-group">
+          <label class="input-label">Name *</label>
+          <input type="text" id="smName" class="input">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Phone *</label>
+          <input type="tel" id="smPhone" class="input">
+        </div>
+        <div class="input-group">
+          <label class="input-label">PIN Code *</label>
+          <input type="password" id="smPin" class="input" maxlength="6" placeholder="4-6 digits">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Role</label>
+          <select id="smRole" class="input">
+            <option value="waiter">Waiter</option>
+            <option value="kitchen">Kitchen</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+            <option value="superadmin">Superadmin</option>
+          </select>
+        </div>
+        <div class="input-group" id="smBranchGroup">
+          <label class="input-label">Branch</label>
+          <select id="smBranch" class="input">
+            <!-- Filled dynamically -->
+          </select>
+        </div>
+        <div class="input-group">
+          <div class="toggle-wrap" style="margin-top:6px;">
+            <label class="toggle">
+              <input type="checkbox" id="smActive" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Active Account</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeStaffModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStaff()" id="staffSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module" src="assets/auth.js?v=4"></script>
+  <script type="module">
+    let allBranches = [];
+    let allStaff = [];
+    let allOrders = [];
+    let allActivity = [];
+
+    let filteredOrders = [];
+    let ordersPage = 1;
+    const PAGE_SIZE = 25;
+
+    let filteredActivity = [];
+    let activityPage = 1;
+
+    let editingBranchId = null;
+    let editingStaffId = null;
+
+    // ── INIT
+    window.appInit = async function () {
+      // 🔒 SUPERADMIN GUARD
+      if (!window.currentStaff || window.currentStaff.role !== 'superadmin') {
+        window.location.href = 'admin.html';
+        return;
+      }
+
+      window.renderStaffUI && window.renderStaffUI();
+      initDate();
+      await loadBranches(); // Must be first to populate filters/sidebar
+      await Promise.all([
+        loadDashboardStats(),
+        loadStaff(),
+        loadAllOrders(),
+        loadActivity()
+      ]);
+      subscribeRealtime();
+      window.setConnectionStatus('online');
+    };
+
+    function initDate() {
+      const el = document.getElementById('adminDate');
+      if (el) el.textContent = new Date().toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+      });
+      const df = document.getElementById('orderDateFilter');
+      if (df) df.value = window.todayIST ? window.todayIST() : new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    }
+
+    function populateBranchSelects() {
+      const options = allBranches.map(b => `<option value="${b.id}">${b.name} (${b.city})</option>`).join('');
+
+      // Filters
+      document.getElementById('staffBranchFilter').innerHTML = `<option value="all">All Branches</option>` + options;
+      document.getElementById('orderBranchFilter').innerHTML = `<option value="all">All Branches</option>` + options;
+      document.getElementById('activityBranchFilter').innerHTML = `<option value="all">All Branches</option>` + options;
+      document.getElementById('reportBranchFilter').innerHTML = `<option value="all">All Branches</option>` + options;
+
+      // Forms
+      document.getElementById('smBranch').innerHTML = options;
+
+      // Sidebar Jump Links
+      const jumpHtml = allBranches.map(b => `
+      <a class="nav-item" href="#" onclick="jumpToBranch('${b.id}', event)">
+        <span class="nav-item-icon">🏪</span> ${b.name} <span style="margin-left:auto;opacity:0.5;">→</span>
+      </a>
+    `).join('');
+      document.getElementById('jumpToBranchList').innerHTML = jumpHtml || '<div style="padding:10px 16px; font-size:0.8rem; color:var(--text-dim);">No branches yet</div>';
+    }
+
+    window.jumpToBranch = function (branchId, e) {
+      if (e) e.preventDefault();
+      localStorage.setItem('rms_active_branch', branchId);
+      window.location.href = 'admin.html';
+    };
+
+    // ── BRANCHES
+    async function loadBranches() {
+      const sb = window.supabaseClient;
+      let { data, error } = await sb.from('branches').select('*').order('created_at');
+      if (error) { window.showToast('Error loading branches', error.message, 'error'); console.error(error); }
+      allBranches = data || [];
+
+      // Fetch basic counts (tables & staff per branch) to display in the table
+      for (let b of allBranches) {
+        try {
+          const [{ count: tCount }, { count: rCount }, { count: sCount }] = await Promise.all([
+              sb.from('restaurant_tables').select('id', { count: 'exact', head: true }).eq('branch_id', b.id).not('table_number', 'is', null),
+              sb.from('restaurant_tables').select('id', { count: 'exact', head: true }).eq('branch_id', b.id).not('room_number', 'is', null),
+              sb.from('staff').select('id', { count: 'exact', head: true }).eq('branch_id', b.id)
+            ]);
+            b._tableCount = tCount || 0;
+            b._roomCount = rCount || 0;
+            b._staffCount = sCount || 0;
+        } catch (e) {
+          b._tableCount = 0;
+            b._roomCount = 0;
+            b._staffCount = 0;
+        }
+      }
+
+      populateBranchSelects();
+      renderBranchesTable();
+    }
+
+    function renderBranchesTable() {
+      const tbody = document.getElementById('branchesTableBody');
+      if (!allBranches.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim);">No branches found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = allBranches.map(b => `
+      <tr>
+        <td style="font-weight:600;">${b.name}</td>
+        <td>${b.city || '—'}</td>
+        <td><span class="badge ${b.is_active ? 'badge-paid' : 'badge-rejected'}">${b.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td>${b._tableCount}</td>
+        <td>${b._roomCount}</td>
+        <td>${b._staffCount}</td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="openBranchModal('${b.id}')">Edit</button>
+          <button class="btn btn-secondary btn-sm" onclick="jumpToBranch('${b.id}')">Enter →</button>
+        </td>
+      </tr>
+    `).join('');
+    }
+
+    window.openBranchModal = function (id = null) {
+      editingBranchId = id;
+      const b = allBranches.find(x => x.id === id) || { is_active: true };
+      document.getElementById('branchModalTitle').textContent = id ? 'Edit Branch' : 'Add Branch';
+      document.getElementById('bmName').value = b.name || '';
+      document.getElementById('bmCity').value = b.city || '';
+      document.getElementById('bmAddress').value = b.address || '';
+      document.getElementById('bmPhone').value = b.phone || '';
+      document.getElementById('bmActive').checked = b.is_active;
+      
+      const delBtn = document.getElementById('branchDeleteBtn');
+      if (delBtn) {
+        delBtn.style.display = id ? 'block' : 'none';
+        delBtn.disabled = false;
+        delBtn.textContent = '🗑️ Delete';
+      }
+
+      document.getElementById('branchModal').style.display = 'flex';
+    };
+    window.closeBranchModal = () => document.getElementById('branchModal').style.display = 'none';
+
+    window.saveBranch = async function () {
+      const sb = window.supabaseClient;
+      const name = document.getElementById('bmName').value.trim();
+      const city = document.getElementById('bmCity').value.trim();
+      if (!name || !city) { window.showToast('Name and City required', '', 'error'); return; }
+
+      const payload = {
+        name, city,
+        address: document.getElementById('bmAddress').value.trim(),
+        phone: document.getElementById('bmPhone').value.trim(),
+        is_active: document.getElementById('bmActive').checked
+      };
+
+      document.getElementById('branchSaveBtn').disabled = true;
+      let error;
+      let newBranchId = editingBranchId;
+      if (editingBranchId) {
+        ({ error } = await sb.from('branches').update(payload).eq('id', editingBranchId));
+      } else {
+        const { data, error: err } = await sb.from('branches').insert(payload).select('id').single();
+        error = err;
+        if (data) newBranchId = data.id;
+      }
+
+      // ── SYNC TO SETTINGS FOR REALTIME UPDATES ──
+      if (!error && newBranchId && window.setSetting) {
+        await window.setSetting('restaurant_name', name, newBranchId);
+        await window.setSetting('phone', payload.phone, newBranchId);
+        await window.setSetting('address', payload.address, newBranchId);
+        await window.setSetting('store_open', payload.is_active ? 'true' : 'false', newBranchId);
+      }
+
+      document.getElementById('branchSaveBtn').disabled = false;
+
+      if (error) { window.showToast('Error saving branch', error.message, 'error'); return; }
+      window.showToast('✅ Branch saved!', '', 'success');
+      closeBranchModal();
+      await loadBranches();
+    };
+
+    window.deleteBranch = async function () {
+      if (!editingBranchId) return;
+
+      const branch = allBranches.find(b => b.id === editingBranchId);
+      if (!branch) return;
+
+      // First confirmation
+      const confirm1 = confirm("⚠️ CRITICAL WARNING: You are about to permanently DELETE this entire branch.\n\nAll orders, staff, menu items, and settings tied to this branch will be lost forever or orphaned. If you only want to close it temporarily, use the 'Is Active' toggle instead.\n\nAre you absolutely sure you want to proceed?");
+      if (!confirm1) return;
+
+      // Second, highly secure confirmation (Industry Standard)
+      const confirm2 = prompt(`🚨 FINAL SECURITY CHECK 🚨\n\nDeleting a branch is IRREVERSIBLE. To prevent accidental deletion, you must type the exact name of the branch below.\n\nPlease type exactly:  ${branch.name}`);
+
+      if (confirm2 !== branch.name) {
+        window.showToast('Deletion cancelled. Name did not match exactly.', '', 'info');
+        return;
+      }
+
+      const delBtn = document.getElementById('branchDeleteBtn');
+      delBtn.disabled = true;
+      delBtn.textContent = 'Deleting...';
+
+      const sb = window.supabaseClient;
+      const { error } = await sb.from('branches').delete().eq('id', editingBranchId);
+
+      if (error) {
+        window.showToast('Error deleting branch', error.message, 'error');
+        delBtn.disabled = false;
+        delBtn.textContent = '🗑️ Delete';
+        return;
+      }
+
+      window.showToast('✅ Branch permanently deleted.', '', 'success');
+      closeBranchModal();
+      await loadBranches();
+    };
+
+    // ── DASHBOARD (CROSS-BRANCH)
+    async function loadDashboardStats() {
+      const sb = window.supabaseClient;
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+
+      // Fetch ALL orders today (no branch filter)
+      const { data: todayOrders } = await sb.from('orders')
+        .select('id, branch_id, total, status')
+        .gte('created_at', today + 'T00:00:00+05:30');
+
+      const orders = todayOrders || [];
+      const done = orders.filter(o => o.status === 'done' || o.status === 'delivered');
+      const pending = orders.filter(o => o.status === 'pending' || o.status === 'preparing');
+
+      const totalRev = done.reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
+
+      // Group by branch
+      const branchStats = {};
+      allBranches.forEach(b => branchStats[b.id] = { rev: 0, orders: 0, pending: 0 });
+
+      orders.forEach(o => {
+        if (!branchStats[o.branch_id]) branchStats[o.branch_id] = { rev: 0, orders: 0, pending: 0 };
+        branchStats[o.branch_id].orders++;
+        if (o.status === 'done' || o.status === 'delivered') branchStats[o.branch_id].rev += parseFloat(o.total || 0);
+        if (o.status === 'pending' || o.status === 'preparing') branchStats[o.branch_id].pending++;
+      });
+
+      // Find top branch
+      let topBId = null, maxRev = -1;
+      for (const [bid, st] of Object.entries(branchStats)) {
+        if (st.rev > maxRev) { maxRev = st.rev; topBId = parseInt(bid); }
+      }
+      const topBranchObj = allBranches.find(b => b.id === topBId);
+
+      // Update Cards
+      document.getElementById('statTotalRev').textContent = 'Rs. ' + totalRev.toFixed(0);
+      document.getElementById('statTotalOrders').textContent = orders.length;
+      document.getElementById('statActiveBranches').textContent = allBranches.filter(b => b.is_active).length;
+      document.getElementById('statTopBranch').textContent = topBranchObj && maxRev > 0 ? topBranchObj.name : '—';
+      document.getElementById('statPendingOrders').textContent = pending.length;
+      document.getElementById('statActiveStaff').textContent = allStaff.filter(s => s.is_active).length || '0';
+
+      renderBranchCards(branchStats);
+      drawBranchChart(branchStats);
+    }
+
+    function renderBranchCards(stats) {
+      const grid = document.getElementById('branchCardsGrid');
+      if (!allBranches.length) { grid.innerHTML = '<div style="color:var(--text-dim);">No branches</div>'; return; }
+
+      grid.innerHTML = allBranches.map(b => {
+        const st = stats[b.id] || { rev: 0, orders: 0, pending: 0 };
+        return `
+      <div class="branch-card">
+        <div class="branch-card-header">
+          <div>
+            <div class="branch-card-title">${b.name}</div>
+            <div class="branch-card-subtitle">${b.city || ''}</div>
+          </div>
+          <span class="badge ${b.is_active ? 'badge-paid' : 'badge-rejected'}">${b.is_active ? 'Active' : 'Inactive'}</span>
+        </div>
+        <div class="branch-card-stats">
+          <div><span>Revenue</span><span style="color:var(--accent-bright)">Rs. ${st.rev.toFixed(0)}</span></div>
+          <div><span>Orders</span><span>${st.orders}</span></div>
+          <div><span>Pending</span><span style="${st.pending > 0 ? 'color:var(--gold)' : ''}">${st.pending}</span></div>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:auto;" onclick="jumpToBranch('${b.id}')">Enter Branch →</button>
+      </div>`;
+      }).join('');
+    }
+
+    function drawBranchChart(stats) {
+      const svg = document.getElementById('branchChart');
+      if (!svg || !allBranches.length) return;
+
+      const validBranches = allBranches.filter(b => stats[b.id] && stats[b.id].rev > 0);
+      if (!validBranches.length) {
+        svg.innerHTML = `<text x="350" y="100" text-anchor="middle" fill="var(--text-dim)" font-size="14">No revenue today</text>`;
+        return;
+      }
+
+      const maxRev = Math.max(...validBranches.map(b => stats[b.id].rev));
+      const W = 700, H = 160, pad = 30;
+      const barW = Math.min(60, Math.floor((W - pad * 2) / validBranches.length) - 10);
+      const chartH = H - 40;
+
+      let svgContent = '';
+      validBranches.forEach((b, i) => {
+        const val = stats[b.id].rev;
+        const barH = Math.max(4, Math.floor((val / maxRev) * chartH));
+        const x = pad + i * ((W - pad * 2) / validBranches.length) + ((W - pad * 2) / validBranches.length) / 2 - barW / 2;
+        const y = H - 30 - barH;
+        const shortName = b.name.length > 10 ? b.name.slice(0, 8) + '…' : b.name;
+
+        svgContent += `<rect class="chart-bar" x="${x}" y="${y}" width="${barW}" height="${barH}" rx="4" />`;
+        svgContent += `<text class="chart-label" x="${x + barW / 2}" y="${H - 14}" text-anchor="middle">${shortName}</text>`;
+        svgContent += `<text class="chart-value" x="${x + barW / 2}" y="${y - 4}" text-anchor="middle">Rs. ${val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val.toFixed(0)}</text>`;
+      });
+      svg.innerHTML = svgContent;
+    }
+
+    // ── STAFF (CROSS-BRANCH)
+    async function loadStaff() {
+      const sb = window.supabaseClient;
+      // Get all staff across all branches
+      let { data, error } = await sb.from('staff').select('*, branches(name)').order('created_at', { ascending: false });
+      if (error) {
+        console.warn("Staff branches join failed, falling back to flat query", error);
+        ({ data, error } = await sb.from('staff').select('*').order('created_at', { ascending: false }));
+      }
+      allStaff = data || [];
+      document.getElementById('statActiveStaff').textContent = allStaff.filter(s => s.is_active).length;
+      filterStaff();
+    }
+
+    window.filterStaff = function () {
+      const branch = document.getElementById('staffBranchFilter').value;
+      const role = document.getElementById('staffRoleFilter').value;
+      const tbody = document.getElementById('staffTableBody');
+
+      const filtered = allStaff.filter(s => {
+        if (branch !== 'all' && s.branch_id != branch) return false;
+        if (role !== 'all' && s.role !== role) return false;
+        return true;
+      });
+
+      if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim);">No staff found.</td></tr>`; return; }
+
+      tbody.innerHTML = filtered.map(s => `
+      <tr>
+        <td style="font-weight:500;">${s.name}</td>
+        <td style="font-family:var(--font-mono); font-size:0.85rem;">${s.phone}</td>
+        <td>${s.branches?.name || '—'}</td>
+        <td><span class="badge" style="background:var(--surface2); border:1px solid var(--border); color:var(--text);">${s.role}</span></td>
+        <td><span class="badge ${s.is_active ? 'badge-paid' : 'badge-rejected'}">${s.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="openStaffModal('${s.id}')">Edit</button>
+        </td>
+      </tr>
+    `).join('');
+    };
+
+    window.openStaffModal = function (id = null) {
+      editingStaffId = id;
+      const s = allStaff.find(x => x.id === id) || { is_active: true, role: 'waiter' };
+      document.getElementById('staffModalTitle').textContent = id ? 'Edit Staff' : 'Add Staff';
+      document.getElementById('smName').value = s.name || '';
+      document.getElementById('smPhone').value = s.phone || '';
+      document.getElementById('smPhone').disabled = !!id; // Can't change phone once created
+      document.getElementById('smPin').value = '';
+      document.getElementById('smPin').placeholder = id ? '(Leave blank to keep current)' : '4-6 digits';
+      document.getElementById('smRole').value = s.role;
+      if (s.branch_id) document.getElementById('smBranch').value = s.branch_id;
+      document.getElementById('smActive').checked = s.is_active;
+
+      // Superadmin doesn't need a branch, hide branch select if role is superadmin
+      const toggleBranch = () => {
+        document.getElementById('smBranchGroup').style.display = document.getElementById('smRole').value === 'superadmin' ? 'none' : 'flex';
+      };
+      document.getElementById('smRole').onchange = toggleBranch;
+      toggleBranch();
+
+      document.getElementById('staffModal').style.display = 'flex';
+    };
+    window.closeStaffModal = () => document.getElementById('staffModal').style.display = 'none';
+
+    window.saveStaff = async function () {
+      const sb = window.supabaseClient;
+      const name = document.getElementById('smName').value.trim();
+      const phone = document.getElementById('smPhone').value.trim();
+      const pin = document.getElementById('smPin').value.trim();
+      const role = document.getElementById('smRole').value;
+      const branch_id = role === 'superadmin' ? null : parseInt(document.getElementById('smBranch').value);
+      const is_active = document.getElementById('smActive').checked;
+
+      if (!name || !phone) { window.showToast('Name and phone required', '', 'error'); return; }
+      if (!editingStaffId && !pin) { window.showToast('PIN required for new staff', '', 'error'); return; }
+
+      const payload = { name, role, branch_id, is_active };
+      if (!editingStaffId) payload.phone = phone; // only set on create
+
+      document.getElementById('staffSaveBtn').disabled = true;
+      let error;
+
+      if (editingStaffId) {
+        if (pin) {
+          // Need RPC to update PIN securely if provided
+          const { error: rpcErr } = await sb.rpc('admin_update_staff_pin', { p_staff_id: editingStaffId, p_new_pin: pin });
+          if (rpcErr) { window.showToast('Error updating PIN', rpcErr.message, 'error'); document.getElementById('staffSaveBtn').disabled = false; return; }
+        }
+        ({ error } = await sb.from('staff').update(payload).eq('id', editingStaffId));
+      } else {
+        // Create new staff - requires RPC to hash PIN
+        const { data: newId, error: createErr } = await sb.rpc('create_staff_member', {
+          p_name: name, p_phone: phone, p_pin: pin, p_role: role, p_branch_id: branch_id
+        });
+        error = createErr;
+      }
+
+      document.getElementById('staffSaveBtn').disabled = false;
+      if (error) { window.showToast('Error saving staff', error.message, 'error'); return; }
+
+      window.showToast('✅ Staff saved!', '', 'success');
+      closeStaffModal();
+      await loadStaff();
+      loadDashboardStats(); // update staff count
+    };
+
+    // ── ORDERS (CROSS-BRANCH)
+    window.loadAllOrders = async function () {
+      const sb = window.supabaseClient;
+      const dateVal = document.getElementById('orderDateFilter')?.value;
+      const date = dateVal || new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+
+      // Join with branches to get branch name
+      let { data, error } = await sb.from('orders')
+        .select('*, branches(name)')
+        .gte('created_at', date + 'T00:00:00+05:30')
+        .lte('created_at', date + 'T23:59:59+05:30')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn("Orders branches join failed, falling back to flat query", error);
+        ({ data, error } = await sb.from('orders')
+          .select('*')
+          .gte('created_at', date + 'T00:00:00+05:30')
+          .lte('created_at', date + 'T23:59:59+05:30')
+          .order('created_at', { ascending: false }));
+      }
+
+      allOrders = data || [];
+      filterOrders();
+    };
+
+    window.filterOrders = function () {
+      const search = document.getElementById('orderSearch')?.value?.toLowerCase() || '';
+      const branch = document.getElementById('orderBranchFilter')?.value || 'all';
+      const status = document.getElementById('orderStatusFilter')?.value || 'all';
+
+      filteredOrders = allOrders.filter(o => {
+        const matchSearch = !search || o.order_id?.toLowerCase().includes(search) || o.customer_phone?.includes(search);
+        const matchBranch = branch === 'all' || o.branch_id == branch;
+        const matchStatus = status === 'all' || o.status === status || (status === 'delivered' && o.status === 'done');
+        return matchSearch && matchBranch && matchStatus;
+      });
+
+      ordersPage = 1;
+      renderOrdersTable();
+      renderOrdersPagination();
+    };
+
+    function renderOrdersTable() {
+      const tbody = document.getElementById('ordersTableBody');
+      const start = (ordersPage - 1) * PAGE_SIZE;
+      const page = filteredOrders.slice(start, start + PAGE_SIZE);
+
+      if (!page.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-dim);">No orders found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = page.map(o => {
+        const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+        const summary = items.slice(0, 2).map(i => `${i.name}×${i.qty}`).join(', ') + (items.length > 2 ? ` +${items.length - 2}` : '');
+        const dispStatus = o.status === 'done' ? 'delivered' : o.status;
+        const time = new Date(o.created_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+        return `<tr>
+        <td style="font-size:0.85rem;color:var(--text-dim);">${o.branches?.name || '—'}</td>
+        <td><span style="font-family:var(--font-mono);font-size:0.8rem;">${o.order_id}</span></td>
+        <td style="font-size:0.8rem;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${summary}</td>
+        <td><span style="font-family:var(--font-mono);color:var(--accent-bright);">Rs. ${parseFloat(o.total).toFixed(2)}</span></td>
+        <td><span class="badge badge-${o.status}">${o.status}</span></td>
+        <td><span class="badge ${o.payment_status === 'paid' ? 'badge-paid' : 'badge-unpaid'}">${o.payment_status}</span></td>
+        <td style="color:var(--text-dim);font-size:0.8rem;">${time}</td>
+      </tr>`;
+      }).join('');
+    }
+
+    function renderOrdersPagination() {
+      const total = Math.ceil(filteredOrders.length / PAGE_SIZE);
+      const el = document.getElementById('ordersPagination');
+      if (total <= 1) { el.innerHTML = ''; return; }
+      let html = `<button class="page-btn" onclick="ordersGoPage(${ordersPage - 1})" ${ordersPage === 1 ? 'disabled' : ''}>‹</button>`;
+      for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || Math.abs(i - ordersPage) <= 1) html += `<button class="page-btn ${i === ordersPage ? 'active' : ''}" onclick="ordersGoPage(${i})">${i}</button>`;
+        else if (Math.abs(i - ordersPage) === 2) html += `<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
+      }
+      html += `<button class="page-btn" onclick="ordersGoPage(${ordersPage + 1})" ${ordersPage === total ? 'disabled' : ''}>›</button>`;
+      el.innerHTML = html;
+    }
+    window.ordersGoPage = function (p) { ordersPage = p; renderOrdersTable(); renderOrdersPagination(); };
+
+    window.exportOrdersCSV = function () {
+      if (!filteredOrders.length) { window.showToast('No orders to export', '', 'warning'); return; }
+      let csv = 'Branch,Order ID,Invoice,Customer,Phone,Items,Total,Status,Payment,Time\n';
+      filteredOrders.forEach(o => {
+        const bname = o.branches?.name || '';
+        const items = (typeof o.items === 'string' ? JSON.parse(o.items) : o.items).map(i => `${i.name}×${i.qty}`).join(' | ');
+        const time = new Date(o.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+        csv += `"${bname}","${o.order_id}","${o.invoice_no || ''}","${o.customer_name || ''}","${o.customer_phone || ''}","${items}",${o.total},"${o.status}","${o.payment_status}","${time}"\n`;
+      });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      a.download = `Chain_Orders_${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}.csv`;
+      a.click();
+    };
+
+    // ── ACTIVITY LOG (CROSS-BRANCH)
+    window.loadActivity = async function () {
+      const sb = window.supabaseClient;
+      let { data, error } = await sb.from('activity_log').select('*, branches(name)').order('created_at', { ascending: false }).limit(300);
+      if (error) {
+        console.warn("Activity branches join failed, falling back to flat query", error);
+        ({ data, error } = await sb.from('activity_log').select('*').order('created_at', { ascending: false }).limit(300));
+      }
+      allActivity = data || [];
+      filterActivity();
+    };
+
+    window.filterActivity = function () {
+      const branch = document.getElementById('activityBranchFilter')?.value || 'all';
+      const event = document.getElementById('activityEventFilter')?.value || 'all';
+
+      filteredActivity = allActivity.filter(a => {
+        if (branch !== 'all' && a.branch_id != branch) return false;
+        if (event !== 'all' && a.event_type !== event) return false;
+        return true;
+      });
+      activityPage = 1;
+      renderActivity();
+      renderActivityPagination();
+    };
+
+    function renderActivity() {
+      const tbody = document.getElementById('activityBody');
+      const start = (activityPage - 1) * PAGE_SIZE;
+      const page = filteredActivity.slice(start, start + PAGE_SIZE);
+
+      if (!page.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-dim);">No activity found.</td></tr>`;
+        return;
+      }
+      const icons = { new_order: '🔔', order_status: '🔄', store_toggle: '🏪', settings: '⚙️', staff: '👥', branch: '🏢' };
+      tbody.innerHTML = page.map(a => {
+        const time = new Date(a.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        return `<tr>
+        <td style="font-size:0.8rem;color:var(--text-dim);white-space:nowrap;">${time}</td>
+        <td style="font-size:0.85rem;font-weight:500;">${a.branches?.name || 'Chain-wide'}</td>
+        <td><span class="chip">${icons[a.event_type] || '📌'} ${a.event_type}</span></td>
+        <td style="font-size:0.875rem;">${a.description || '—'}</td>
+        <td style="font-size:0.8rem;color:var(--text-dim);">${a.staff_name || 'System'}</td>
+      </tr>`;
+      }).join('');
+    }
+
+    function renderActivityPagination() {
+      const total = Math.ceil(filteredActivity.length / PAGE_SIZE);
+      const el = document.getElementById('activityPagination');
+      if (total <= 1) { el.innerHTML = ''; return; }
+      let html = `<button class="page-btn" onclick="actGoPage(${activityPage - 1})" ${activityPage === 1 ? 'disabled' : ''}>‹</button>`;
+      for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || Math.abs(i - activityPage) <= 1) html += `<button class="page-btn ${i === activityPage ? 'active' : ''}" onclick="actGoPage(${i})">${i}</button>`;
+        else if (Math.abs(i - activityPage) === 2) html += `<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
+      }
+      html += `<button class="page-btn" onclick="actGoPage(${activityPage + 1})" ${activityPage === total ? 'disabled' : ''}>›</button>`;
+      el.innerHTML = html;
+    }
+    window.actGoPage = function (p) { activityPage = p; renderActivity(); renderActivityPagination(); };
+
+    // ── SYSTEM SETTINGS & DANGER
+    window.saveSystemSettings = async function () {
+      const appName = document.getElementById('sysAppName')?.value.trim();
+      if (appName && allBranches.length > 0) {
+        const btn = document.querySelector('#tab-system .btn-primary');
+        if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+        // Update restaurant_name for all branches so realtime listeners on those pages catch it
+        for (let b of allBranches) {
+          if (window.setSetting) await window.setSetting('restaurant_name', appName, b.id);
+        }
+
+        if (btn) { btn.disabled = false; btn.textContent = '💾 Save Settings'; }
+      }
+      window.showToast('✅ Chain settings applied to all branches', '', 'success');
+      window.logActivity && window.logActivity('settings', 'Updated chain settings', window.currentStaff?.name || '', null);
+    };
+
+    window.deactivateAllStaff = async function () {
+      if (!confirm('🚨 Are you absolutely sure you want to deactivate ALL staff members across ALL branches? (Superadmins will not be deactivated).')) return;
+      const sb = window.supabaseClient;
+      // Set is_active = false for everyone where role != superadmin
+      const { error } = await sb.from('staff').update({ is_active: false }).neq('role', 'superadmin');
+      if (error) { window.showToast('Error deactivating staff', error.message, 'error'); return; }
+      window.showToast('✅ All staff deactivated', '', 'success');
+      window.logActivity && window.logActivity('staff', 'Deactivated all non-superadmin staff', window.currentStaff?.name || '', null);
+      await loadStaff();
+    };
+
+    // ── REALTIME
+    function subscribeRealtime() {
+      const sb = window.supabaseClient;
+      // Subscribe to ALL orders (no branch filter)
+      sb.channel('superadmin-orders')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, async () => { await loadDashboardStats(); await loadAllOrders(); })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, async () => { await loadDashboardStats(); await loadAllOrders(); })
+        .subscribe();
+
+      // Subscribe to branch activity
+      sb.channel('superadmin-activity')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activity_log' }, async () => { await loadActivity(); })
+        .subscribe();
+
+      // Subscribe to staff changes
+      sb.channel('superadmin-staff')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'staff' }, async () => { await loadStaff(); await loadDashboardStats(); })
+        .subscribe();
+    }
+
+    // ── TAB LOGIC
+    window.switchTab = function (tab, el) {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      if (el) el.classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      if (tab === 'orders') loadAllOrders();
+      if (tab === 'staff') loadStaff();
+      if (tab === 'overview') loadDashboardStats();
+      if (tab === 'activity') loadActivity();
+      if (tab === 'reports' && !document.getElementById('reportStartDate').value) {
+        setReportRange('month'); // default to this month
+        generateReport();
+      }
+    };
+
+    // ════════════════════════════════════════════════════════
+    // ── ADVANCED REPORTS ENGINE ──
+    // ════════════════════════════════════════════════════════
+    window.setReportRange = function (range) {
+      const start = document.getElementById('reportStartDate');
+      const end = document.getElementById('reportEndDate');
+      const today = new Date();
+      let s = new Date(), e = new Date();
+
+      if (range === 'today') {
+        // already set to today
+      } else if (range === 'month') {
+        s = new Date(today.getFullYear(), today.getMonth(), 1);
+      } else if (range === 'year') {
+        s = new Date(today.getFullYear(), 0, 1);
+      }
+
+      // Convert to YYYY-MM-DD local time
+      start.value = s.toLocaleDateString('en-CA');
+      end.value = e.toLocaleDateString('en-CA');
+      generateReport();
+    };
+
+    window.generateReport = async function () {
+      const sb = window.supabaseClient;
+      const branchId = document.getElementById('reportBranchFilter').value;
+      const startStr = document.getElementById('reportStartDate').value;
+      const endStr = document.getElementById('reportEndDate').value;
+      const btn = document.getElementById('genReportBtn');
+
+      if (!startStr || !endStr) { window.showToast('Please select date range', '', 'error'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      const startTime = startStr + 'T00:00:00+05:30';
+      const endTime = endStr + 'T23:59:59+05:30';
+
+      try {
+        // 1. Fetch Orders
+        let q = sb.from('orders').select('*')
+          .gte('created_at', startTime)
+          .lte('created_at', endTime);
+        if (branchId !== 'all') q = q.eq('branch_id', branchId);
+        const { data: ordersData, error: ordersErr } = await q;
+        if (ordersErr) throw ordersErr;
+        const orders = ordersData || [];
+
+        // 2. Fetch Reviews
+        let rq = sb.from('reviews').select('*')
+          .gte('created_at', startTime)
+          .lte('created_at', endTime);
+        if (branchId !== 'all') rq = rq.eq('branch_id', branchId);
+        const { data: revData } = await rq;
+        const reviews = revData || [];
+
+        processReportData(orders, reviews, startStr, endStr);
+
+      } catch (err) {
+        window.showToast('Error generating report', err.message, 'error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Generate Report';
+    };
+
+    function processReportData(orders, reviews, startStr, endStr) {
+      const doneOrders = orders.filter(o => o.status === 'done' || o.status === 'delivered');
+
+      // --- 1. KPIs ---
+      const totalRev = doneOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
+      const totalOrds = doneOrders.length;
+      const avgOrd = totalOrds > 0 ? (totalRev / totalOrds) : 0;
+      const avgRating = reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) : 0;
+
+      document.getElementById('repTotalRevenue').textContent = 'Rs. ' + totalRev.toFixed(0);
+      document.getElementById('repTotalOrders').textContent = totalOrds;
+      document.getElementById('repAvgOrder').textContent = 'Rs. ' + avgOrd.toFixed(0);
+      document.getElementById('repAvgRating').textContent = avgRating.toFixed(1) + ' ⭐';
+
+      // --- 2. Top Items Matrix ---
+      const itemMap = {};
+      doneOrders.forEach(o => {
+        let items = [];
+        try { items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items; } catch (e) { }
+        items.forEach(i => {
+          if (!itemMap[i.id]) itemMap[i.id] = { name: i.name, qty: 0, rev: 0 };
+          itemMap[i.id].qty += parseInt(i.qty || 1);
+          itemMap[i.id].rev += parseFloat(i.price || 0) * parseInt(i.qty || 1);
+        });
+      });
+      const sortedItems = Object.values(itemMap).sort((a, b) => b.qty - a.qty).slice(0, 5); // top 5
+
+      const itemsBody = document.getElementById('repTopItemsBody');
+      if (!sortedItems.length) {
+        itemsBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:20px;">No sales data</td></tr>';
+      } else {
+        itemsBody.innerHTML = sortedItems.map(i => `
+        <tr>
+          <td style="font-weight:500;">${i.name}</td>
+          <td style="text-align:right;">${i.qty}</td>
+          <td style="text-align:right;color:var(--accent-bright);">Rs. ${i.rev.toFixed(0)}</td>
+        </tr>
+      `).join('');
+      }
+
+      // --- 3. Branch Leaderboard (Only if All Branches selected) ---
+      const branchMap = {};
+      allBranches.forEach(b => branchMap[b.id] = { name: b.name, rev: 0, ords: 0, ratingSum: 0, ratingCnt: 0 });
+
+      doneOrders.forEach(o => {
+        if (branchMap[o.branch_id]) {
+          branchMap[o.branch_id].rev += parseFloat(o.total || 0);
+          branchMap[o.branch_id].ords++;
+        }
+      });
+      reviews.forEach(r => {
+        if (branchMap[r.branch_id]) {
+          branchMap[r.branch_id].ratingSum += r.rating;
+          branchMap[r.branch_id].ratingCnt++;
+        }
+      });
+
+      const branchArr = Object.values(branchMap).sort((a, b) => b.rev - a.rev);
+
+      const branchBody = document.getElementById('repBranchMatrixBody');
+      if (!doneOrders.length) {
+        branchBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:20px;">No data in range</td></tr>';
+      } else {
+        branchBody.innerHTML = branchArr.filter(b => b.ords > 0).map(b => {
+          const avgR = b.ratingCnt > 0 ? (b.ratingSum / b.ratingCnt).toFixed(1) : '-';
+          return `
+        <tr>
+          <td style="font-weight:500;">${b.name}</td>
+          <td style="text-align:right;">${b.ords}</td>
+          <td style="text-align:right;color:var(--accent-bright);">Rs. ${b.rev.toFixed(0)}</td>
+          <td style="text-align:right;">${avgR} ${avgR !== '-' ? '⭐' : ''}</td>
+        </tr>`;
+        }).join('');
+      }
+
+      // --- Best Waiter Matrix ---
+      const waiterPerf = {};
+      doneOrders.forEach(o => {
+        let wid = null;
+        let wname = null;
+        if (o.assigned_waiter_id) {
+          wid = o.assigned_waiter_id;
+          wname = o.assigned_waiter_name || 'Unknown';
+        } else if (o.firebase_uid) {
+          const w = allStaff.find(s => s.uid === o.firebase_uid || s.id === o.firebase_uid);
+          if (w && w.role === 'waiter') {
+            wid = w.id;
+            wname = w.name;
+          }
+        }
+        if (wid) {
+          if (!waiterPerf[wid]) {
+            waiterPerf[wid] = { name: wname, ords: 0, rev: 0 };
+          }
+          waiterPerf[wid].ords++;
+          waiterPerf[wid].rev += parseFloat(o.total || 0);
+        }
+      });
+      
+      const sortedWaiters = Object.values(waiterPerf).sort((a,b) => b.rev - a.rev).slice(0, 10);
+      const waitersBody = document.getElementById('repBestWaitersBody');
+      if (!sortedWaiters.length) {
+        waitersBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:20px;">No waiter data in range</td></tr>';
+      } else {
+        waitersBody.innerHTML = sortedWaiters.map(w => `
+        <tr>
+          <td style="font-weight:500;">${w.name}</td>
+          <td style="text-align:right;">${w.ords}</td>
+          <td style="text-align:right;color:var(--accent-bright);">Rs. ${w.rev.toFixed(0)}</td>
+        </tr>`).join('');
+      }
+
+      // --- 4. Render SVG Charts ---
+      drawReportSalesTrend(doneOrders, startStr, endStr);
+      drawReportBranchRank(branchArr.filter(b => b.ords > 0));
+    }
+
+    function drawReportSalesTrend(orders, startStr, endStr) {
+      const svg = document.getElementById('reportSalesTrendChart');
+      if (!orders.length) {
+        svg.innerHTML = `<text x="350" y="100" text-anchor="middle" fill="var(--text-dim)" font-size="14">No sales data for range</text>`;
+        return;
+      }
+
+      // Group by Day
+      const dayMap = {};
+      const d1 = new Date(startStr);
+      const d2 = new Date(endStr);
+      // Fill all days in range with 0
+      for (let d = new Date(d1); d <= d2; d.setDate(d.getDate() + 1)) {
+        dayMap[d.toLocaleDateString('en-CA')] = 0;
+      }
+
+      orders.forEach(o => {
+        const d = o.created_at.split('T')[0];
+        if (dayMap[d] !== undefined) dayMap[d] += parseFloat(o.total || 0);
+      });
+
+      const days = Object.keys(dayMap).sort();
+      const vals = days.map(d => dayMap[d]);
+      const maxVal = Math.max(...vals, 1);
+
+      const W = 700, H = 200, padX = 40, padY = 30;
+      const innerW = W - padX * 2, innerH = H - padY * 2;
+
+      let pathD = '';
+      let circles = '';
+      let labels = '';
+
+      days.forEach((day, i) => {
+        const x = padX + (innerW / Math.max(1, days.length - 1)) * i;
+        const y = H - padY - (vals[i] / maxVal) * innerH;
+
+        if (i === 0) pathD += `M ${x} ${y} `;
+        else pathD += `L ${x} ${y} `;
+
+        circles += `<circle cx="${x}" cy="${y}" r="4" fill="var(--accent)" stroke="var(--bg)" stroke-width="2"/>`;
+
+        // Add labels if not too many points (limit to ~7 labels max)
+        if (days.length <= 10 || i % Math.ceil(days.length / 7) === 0 || i === days.length - 1) {
+          const dateLabel = new Date(day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          labels += `<text x="${x}" y="${H - 10}" font-size="10" fill="var(--text-dim)" text-anchor="middle">${dateLabel}</text>`;
+        }
+      });
+
+      // Background gradient for line
+      let bgPath = pathD + `L ${W - padX} ${H - padY} L ${padX} ${H - padY} Z`;
+
+      svg.innerHTML = `
+      <defs>
+        <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <!-- Grid lines -->
+      <line x1="${padX}" y1="${padY}" x2="${W - padX}" y2="${padY}" stroke="var(--border)" stroke-dasharray="4"/>
+      <line x1="${padX}" y1="${H - padY}" x2="${W - padX}" y2="${H - padY}" stroke="var(--border)"/>
+      <text x="${padX - 5}" y="${padY + 4}" font-size="10" fill="var(--text-dim)" text-anchor="end">Rs. ${maxVal >= 1000 ? (maxVal / 1000).toFixed(1) + 'k' : maxVal.toFixed(0)}</text>
+      
+      <!-- Chart Elements -->
+      <path d="${bgPath}" fill="url(#trendGrad)" />
+      <path d="${pathD}" fill="none" stroke="var(--accent)" stroke-width="3" />
+      ${circles}
+      ${labels}
+    `;
+    }
+
+    function drawReportBranchRank(branches) {
+      const svg = document.getElementById('reportBranchRankChart');
+      if (!branches.length) {
+        svg.innerHTML = `<text x="350" y="100" text-anchor="middle" fill="var(--text-dim)" font-size="14">Select 'All Branches' or No Data</text>`;
+        return;
+      }
+
+      const maxVal = Math.max(...branches.map(b => b.rev), 1);
+      const W = 700, H = 200, padX = 20, padY = 30;
+      const innerH = H - padY * 2;
+      const barW = Math.min(80, (W - padX * 2) / branches.length - 10);
+
+      let html = '';
+      branches.slice(0, 7).forEach((b, i) => { // Top 7 max to fit
+        const x = padX + i * ((W - padX * 2) / Math.min(7, branches.length)) + ((W - padX * 2) / Math.min(7, branches.length)) / 2 - barW / 2;
+        const barH = (b.rev / maxVal) * innerH;
+        const y = H - padY - barH;
+
+        html += `
+        <rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="4" fill="var(--gold)"/>
+        <text x="${x + barW / 2}" y="${y - 8}" font-size="12" fill="var(--text)" text-anchor="middle" font-weight="600">Rs. ${b.rev >= 1000 ? (b.rev / 1000).toFixed(1) + 'k' : b.rev.toFixed(0)}</text>
+        <text x="${x + barW / 2}" y="${H - 12}" font-size="11" fill="var(--text-dim)" text-anchor="middle">${b.name.length > 10 ? b.name.slice(0, 8) + '…' : b.name}</text>
+      `;
+      });
+
+      // Base line
+      html += `<line x1="${padX}" y1="${H - padY}" x2="${W - padX}" y2="${H - padY}" stroke="var(--border)"/>`;
+
+      svg.innerHTML = html;
+    }
+
+  </script>
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('open');
+      if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('open'));
+    }
+    function closeSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.remove('open');
+      if (overlay) overlay.classList.remove('show');
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.nav-item').forEach(function (el) {
+        el.addEventListener('click', closeSidebar);
+      });
+    });
+  </script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+

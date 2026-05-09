@@ -1,462 +1,509 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LAXMI — Kitchen Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
   <style>
     /* Fullscreen Mode */
-    body.kitchen-fullscreen .sidebar { display: none !important; }
-    body.kitchen-fullscreen .main-content { margin-left: 0 !important; width: 100% !important; max-width: 100% !important; }
-    body.kitchen-fullscreen .hamburger { display: none !important; }
-  </style>
-</head>
-<body>
-
-<!-- Offline Banner -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-<div class="offline-banner" id="offlineBanner">⚠️ Connection lost — showing last known data. Reconnecting…</div>
-
-<!-- Auth Gate -->
-<div class="auth-gate" id="authGate" style="display:none;">
-  <!-- built by auth.js -->
-</div>
-
-<!-- App Content -->
-<div id="appContent" style="display:none;">
-  <div class="app-layout">
-
-    <!-- ── SIDEBAR ── -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo">
-        <div class="sidebar-logo-name">🍃 LAXMI</div>
-        <div class="sidebar-logo-sub">Kitchen Dashboard</div>
-      </div>
-
-      <nav class="sidebar-nav">
-        <div class="nav-section-label">Operations</div>
-        <a class="nav-item active" href="kitchen.html">
-          <span class="nav-item-icon">🍳</span> Kitchen
-        </a>
-        <a class="nav-item" href="admin.html">
-          <span class="nav-item-icon">📊</span> Admin Panel
-        </a>
-        <a class="nav-item" href="menu-manager.html">
-          <span class="nav-item-icon">📋</span> Menu Manager
-        </a>
-        <a class="nav-item" href="reports.html">
-          <span class="nav-item-icon">📈</span> Reports
-        </a>
-        <div class="nav-section-label" style="margin-top:8px;">Management</div>
-        <a class="nav-item" href="staff.html">
-          <span class="nav-item-icon">👥</span> Staff
-        </a>
-        <div class="nav-section-label" style="margin-top:8px;">Customer</div>
-        <a class="nav-item" href="waiter.html"><span class="nav-item-icon">🛎️</span> Waiter</a>
-        <a class="nav-item" href="payment-manager.html"><span class="nav-item-icon">💳</span> Payments</a>
-        <a class="nav-item" href="index.html" target="_blank">
-          <span class="nav-item-icon">🛒</span> Order Page ↗
-        </a>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="sidebar-user">
-          <div class="sidebar-avatar" id="sidebarAvatar">?</div>
-          <div class="sidebar-user-info">
-            <div class="sidebar-user-name" id="sidebarUserName">Loading…</div>
-            <div class="sidebar-user-role" id="sidebarUserRole">—</div>
-          </div>
-        </div>
-        <button class="btn btn-ghost w-full btn-sm" onclick="window.rmsSignOut()">⏏ Sign Out</button>
-      </div>
-    </aside>
-
-    <!-- ── MAIN CONTENT ── -->
-    <main class="main-content">
-
-      <!-- Page Header -->
-      <div class="page-header">
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
-              <span></span><span></span><span></span>
-            </button>
-            <h1 class="page-title">🍳 Kitchen Dashboard</h1>
-          </div>
-          <div class="page-subtitle" id="kitchenDate">—</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <!-- Live indicator -->
-          <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--text-dim);">
-            <span class="live-dot" id="liveDot"></span>
-            <span id="liveText">Connecting…</span>
-          </div>
-          <!-- Store toggle -->
-          <div class="toggle-wrap">
-            <label class="toggle">
-              <input type="checkbox" id="storeToggle" onchange="toggleStore(this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="toggle-label" id="storeLabel">Store Closed</span>
-          </div>
-          <!-- Bell toggle -->
-          <button class="btn btn-secondary btn-sm" id="bellBtn" onclick="toggleBell()" title="Toggle sound">
-            🔔 Sound On
-          </button>
-          <!-- Fullscreen toggle -->
-          <button class="btn btn-secondary btn-sm" id="fullscreenBtn" onclick="toggleFullscreen()" title="Full Screen">
-            🖥️ Full Screen
-          </button>
-          <!-- Print summary -->
-          <button class="btn btn-secondary btn-sm" onclick="printDailySummary()">🖨️ Print Summary</button>
-        </div>
-      </div>
-
-      <!-- Stats -->
-      <div class="stats-grid" id="statsGrid">
-        <div class="stat-card">
-          <div class="stat-label">Pending</div>
-          <div class="stat-value gold" id="statPending">0</div>
-          <div class="stat-dot" style="background:var(--pending);"></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Preparing</div>
-          <div class="stat-value blue" id="statPreparing">0</div>
-          <div class="stat-dot" style="background:var(--preparing);"></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Completed Today</div>
-          <div class="stat-value green" id="statDone">0</div>
-          <div class="stat-dot" style="background:var(--done);"></div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-label">Total Orders</div>
-          <div class="stat-value" id="statTotal">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Rejected</div>
-          <div class="stat-value red" id="statRejected">0</div>
-          <div class="stat-dot" style="background:var(--red);"></div>
-        </div>
-      </div>
-
-      <!-- Filter Tabs -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-        <div class="filter-tabs" id="filterTabs">
-          <button class="filter-tab active" data-status="active" onclick="setFilter('active',this)">
-            🔥 Active <span class="tab-count" id="tabActive">0</span>
-          </button>
-          <button class="filter-tab" data-status="pending" onclick="setFilter('pending',this)">
-            🕐 Pending <span class="tab-count" id="tabPending">0</span>
-          </button>
-          <button class="filter-tab" data-status="preparing" onclick="setFilter('preparing',this)">
-            👨‍🍳 Preparing <span class="tab-count" id="tabPreparing">0</span>
-          </button>
-          <button class="filter-tab" id="filterTabDelayed" data-status="delayed" onclick="setFilter('delayed',this)">
-            ⚠️ Delayed <span class="tab-count" id="tabDelayed">0</span>
-          </button>
-          <button class="filter-tab" data-status="all" onclick="setFilter('all',this)">
-            📋 All Today
-          </button>
-          <button class="filter-tab" data-status="rejected" onclick="setFilter('rejected',this)">
-            ❌ Rejected
-          </button>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary btn-sm" onclick="exportExcel()">📥 Export Excel</button>
-          <button class="btn btn-secondary btn-sm" onclick="loadOrders()">🔄 Refresh</button>
-        </div>
-      </div>
-
-      <!-- Orders Grid -->
-      <div class="orders-grid" id="ordersGrid">
-        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-dim);">
-          <div style="font-size:2rem;margin-bottom:12px;">⏳</div>
-          <p>Loading orders…</p>
-        </div>
-      </div>
-
-    </main>
-  </div>
-</div>
-
-<!-- ── ORDER DETAIL MODAL ── -->
-<div class="modal-overlay" id="orderModal" style="display:none;" onclick="if(event.target===this)closeOrderModal()">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modalTitle">Order Details</h2>
-      <button class="modal-close" onclick="closeOrderModal()">×</button>
-    </div>
-    <div id="modalBody"></div>
-    <div class="modal-footer" id="modalFooter"></div>
-  </div>
-</div>
-
-<!-- ── PRINT SLIP ── -->
-<div id="printSlip"></div>
-
-<!-- ── TOAST CONTAINER ── -->
-<div id="toast-container"></div>
-
-<!-- ── BELL AUDIO ── -->
-<audio id="bellSound" preload="auto">
-  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA..." type="audio/wav">
-</audio>
-
-<!-- ── SUPABASE ── -->
-<!-- ── AUTH ── -->
-<script type="module" src="assets/auth.js?v=3"></script>
-
-<!-- ── MAIN LOGIC ── -->
-<script type="module">
-  // Wait for auth + supabase to load
-  window.appInit = async function() {
-    window.renderStaffUI && window.renderStaffUI();
-    window.buildAuthGate && window.buildAuthGate('Kitchen Dashboard');
-    initDate();
-    await loadSettings();
-    await loadOrders();
-    subscribeRealtime();
-    window.startHeartbeat && window.startHeartbeat();
-    loadWaiters();
-    window.listenToSettings && window.listenToSettings();
-    setInterval(updateTimers, 60000);
-  };
-
-  // ── Date & time display
-  function initDate() {
-    const el = document.getElementById('kitchenDate');
-    const now = new Date().toLocaleDateString('en-IN', {
-      timeZone: 'Asia/Kolkata', weekday: 'long',
-      day: '2-digit', month: 'long', year: 'numeric'
-    });
-    if (el) el.textContent = now;
-  }
-
-  // ── Load settings (store open/close)
-  async function loadSettings() {
-    const sb = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    const { data } = await sb.from('settings').select('key,value').eq('branch_id', bid);
-    if (!data) return;
-    const s = {};
-    data.forEach(r => s[r.key] = r.value);
-    window.kitchenSettings = s;
-    const isOpen = s.store_open !== 'false';
-    const toggle = document.getElementById('storeToggle');
-    const label = document.getElementById('storeLabel');
-    if (toggle) toggle.checked = isOpen;
-    if (label) label.textContent = isOpen ? 'Store Open' : 'Store Closed';
-    window.gstRate = parseFloat(s.gst_rate || '5');
-  }
-
-  // ── Load orders
-  window.loadOrders = async function() {
-    const sb = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-
-    const { data, error } = await sb.from('orders')
-      .select('*')
-      .eq('branch_id', bid)
-      .gte('created_at', today + 'T00:00:00+05:30')
-      .order('created_at', { ascending: false });
-
-    if (error) { console.error('Load orders error:', error); return; }
-    window.allOrders = data || [];
-    updateStats(window.allOrders);
-    updateTabCounts(window.allOrders);
-    renderOrders(window.allOrders);
-    window.setConnectionStatus('online');
-  };
-
-  // ── Realtime subscription
-  function subscribeRealtime() {
-    const sb = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-
-    sb.channel('kitchen-orders')
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'orders',
-        filter: `branch_id=eq.${bid}`
-      }, (payload) => {
-        window.allOrders = [payload.new, ...(window.allOrders || [])];
-        updateStats(window.allOrders);
-        updateTabCounts(window.allOrders);
-        renderOrders(window.allOrders);
-        playBell();
-        window.showToast('🔔 New Order!', `${payload.new.order_id} — Table ${payload.new.table_number}`, 'order');
-        window.logActivity && window.logActivity('new_order', `New order ${payload.new.order_id}`, window.currentStaff?.name || '', bid);
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'orders',
-        filter: `branch_id=eq.${bid}`
-      }, (payload) => {
-        const idx = (window.allOrders || []).findIndex(o => o.id === payload.new.id);
-        if (idx !== -1) window.allOrders[idx] = payload.new;
-        updateStats(window.allOrders);
-        updateTabCounts(window.allOrders);
-        renderOrders(window.allOrders);
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') window.setConnectionStatus('online');
-        else if (status === 'CHANNEL_ERROR') window.setConnectionStatus('offline');
-      });
-
-    // Store settings realtime
-    sb.channel('kitchen-settings')
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'settings',
-        filter: `branch_id=eq.${bid}`
-      }, (payload) => {
-        if (payload.new?.key === 'store_open') {
-          const isOpen = payload.new.value !== 'false';
-          const toggle = document.getElementById('storeToggle');
-          const label = document.getElementById('storeLabel');
-          if (toggle) toggle.checked = isOpen;
-          if (label) label.textContent = isOpen ? 'Store Open' : 'Store Closed';
-        }
-      })
-      .subscribe();
-  }
-
-  // ── Stats
-  function updateStats(orders) {
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-    const todayOrders = orders.filter(o => o.created_at?.startsWith(today) ||
-      new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === today);
-
-    const pending   = todayOrders.filter(o => o.status === 'pending').length;
-    const preparing = todayOrders.filter(o => o.status === 'preparing').length;
-    const done      = todayOrders.filter(o => o.status === 'done' || o.status === 'delivered').length;
-    const rejected  = todayOrders.filter(o => o.status === 'rejected').length;
-
-    document.getElementById('statPending').textContent   = pending;
-    document.getElementById('statPreparing').textContent = preparing;
-    document.getElementById('statDone').textContent      = done;
-    document.getElementById('statRejected').textContent  = rejected;
-    document.getElementById('statTotal').textContent     = todayOrders.length;
-  }
-
-  function updateTabCounts(orders) {
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-    const todayOrders = orders.filter(o =>
-      new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === today);
-
-    const pending   = todayOrders.filter(o => o.status === 'pending').length;
-    const preparing = todayOrders.filter(o => o.status === 'preparing').length;
-    const active    = pending + preparing;
-    
-    // Delayed: Active orders > 15 mins
-    const delayed = todayOrders.filter(o => 
-      (o.status === 'pending' || o.status === 'preparing') && 
-      getMinutesElapsed(o.created_at) >= 15
-    ).length;
-
-    document.getElementById('tabActive').textContent    = active;
-    document.getElementById('tabPending').textContent   = pending;
-    document.getElementById('tabPreparing').textContent = preparing;
-    const tabDelayed = document.getElementById('tabDelayed');
-    if (tabDelayed) tabDelayed.textContent = delayed;
-  }
-
-  // ── Render orders
-  window._activeFilter = 'active';
-
-  window.setFilter = function(status, el) {
-    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    if (el) el.classList.add('active');
-    window._activeFilter = status;
-    renderOrders(window.allOrders || []);
-  };
-
-  function renderOrders(orders) {
-    const grid = document.getElementById('ordersGrid');
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-    const filter = window._activeFilter || 'active';
-
-    let filtered = orders.filter(o =>
-      new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === today);
-
-    if (filter === 'active') {
-      filtered = filtered.filter(o => o.status === 'pending' || o.status === 'preparing');
-    } else if (filter === 'delayed') {
-      filtered = filtered.filter(o => (o.status === 'pending' || o.status === 'preparing') && getMinutesElapsed(o.created_at) >= 15);
-    } else if (filter !== 'all') {
-      filtered = filtered.filter(o => o.status === filter);
+    body.kitchen-fullscreen .sidebar {
+      display: none !important;
     }
 
-    // Sort: pending first, then preparing, then by time
-    filtered.sort((a, b) => {
-      const statusOrder = { pending: 0, preparing: 1, done: 2, delivered: 3, rejected: 4, cancelled: 5 };
-      if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
-      return new Date(a.created_at) - new Date(b.created_at);
-    });
+    body.kitchen-fullscreen .main-content {
+      margin-left: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
 
-    if (filtered.length === 0) {
-      grid.innerHTML = `<div style="grid-column:1/-1;" class="empty-state">
+    body.kitchen-fullscreen .hamburger {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Offline Banner -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="offline-banner" id="offlineBanner">⚠️ Connection lost — showing last known data. Reconnecting…</div>
+
+  <!-- Auth Gate -->
+  <div class="auth-gate" id="authGate" style="display:none;">
+    <!-- built by auth.js -->
+  </div>
+
+  <!-- App Content -->
+  <div id="appContent" style="display:none;">
+    <div class="app-layout">
+
+      <!-- ── SIDEBAR ── -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-name">🍃 LAXMI</div>
+          <div class="sidebar-logo-sub">Kitchen Dashboard</div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section-label">Operations</div>
+          <a class="nav-item active" href="kitchen.html">
+            <span class="nav-item-icon">🍳</span> Kitchen
+          </a>
+          <a class="nav-item" href="admin.html">
+            <span class="nav-item-icon">📊</span> Admin Panel
+          </a>
+          <a class="nav-item" href="menu-manager.html">
+            <span class="nav-item-icon">📋</span> Menu Manager
+          </a>
+          <a class="nav-item" href="reports.html">
+            <span class="nav-item-icon">📈</span> Reports
+          </a>
+          <div class="nav-section-label" style="margin-top:8px;">Management</div>
+          <a class="nav-item" href="staff.html">
+            <span class="nav-item-icon">👥</span> Staff
+          </a>
+          <div class="nav-section-label" style="margin-top:8px;">Customer</div>
+          <a class="nav-item" href="waiter.html"><span class="nav-item-icon">🛎️</span> Waiter</a>
+          <a class="nav-item" href="payment-manager.html"><span class="nav-item-icon">💳</span> Payments</a>
+          <a class="nav-item" href="index.html" target="_blank">
+            <span class="nav-item-icon">🛒</span> Order Page ↗
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatar">?</div>
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="sidebarUserName">Loading…</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">—</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost w-full btn-sm" onclick="window.rmsSignOut()">⏏ Sign Out</button>
+        </div>
+      </aside>
+
+      <!-- ── MAIN CONTENT ── -->
+      <main class="main-content">
+
+        <!-- Page Header -->
+        <div class="page-header">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+                <span></span><span></span><span></span>
+              </button>
+              <h1 class="page-title">🍳 Kitchen Dashboard</h1>
+            </div>
+            <div class="page-subtitle" id="kitchenDate">—</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <!-- Live indicator -->
+            <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--text-dim);">
+              <span class="live-dot" id="liveDot"></span>
+              <span id="liveText">Connecting…</span>
+            </div>
+            <!-- Store toggle -->
+            <div class="toggle-wrap">
+              <label class="toggle">
+                <input type="checkbox" id="storeToggle" onchange="toggleStore(this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label" id="storeLabel">Store Closed</span>
+            </div>
+            <!-- Bell toggle -->
+            <button class="btn btn-secondary btn-sm" id="bellBtn" onclick="toggleBell()" title="Toggle sound">
+              🔔 Sound On
+            </button>
+            <!-- Fullscreen toggle -->
+            <button class="btn btn-secondary btn-sm" id="fullscreenBtn" onclick="toggleFullscreen()"
+              title="Full Screen">
+              🖥️ Full Screen
+            </button>
+            <!-- Print summary -->
+            <button class="btn btn-secondary btn-sm" onclick="printDailySummary()">🖨️ Print Summary</button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value gold" id="statPending">0</div>
+            <div class="stat-dot" style="background:var(--pending);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Preparing</div>
+            <div class="stat-value blue" id="statPreparing">0</div>
+            <div class="stat-dot" style="background:var(--preparing);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Completed Today</div>
+            <div class="stat-value green" id="statDone">0</div>
+            <div class="stat-dot" style="background:var(--done);"></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">Total Orders</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Rejected</div>
+            <div class="stat-value red" id="statRejected">0</div>
+            <div class="stat-dot" style="background:var(--red);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">🚚 Delivery</div>
+            <div class="stat-value" id="statDelivery" style="color:#00bcd4">0</div>
+            <div class="stat-dot" style="background:#00bcd4;"></div>
+          </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div
+          style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+          <div class="filter-tabs" id="filterTabs">
+            <button class="filter-tab active" data-status="active" onclick="setFilter('active',this)">
+              🔥 Active <span class="tab-count" id="tabActive">0</span>
+            </button>
+            <button class="filter-tab" data-status="pending" onclick="setFilter('pending',this)">
+              🕐 Pending <span class="tab-count" id="tabPending">0</span>
+            </button>
+            <button class="filter-tab" data-status="preparing" onclick="setFilter('preparing',this)">
+              👨‍🍳 Preparing <span class="tab-count" id="tabPreparing">0</span>
+            </button>
+            <button class="filter-tab" id="filterTabDelayed" data-status="delayed" onclick="setFilter('delayed',this)">
+              ⚠️ Delayed <span class="tab-count" id="tabDelayed">0</span>
+            </button>
+            <button class="filter-tab" data-status="all" onclick="setFilter('all',this)">
+              📋 All Today
+            </button>
+            <button class="filter-tab" data-status="rejected" onclick="setFilter('rejected',this)">
+              ❌ Rejected
+            </button>
+            <button class="filter-tab" data-status="delivery" onclick="setFilter('delivery',this)">
+              🚚 Delivery <span class="tab-count" id="tabDelivery">0</span>
+            </button>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="exportExcel()">📥 Export Excel</button>
+            <button class="btn btn-secondary btn-sm" onclick="loadOrders()">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <!-- Orders Grid -->
+        <div class="orders-grid" id="ordersGrid">
+          <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-dim);">
+            <div style="font-size:2rem;margin-bottom:12px;">⏳</div>
+            <p>Loading orders…</p>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ── ORDER DETAIL MODAL ── -->
+  <div class="modal-overlay" id="orderModal" style="display:none;" onclick="if(event.target===this)closeOrderModal()">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Order Details</h2>
+        <button class="modal-close" onclick="closeOrderModal()">×</button>
+      </div>
+      <div id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <!-- ── PRINT SLIP ── -->
+  <div id="printSlip"></div>
+
+  <!-- ── TOAST CONTAINER ── -->
+  <div id="toast-container"></div>
+
+  <!-- ── BELL AUDIO ── -->
+  <audio id="bellSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA..." type="audio/wav">
+  </audio>
+
+  <!-- ── SUPABASE ── -->
+  <!-- ── AUTH ── -->
+  <script type="module" src="assets/auth.js?v=3"></script>
+
+  <!-- ── MAIN LOGIC ── -->
+  <script type="module">
+    // Wait for auth + supabase to load
+    window.appInit = async function () {
+      window.renderStaffUI && window.renderStaffUI();
+      window.buildAuthGate && window.buildAuthGate('Kitchen Dashboard');
+      initDate();
+      await loadSettings();
+      await loadOrders();
+      subscribeRealtime();
+      window.startHeartbeat && window.startHeartbeat();
+      loadWaiters();
+    loadDeliveryBoys();
+      window.listenToSettings && window.listenToSettings();
+      setInterval(updateTimers, 60000);
+    };
+
+    // ── Date & time display
+    function initDate() {
+      const el = document.getElementById('kitchenDate');
+      const now = new Date().toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata', weekday: 'long',
+        day: '2-digit', month: 'long', year: 'numeric'
+      });
+      if (el) el.textContent = now;
+    }
+
+    // ── Load settings (store open/close)
+    async function loadSettings() {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const { data } = await sb.from('settings').select('key,value').eq('branch_id', bid);
+      if (!data) return;
+      const s = {};
+      data.forEach(r => s[r.key] = r.value);
+      window.kitchenSettings = s;
+      const isOpen = s.store_open !== 'false';
+      const toggle = document.getElementById('storeToggle');
+      const label = document.getElementById('storeLabel');
+      if (toggle) toggle.checked = isOpen;
+      if (label) label.textContent = isOpen ? 'Store Open' : 'Store Closed';
+      window.gstRate = parseFloat(s.gst_rate || '5');
+    }
+
+    // ── Load orders
+    window.loadOrders = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+
+      const { data, error } = await sb.from('orders')
+        .select('*')
+        .eq('branch_id', bid)
+        .gte('created_at', today + 'T00:00:00+05:30')
+        .order('created_at', { ascending: false });
+
+      if (error) { console.error('Load orders error:', error); return; }
+      window.allOrders = data || [];
+      updateStats(window.allOrders);
+      updateTabCounts(window.allOrders);
+      renderOrders(window.allOrders);
+      window.setConnectionStatus('online');
+    };
+
+    // ── Realtime subscription
+    function subscribeRealtime() {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+
+      sb.channel('kitchen-orders')
+        .on('postgres_changes', {
+          event: 'INSERT', schema: 'public', table: 'orders',
+          filter: `branch_id=eq.${bid}`
+        }, (payload) => {
+          window.allOrders = [payload.new, ...(window.allOrders || [])];
+          updateStats(window.allOrders);
+          updateTabCounts(window.allOrders);
+          renderOrders(window.allOrders);
+          playBell();
+          window.showToast('🔔 New Order!', `${payload.new.order_id} — Table ${payload.new.table_number}`, 'order');
+          window.logActivity && window.logActivity('new_order', `New order ${payload.new.order_id}`, window.currentStaff?.name || '', bid);
+        })
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'orders',
+          filter: `branch_id=eq.${bid}`
+        }, (payload) => {
+          const idx = (window.allOrders || []).findIndex(o => o.id === payload.new.id);
+          if (idx !== -1) window.allOrders[idx] = payload.new;
+          updateStats(window.allOrders);
+          updateTabCounts(window.allOrders);
+          renderOrders(window.allOrders);
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') window.setConnectionStatus('online');
+          else if (status === 'CHANNEL_ERROR') window.setConnectionStatus('offline');
+        });
+
+      // Store settings realtime
+      sb.channel('kitchen-settings')
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'settings',
+          filter: `branch_id=eq.${bid}`
+        }, (payload) => {
+          if (payload.new?.key === 'store_open') {
+            const isOpen = payload.new.value !== 'false';
+            const toggle = document.getElementById('storeToggle');
+            const label = document.getElementById('storeLabel');
+            if (toggle) toggle.checked = isOpen;
+            if (label) label.textContent = isOpen ? 'Store Open' : 'Store Closed';
+          }
+        })
+        .subscribe();
+    }
+
+    // ── Stats
+    function updateStats(orders) {
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      const todayOrders = orders.filter(o => o.created_at?.startsWith(today) ||
+        new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === today);
+
+      const pending = todayOrders.filter(o => o.status === 'pending').length;
+      const preparing = todayOrders.filter(o => o.status === 'preparing').length;
+      const done = todayOrders.filter(o => o.status === 'done' || o.status === 'delivered').length;
+      const rejected = todayOrders.filter(o => o.status === 'rejected').length;
+
+      const delivery = todayOrders.filter(o => o.order_type === 'delivery').length;
+
+      document.getElementById('statPending').textContent = pending;
+      document.getElementById('statPreparing').textContent = preparing;
+      document.getElementById('statDone').textContent = done;
+      document.getElementById('statRejected').textContent = rejected;
+      document.getElementById('statTotal').textContent = todayOrders.length;
+      document.getElementById('statDelivery').textContent = delivery;
+    }
+
+    function updateTabCounts(orders) {
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      const todayOrders = orders.filter(o =>
+        new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === today);
+
+      const pending = todayOrders.filter(o => o.status === 'pending').length;
+      const preparing = todayOrders.filter(o => o.status === 'preparing').length;
+      const active = pending + preparing;
+
+      // Delayed: Active orders > 15 mins
+      const delayed = todayOrders.filter(o =>
+        (o.status === 'pending' || o.status === 'preparing') &&
+        getMinutesElapsed(o.created_at) >= 15
+      ).length;
+
+      document.getElementById('tabActive').textContent = active;
+      document.getElementById('tabPending').textContent = pending;
+      document.getElementById('tabPreparing').textContent = preparing;
+      const tabDelayed = document.getElementById('tabDelayed');
+      if (tabDelayed) tabDelayed.textContent = delayed;
+      const delivery = todayOrders.filter(o => o.order_type === 'delivery').length;
+      const tabDelivery = document.getElementById('tabDelivery');
+      if (tabDelivery) tabDelivery.textContent = delivery;
+    }
+
+    // ── Render orders
+    window._activeFilter = 'active';
+
+    window.setFilter = function (status, el) {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      if (el) el.classList.add('active');
+      window._activeFilter = status;
+      renderOrders(window.allOrders || []);
+    };
+
+    function renderOrders(orders) {
+      const grid = document.getElementById('ordersGrid');
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      const filter = window._activeFilter || 'active';
+
+      let filtered = orders.filter(o =>
+        new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === today);
+
+      if (filter === 'active') {
+        filtered = filtered.filter(o => o.status === 'pending' || o.status === 'preparing');
+      } else if (filter === 'delayed') {
+        filtered = filtered.filter(o => (o.status === 'pending' || o.status === 'preparing') && getMinutesElapsed(o.created_at) >= 15);
+      } else if (filter === 'delivery') {
+        filtered = filtered.filter(o => o.order_type === 'delivery');
+      } else if (filter !== 'all') {
+        filtered = filtered.filter(o => o.status === filter);
+      }
+
+      // Sort: pending first, then preparing, then by time
+      filtered.sort((a, b) => {
+        const statusOrder = { pending: 0, preparing: 1, done: 2, delivered: 3, rejected: 4, cancelled: 5 };
+        if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
+        return new Date(a.created_at) - new Date(b.created_at);
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;" class="empty-state">
         <div class="empty-state-icon">✅</div>
         <div class="empty-state-title">All clear!</div>
         <div class="empty-state-text">No orders in this view right now.</div>
       </div>`;
-      return;
-    }
-
-    grid.innerHTML = '';
-    filtered.forEach(order => {
-      grid.appendChild(createOrderCard(order));
-    });
-  }
-
-  function createOrderCard(order) {
-    const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-    const elapsedMins = getMinutesElapsed(order.created_at);
-    let elapsedText = getElapsedTime(order.created_at);
-    
-    // Preparation Time Logic
-    let delayClass = '';
-    let delayLabel = '';
-    if (order.status === 'pending' || order.status === 'preparing') {
-      if (elapsedMins >= 18) {
-        delayClass = 'delay-urgent';
-        delayLabel = ' (Urgent)';
-      } else if (elapsedMins >= 15) {
-        delayClass = 'delay-warning';
-        delayLabel = ' (Slightly Delayed)';
+        return;
       }
+
+      grid.innerHTML = '';
+      filtered.forEach(order => {
+        grid.appendChild(createOrderCard(order));
+      });
     }
 
-    const card = document.createElement('div');
-    card.className = `order-card status-${order.status} ${delayClass}`;
-    card.id = `order-${order.id}`;
-    
-    // Only pulse if pending for > 10 mins but not yet urgent (pulse-card is a separate animation)
-    if (order.status === 'pending' && elapsedMins >= 10 && elapsedMins < 18) {
-      card.style.animation = 'pulse-card 2s infinite';
-    }
+    function createOrderCard(order) {
+      const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+      const elapsedMins = getMinutesElapsed(order.created_at);
+      let elapsedText = getElapsedTime(order.created_at);
 
-    const itemsHtml = items.map(i =>
-      `<li class="order-item">
+      // Preparation Time Logic
+      let delayClass = '';
+      let delayLabel = '';
+      if (order.status === 'pending' || order.status === 'preparing') {
+        if (elapsedMins >= 18) {
+          delayClass = 'delay-urgent';
+          delayLabel = ' (Urgent)';
+        } else if (elapsedMins >= 15) {
+          delayClass = 'delay-warning';
+          delayLabel = ' (Slightly Delayed)';
+        }
+      }
+
+      const isDelivery = order.order_type === 'delivery';
+
+      const card = document.createElement('div');
+      card.className = `order-card status-${order.status} ${delayClass}`;
+      card.id = `order-${order.id}`;
+      if (isDelivery) {
+        card.style.borderLeft = '4px solid #00bcd4';
+        card.style.background = 'rgba(0,188,212,0.03)';
+      }
+
+      // Only pulse if pending for > 10 mins but not yet urgent (pulse-card is a separate animation)
+      if (order.status === 'pending' && elapsedMins >= 10 && elapsedMins < 18) {
+        card.style.animation = 'pulse-card 2s infinite';
+      }
+
+      const itemsHtml = items.map(i =>
+        `<li class="order-item">
         <span class="order-item-name">
           <span>${i.emoji || '🍽️'}</span>
           <span>${i.name}</span>
         </span>
         <span class="order-item-qty">×${i.qty}</span>
       </li>`
-    ).join('');
+      ).join('');
 
-    const statusBadge = `<span class="badge badge-${order.status}">${order.status}</span>`;
-    const actionBtns = getActionButtons(order);
+      const statusBadge = `<span class="badge badge-${order.status}">${order.status}</span>`;
+      const actionBtns = getActionButtons(order);
 
-    card.innerHTML = `
+      card.innerHTML = `
       <div class="order-card-header">
         <div>
-          <div class="order-id">${order.order_id}</div>
-          <div class="order-table">${order.room_number ? '🛏️ Room ' + order.room_number : '🪑 Table ' + (order.table_number || '—')}</div>
+          <div class="order-id">
+            ${order.order_id}
+            ${isDelivery ? `<span style="background:rgba(0,188,212,0.15);color:#00bcd4;padding:2px 8px;border-radius:10px;font-size:0.65rem;font-weight:700;margin-left:6px;vertical-align:middle;">🚚 DELIVERY</span>` : ''}
+          </div>
+          <div class="order-table">
+            ${isDelivery
+          ? `👤 ${order.customer_name || 'Customer'}`
+          : (order.room_number ? '🛏️ Room ' + order.room_number : '🪑 Table ' + (order.table_number || '—'))
+        }
+          </div>
           <div class="order-time" id="timer-${order.id}" data-created="${order.created_at}" data-status="${order.status}">
             ⏱ ${elapsedText}${delayLabel}
           </div>
@@ -469,315 +516,390 @@
       <div class="order-card-body">
         <ul class="order-items">${itemsHtml}</ul>
         ${order.note ? `<div class="order-note">📝 ${order.note}</div>` : ''}
-        ${order.customer_phone ? `<div style="font-size:0.75rem;color:var(--text-dim);margin-top:6px;">📱 ${order.customer_phone}</div>` : ''}
+        ${isDelivery ? `
+          <div style="background:rgba(0,188,212,0.08);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:0.75rem;">
+            <div style="color:#00bcd4;font-weight:600;margin-bottom:4px;">📍 Delivery Address</div>
+            <div style="color:var(--text-dim);line-height:1.4;">${order.delivery_address || '—'}</div>
+            <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+              <span style="color:var(--text-dim);">📞 <a href="tel:${order.customer_phone}" style="color:#00bcd4;">${order.customer_phone || '—'}</a></span>
+              ${order.delivery_maps_link ? `<a href="${order.delivery_maps_link}" target="_blank" rel="noopener"
+                style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,188,212,0.15);border:1px solid rgba(0,188,212,0.4);border-radius:6px;padding:4px 10px;color:#00bcd4;text-decoration:none;font-size:0.7rem;font-weight:700;">
+                🗺️ Maps ↗
+              </a>` : ''}
+            </div>
+            ${order.delivery_boy_name ? `<div style="margin-top:6px;color:#00bcd4;">🚚 ${order.delivery_boy_name}</div>` : ''}
+          </div>
+        ` : `
+          ${order.customer_phone ? `<div style="font-size:0.75rem;color:var(--text-dim);margin-top:6px;">📱 ${order.customer_phone}</div>` : ''}
+        `}
       </div>
       <div class="order-card-footer">
         <div>
           <div style="font-size:0.72rem;color:var(--text-dim);margin-top:2px;">
-            ${order.assigned_waiter_name ? `🛎️ ${order.assigned_waiter_name}` : ''}
+            ${!isDelivery && order.assigned_waiter_name ? `🛎️ ${order.assigned_waiter_name}` : ''}
           </div>
         </div>
         <div class="order-actions">${actionBtns}</div>
       </div>
     `;
 
-    // Click to open detail modal
-    card.querySelector('.order-card-header').addEventListener('click', () => openOrderModal(order));
+      // Click to open detail modal
+      card.querySelector('.order-card-header').addEventListener('click', () => openOrderModal(order));
 
-    return card;
-  }
+      return card;
+    }
 
-  function getActionButtons(order) {
-    const waiterTag = order.assigned_waiter_name
-      ? `<span style="font-size:0.72rem;color:var(--blue);background:var(--blue-dim);padding:2px 8px;border-radius:10px;border:1px solid rgba(66,165,245,0.3);">🛎️ ${order.assigned_waiter_name}</span>`
-      : '';
+    function getActionButtons(order) {
+      const isDelivery = order.order_type === 'delivery';
 
-    if (order.status === 'pending') {
-      return `
+      const waiterTag = order.assigned_waiter_name
+        ? `<span style="font-size:0.72rem;color:var(--blue);background:var(--blue-dim);padding:2px 8px;border-radius:10px;border:1px solid rgba(66,165,245,0.3);">🛎️ ${order.assigned_waiter_name}</span>`
+        : '';
+
+      const deliveryBoyTag = order.delivery_boy_name
+        ? `<span style="font-size:0.72rem;color:#00bcd4;background:rgba(0,188,212,0.1);padding:2px 8px;border-radius:10px;border:1px solid rgba(0,188,212,0.3);">🚚 ${order.delivery_boy_name}</span>`
+        : '';
+
+      if (order.status === 'pending') {
+        return `
         <button class="btn btn-blue btn-sm" onclick="updateStatus('${order.id}','preparing');event.stopPropagation()">👨‍🍳 Preparing</button>
         <button class="btn btn-danger btn-sm" onclick="updateStatus('${order.id}','rejected');event.stopPropagation()">✕ Reject</button>
       `;
-    }
-    if (order.status === 'preparing') {
-      // If waiter already assigned show Done button, else show Assign+Done
-      if (order.assigned_waiter_name) {
-        return `
+      }
+
+      if (order.status === 'preparing') {
+        if (isDelivery) {
+          // Delivery orders: assign delivery boy + mark ready for pickup
+          const dbSelect = `<select onchange="assignDeliveryBoy('${order.id}',this.value,this.options[this.selectedIndex].text);event.stopPropagation()"
+          style="font-size:0.72rem;padding:4px 8px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);max-width:140px;"
+          onclick="event.stopPropagation()">
+          <option value="">Assign Delivery Boy…</option>
+          ${(window._deliveryBoys || []).map(b => `<option value="${b.id}" ${order.delivery_boy_id === b.id ? 'selected' : ''}>${b.name}</option>`).join('')}
+        </select>`;
+          return `
+          <button class="btn btn-primary btn-sm" onclick="markDoneWithWaiter('${order.id}');event.stopPropagation()">✅ Ready for Pickup</button>
+          <button class="btn btn-danger btn-sm" onclick="updateStatus('${order.id}','rejected');event.stopPropagation()">✕ Reject</button>
+          ${dbSelect}
+          ${deliveryBoyTag}
+        `;
+        }
+        // Dine-in: existing waiter logic
+        if (order.assigned_waiter_name) {
+          return `
           <button class="btn btn-primary btn-sm" onclick="markDoneWithWaiter('${order.id}');event.stopPropagation()">✅ Done</button>
           <button class="btn btn-danger btn-sm" onclick="updateStatus('${order.id}','rejected');event.stopPropagation()">✕ Reject</button>
           ${waiterTag}
         `;
-      } else {
-        return `
+        } else {
+          return `
           <button class="btn btn-primary btn-sm" onclick="markDoneWithWaiter('${order.id}');event.stopPropagation()">✅ Done</button>
           <button class="btn btn-danger btn-sm" onclick="updateStatus('${order.id}','rejected');event.stopPropagation()">✕ Reject</button>
         `;
+        }
       }
-    }
-    if (order.status === 'done') {
-      return `
+
+      if (order.status === 'done') {
+        if (isDelivery) {
+          return `
+          <span style="font-size:0.78rem;color:#00bcd4;">📦 Waiting for pickup</span>
+          ${deliveryBoyTag}
+        `;
+        }
+        return `
         <span style="font-size:0.78rem;color:var(--accent-bright);">✅ Ready — Waiter collecting</span>
         ${waiterTag}
       `;
-    }
-    if (order.status === 'delivered') {
-      if (order.payment_status === 'paid') {
-        return `<span style="font-size:0.78rem;color:var(--accent-bright);">🛎️ Delivered & Paid</span>`;
-      } else {
-        return `<span style="font-size:0.78rem;color:var(--text-dim);">🛎️ Delivered — Awaiting payment</span>`;
       }
-    }
-    return '';
-  }
 
-  // ── Update order status (simple — for pending/rejected only)
-  window.updateStatus = async function(orderId, newStatus) {
-    const sb = window.supabaseClient;
-    const { error } = await sb.from('orders')
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq('id', orderId);
-    if (error) { window.showToast('Error', 'Could not update status', 'error'); return; }
-    const order = (window.allOrders || []).find(o => o.id === orderId);
-    window.logActivity && window.logActivity('order_status', `${order?.order_id} → ${newStatus}`, window.currentStaff?.name||'', window.getActiveBranchId());
-    window.showToast('✅ Updated', `Order → ${newStatus}`, 'success');
-  };
-
-  // ── Mark done with smart auto waiter assignment
-  window.markDoneWithWaiter = async function(orderId) {
-    const sb    = window.supabaseClient;
-    const bid   = window.getActiveBranchId();
-    const order = (window.allOrders || []).find(o => o.id === orderId);
-    if (!order) return;
-
-    // ── Situation 5: Waiter placed the order — already assigned, just mark done
-    if (order.assigned_waiter_id) {
-      const { error } = await sb.from('orders')
-        .update({ status: 'done', updated_at: new Date().toISOString() })
-        .eq('id', orderId);
-      if (!error) {
-        window.showToast('✅ Order Ready!', `${order.assigned_waiter_name} will deliver`, 'success');
-        window.logActivity && window.logActivity(
-          'order_status',
-          `${order.order_id} → done (waiter: ${order.assigned_waiter_name})`,
-          window.currentStaff?.name || '', bid
-        );
+      if (order.status === 'picked_up') {
+        return `<span style="font-size:0.78rem;color:#6c63ff;">📦 Picked up — ${order.delivery_boy_name || 'En route'}</span>`;
       }
-      return;
-    }
-
-    // ── Situation 3: No waiters at all
-    // Always fetch fresh from DB (fixes Situation 4 — deactivated mid-shift)
-    const { data: waiters } = await sb.from('staff').select('id,name')
-      .eq('branch_id', bid).eq('is_active', true).eq('role', 'waiter');
-
-    if (!waiters || waiters.length === 0) {
-      window.showToast('⚠️ No waiters available', 'Add waiter staff first', 'warning');
-      return;
-    }
-
-    // ── Get each waiter's CURRENT active orders (status = done, not yet delivered)
-    // This fixes Situation 1 — waiter already busy with an order
-    const { data: activeOrders } = await sb.from('orders').select('assigned_waiter_id')
-      .eq('branch_id', bid)
-      .in('status', ['done']) // 'done' = kitchen ready, waiter picking up/delivering
-      .not('assigned_waiter_id', 'is', null);
-
-    // Count active orders per waiter right now
-    const activeMap = {};
-    waiters.forEach(w => { activeMap[w.id] = 0; });
-    (activeOrders || []).forEach(o => {
-      if (activeMap[o.assigned_waiter_id] !== undefined) {
-        activeMap[o.assigned_waiter_id]++;
+      if (order.status === 'out_for_delivery') {
+        return `<span style="font-size:0.78rem;color:#ff9800;">🚚 Out for delivery — ${order.delivery_boy_name || '—'}</span>`;
       }
-    });
 
-    // ── Get today's total delivery count for tiebreaking (fairness)
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-    const { data: counts } = await sb.from('waiter_delivery_count').select('*')
-      .eq('branch_id', bid).eq('date', today);
-    const countMap = {};
-    (counts || []).forEach(c => { countMap[c.waiter_id] = c.count; });
-
-    // ── Smart assignment: 
-    // Primary sort: fewest ACTIVE orders right now
-    // Tiebreak: fewest total deliveries today (round-robin fairness)
-    let assignedWaiter = waiters[0];
-    let minActive = Infinity;
-    let minTotal  = Infinity;
-
-    waiters.forEach(w => {
-      const active = activeMap[w.id] || 0;
-      const total  = countMap[w.id]  || 0;
-      if (
-        active < minActive ||
-        (active === minActive && total < minTotal)
-      ) {
-        minActive = active;
-        minTotal  = total;
-        assignedWaiter = w;
-      }
-    });
-
-    // ── Situation 2: All waiters are busy — warn but still assign least-busy one
-    const allBusy = waiters.every(w => (activeMap[w.id] || 0) > 0);
-    if (allBusy) {
-      window.showToast(
-        '⚠️ All waiters are busy',
-        `Assigned to ${assignedWaiter.name} — fewest active orders`,
-        'warning',
-        6000
-      );
-    }
-
-    // ── Mark done + assign waiter
-    const { error } = await sb.from('orders').update({
-      status:               'done',
-      assigned_waiter_id:   assignedWaiter.id,
-      assigned_waiter_name: assignedWaiter.name,
-      assigned_at:          new Date().toISOString(),
-      updated_at:           new Date().toISOString()
-    }).eq('id', orderId);
-
-    if (error) { window.showToast('Error assigning waiter', error.message, 'error'); return; }
-
-    // ── Update daily delivery count for tiebreaking
-    await sb.from('waiter_delivery_count').upsert({
-      branch_id:   bid,
-      waiter_id:   assignedWaiter.id,
-      waiter_name: assignedWaiter.name,
-      date:        today,
-      count:       (countMap[assignedWaiter.id] || 0) + 1
-    }, { onConflict: 'branch_id,waiter_id,date' });
-
-    if (!allBusy) {
-      window.showToast(
-        '✅ Order Ready!',
-        `Auto-assigned to ${assignedWaiter.name} ${minActive === 0 ? '(free)' : `(${minActive} active)`}`,
-        'success'
-      );
-    }
-
-    window.logActivity && window.logActivity(
-      'order_status',
-      `${order.order_id} → done, auto-assigned to ${assignedWaiter.name} (active:${minActive}, today:${minTotal})`,
-      window.currentStaff?.name || '', bid
-    );
-  };
-
-  // ── Store toggle
-  window.toggleStore = async function(isOpen) {
-    const label = document.getElementById('storeLabel');
-    if (label) label.textContent = isOpen ? 'Store Open' : 'Store Closed';
-    const ok = await window.setSetting('store_open', String(isOpen));
-    if (ok) {
-      window.showToast(isOpen ? '✅ Store Opened' : '🔴 Store Closed', '', isOpen ? 'success' : 'warning');
-      window.logActivity && window.logActivity(
-        'store_toggle', `Store ${isOpen ? 'opened' : 'closed'}`,
-        window.currentStaff?.name || '', window.getActiveBranchId()
-      );
-    } else {
-      window.showToast('Error', 'Could not update store status', 'error');
-    }
-  };
-
-  // ── Bell sound
-  window._bellEnabled = true;
-  window.toggleBell = function() {
-    window._bellEnabled = !window._bellEnabled;
-    const btn = document.getElementById('bellBtn');
-    if (btn) btn.textContent = window._bellEnabled ? '🔔 Sound On' : '🔕 Sound Off';
-  };
-
-  function playBell() {
-    try {
-      const audio = new Audio('bell.mp3');
-      audio.play().catch(e => console.log('Audio blocked', e));
-    } catch(e) {}
-  }
-
-  // ── Elapsed time helpers
-  function getMinutesElapsed(dateStr) {
-    return Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
-  }
-
-  function getElapsedTime(dateStr) {
-    const mins = getMinutesElapsed(dateStr);
-    if (mins < 1) return 'Just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    const rem = mins % 60;
-    return rem > 0 ? `${hrs}h ${rem}m ago` : `${hrs}h ago`;
-  }
-
-  window.updateTimers = function() {
-    let hasDelayed = false;
-    
-    document.querySelectorAll('[id^="timer-"]').forEach(el => {
-      const created = el.dataset.created;
-      const status = el.dataset.status;
-      if (!created) return;
-      
-      const mins = getMinutesElapsed(created);
-      let text = getElapsedTime(created);
-      
-      const card = el.closest('.order-card');
-      
-      if (status === 'pending' || status === 'preparing') {
-        if (mins >= 18) {
-          text += ' (Urgent)';
-          if (card) {
-            card.classList.add('delay-urgent');
-            card.classList.remove('delay-warning');
-          }
-          hasDelayed = true;
-        } else if (mins >= 15) {
-          text += ' (Slightly Delayed)';
-          if (card) {
-            card.classList.add('delay-warning');
-            card.classList.remove('delay-urgent');
-          }
-          hasDelayed = true;
+      if (order.status === 'delivered') {
+        if (isDelivery) {
+          return `<span style="font-size:0.78rem;color:var(--accent-bright);">✅ Delivered by ${order.delivery_boy_name || '—'}</span>`;
+        }
+        if (order.payment_status === 'paid') {
+          return `<span style="font-size:0.78rem;color:var(--accent-bright);">🛎️ Delivered & Paid</span>`;
         } else {
-          if (card) {
-            card.classList.remove('delay-urgent');
-            card.classList.remove('delay-warning');
-          }
+          return `<span style="font-size:0.78rem;color:var(--text-dim);">🛎️ Delivered — Awaiting payment</span>`;
         }
       }
-      
-      el.innerHTML = `⏱ ${text}`;
-    });
-    
-    const delayTab = document.getElementById('filterTabDelayed');
-    if (delayTab) {
-      if (hasDelayed) {
-        delayTab.classList.add('blink-red');
-      } else {
-        delayTab.classList.remove('blink-red');
+      return '';
+    }
+
+    // ── Update order status (simple — for pending/rejected only)
+    window.updateStatus = async function (orderId, newStatus) {
+      const sb = window.supabaseClient;
+      const { error } = await sb.from('orders')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', orderId);
+      if (error) { window.showToast('Error', 'Could not update status', 'error'); return; }
+      const order = (window.allOrders || []).find(o => o.id === orderId);
+      window.logActivity && window.logActivity('order_status', `${order?.order_id} → ${newStatus}`, window.currentStaff?.name || '', window.getActiveBranchId());
+      window.showToast('✅ Updated', `Order → ${newStatus}`, 'success');
+    };
+
+    // ── Mark done with smart auto waiter assignment
+    window.markDoneWithWaiter = async function (orderId) {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const order = (window.allOrders || []).find(o => o.id === orderId);
+      if (!order) return;
+
+      // ── DELIVERY ORDER: bypass waiter, go straight to picked_up
+      if (order.order_type === 'delivery') {
+        if (!order.delivery_boy_id) {
+          window.showToast('⚠️ No delivery boy assigned', 'Assign a delivery boy first using the dropdown', 'warning');
+          return;
+        }
+        const otp = String(Math.floor(1000 + Math.random() * 9000));
+        const { error } = await sb.from('orders').update({
+          status: 'picked_up',
+          picked_up_at: new Date().toISOString(),
+          otp: otp,
+          updated_at: new Date().toISOString()
+        }).eq('id', orderId);
+        if (!error) {
+          window.showToast('📦 Ready for Pickup!', `${order.delivery_boy_name} — OTP: ${otp}`, 'success', 6000);
+          window.logActivity && window.logActivity('order_status', `${order.order_id} → picked_up (delivery boy: ${order.delivery_boy_name})`, window.currentStaff?.name || '', bid);
+        }
+        return;
       }
+
+      // ── Situation 5: Waiter placed the order — already assigned, just mark done
+      if (order.assigned_waiter_id) {
+        const { error } = await sb.from('orders')
+          .update({ status: 'done', updated_at: new Date().toISOString() })
+          .eq('id', orderId);
+        if (!error) {
+          window.showToast('✅ Order Ready!', `${order.assigned_waiter_name} will deliver`, 'success');
+          window.logActivity && window.logActivity(
+            'order_status',
+            `${order.order_id} → done (waiter: ${order.assigned_waiter_name})`,
+            window.currentStaff?.name || '', bid
+          );
+        }
+        return;
+      }
+
+      // ── Situation 3: No waiters at all
+      // Always fetch fresh from DB (fixes Situation 4 — deactivated mid-shift)
+      const { data: waiters } = await sb.from('staff').select('id,name')
+        .eq('branch_id', bid).eq('is_active', true).eq('role', 'waiter');
+
+      if (!waiters || waiters.length === 0) {
+        window.showToast('⚠️ No waiters available', 'Add waiter staff first', 'warning');
+        return;
+      }
+
+      // ── Get each waiter's CURRENT active orders (status = done, not yet delivered)
+      // This fixes Situation 1 — waiter already busy with an order
+      const { data: activeOrders } = await sb.from('orders').select('assigned_waiter_id')
+        .eq('branch_id', bid)
+        .in('status', ['done']) // 'done' = kitchen ready, waiter picking up/delivering
+        .not('assigned_waiter_id', 'is', null);
+
+      // Count active orders per waiter right now
+      const activeMap = {};
+      waiters.forEach(w => { activeMap[w.id] = 0; });
+      (activeOrders || []).forEach(o => {
+        if (activeMap[o.assigned_waiter_id] !== undefined) {
+          activeMap[o.assigned_waiter_id]++;
+        }
+      });
+
+      // ── Get today's total delivery count for tiebreaking (fairness)
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      const { data: counts } = await sb.from('waiter_delivery_count').select('*')
+        .eq('branch_id', bid).eq('date', today);
+      const countMap = {};
+      (counts || []).forEach(c => { countMap[c.waiter_id] = c.count; });
+
+      // ── Smart assignment: 
+      // Primary sort: fewest ACTIVE orders right now
+      // Tiebreak: fewest total deliveries today (round-robin fairness)
+      let assignedWaiter = waiters[0];
+      let minActive = Infinity;
+      let minTotal = Infinity;
+
+      waiters.forEach(w => {
+        const active = activeMap[w.id] || 0;
+        const total = countMap[w.id] || 0;
+        if (
+          active < minActive ||
+          (active === minActive && total < minTotal)
+        ) {
+          minActive = active;
+          minTotal = total;
+          assignedWaiter = w;
+        }
+      });
+
+      // ── Situation 2: All waiters are busy — warn but still assign least-busy one
+      const allBusy = waiters.every(w => (activeMap[w.id] || 0) > 0);
+      if (allBusy) {
+        window.showToast(
+          '⚠️ All waiters are busy',
+          `Assigned to ${assignedWaiter.name} — fewest active orders`,
+          'warning',
+          6000
+        );
+      }
+
+      // ── Mark done + assign waiter
+      const { error } = await sb.from('orders').update({
+        status: 'done',
+        assigned_waiter_id: assignedWaiter.id,
+        assigned_waiter_name: assignedWaiter.name,
+        assigned_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }).eq('id', orderId);
+
+      if (error) { window.showToast('Error assigning waiter', error.message, 'error'); return; }
+
+      // ── Update daily delivery count for tiebreaking
+      await sb.from('waiter_delivery_count').upsert({
+        branch_id: bid,
+        waiter_id: assignedWaiter.id,
+        waiter_name: assignedWaiter.name,
+        date: today,
+        count: (countMap[assignedWaiter.id] || 0) + 1
+      }, { onConflict: 'branch_id,waiter_id,date' });
+
+      if (!allBusy) {
+        window.showToast(
+          '✅ Order Ready!',
+          `Auto-assigned to ${assignedWaiter.name} ${minActive === 0 ? '(free)' : `(${minActive} active)`}`,
+          'success'
+        );
+      }
+
+      window.logActivity && window.logActivity(
+        'order_status',
+        `${order.order_id} → done, auto-assigned to ${assignedWaiter.name} (active:${minActive}, today:${minTotal})`,
+        window.currentStaff?.name || '', bid
+      );
+    };
+
+    // ── Store toggle
+    window.toggleStore = async function (isOpen) {
+      const label = document.getElementById('storeLabel');
+      if (label) label.textContent = isOpen ? 'Store Open' : 'Store Closed';
+      const ok = await window.setSetting('store_open', String(isOpen));
+      if (ok) {
+        window.showToast(isOpen ? '✅ Store Opened' : '🔴 Store Closed', '', isOpen ? 'success' : 'warning');
+        window.logActivity && window.logActivity(
+          'store_toggle', `Store ${isOpen ? 'opened' : 'closed'}`,
+          window.currentStaff?.name || '', window.getActiveBranchId()
+        );
+      } else {
+        window.showToast('Error', 'Could not update store status', 'error');
+      }
+    };
+
+    // ── Bell sound
+    window._bellEnabled = true;
+    window.toggleBell = function () {
+      window._bellEnabled = !window._bellEnabled;
+      const btn = document.getElementById('bellBtn');
+      if (btn) btn.textContent = window._bellEnabled ? '🔔 Sound On' : '🔕 Sound Off';
+    };
+
+    function playBell() {
+      try {
+        const audio = new Audio('bell.mp3');
+        audio.play().catch(e => console.log('Audio blocked', e));
+      } catch (e) { }
     }
-    
-    if (window.allOrders) {
-      updateTabCounts(window.allOrders);
+
+    // ── Elapsed time helpers
+    function getMinutesElapsed(dateStr) {
+      return Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
     }
-  };
 
-  // ── Order detail modal
-  window.openOrderModal = function(order) {
-    const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-    const rate = window.gstRate || 5;
-    const half = rate / 2;
+    function getElapsedTime(dateStr) {
+      const mins = getMinutesElapsed(dateStr);
+      if (mins < 1) return 'Just now';
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      const rem = mins % 60;
+      return rem > 0 ? `${hrs}h ${rem}m ago` : `${hrs}h ago`;
+    }
 
-    document.getElementById('modalTitle').textContent = `${order.order_id} — ${order.room_number ? 'Room ' + order.room_number : 'Table ' + (order.table_number || '—')}`;
+    window.updateTimers = function () {
+      let hasDelayed = false;
 
-    const itemRows = items.map(i =>
-      `<tr>
+      document.querySelectorAll('[id^="timer-"]').forEach(el => {
+        const created = el.dataset.created;
+        const status = el.dataset.status;
+        if (!created) return;
+
+        const mins = getMinutesElapsed(created);
+        let text = getElapsedTime(created);
+
+        const card = el.closest('.order-card');
+
+        if (status === 'pending' || status === 'preparing') {
+          if (mins >= 18) {
+            text += ' (Urgent)';
+            if (card) {
+              card.classList.add('delay-urgent');
+              card.classList.remove('delay-warning');
+            }
+            hasDelayed = true;
+          } else if (mins >= 15) {
+            text += ' (Slightly Delayed)';
+            if (card) {
+              card.classList.add('delay-warning');
+              card.classList.remove('delay-urgent');
+            }
+            hasDelayed = true;
+          } else {
+            if (card) {
+              card.classList.remove('delay-urgent');
+              card.classList.remove('delay-warning');
+            }
+          }
+        }
+
+        el.innerHTML = `⏱ ${text}`;
+      });
+
+      const delayTab = document.getElementById('filterTabDelayed');
+      if (delayTab) {
+        if (hasDelayed) {
+          delayTab.classList.add('blink-red');
+        } else {
+          delayTab.classList.remove('blink-red');
+        }
+      }
+
+      if (window.allOrders) {
+        updateTabCounts(window.allOrders);
+      }
+    };
+
+    // ── Order detail modal
+    window.openOrderModal = function (order) {
+      const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+      const rate = window.gstRate || 5;
+      const half = rate / 2;
+
+      document.getElementById('modalTitle').textContent = `${order.order_id} — ${order.room_number ? 'Room ' + order.room_number : 'Table ' + (order.table_number || '—')}`;
+
+      const itemRows = items.map(i =>
+        `<tr>
         <td>${i.emoji || '🍽️'} ${i.name}</td>
         <td style="text-align:center;">×${i.qty}</td>
         <td style="text-align:right;font-family:var(--font-mono);">Rs. ${(i.price * i.qty).toFixed(2)}</td>
       </tr>`
-    ).join('');
+      ).join('');
 
-    document.getElementById('modalBody').innerHTML = `
+      document.getElementById('modalBody').innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;font-size:0.875rem;">
         <div><span style="color:var(--text-dim);">Status</span><br>
           <span class="badge badge-${order.status}" style="margin-top:4px;">${order.status}</span></div>
@@ -811,7 +933,7 @@
       ${order.note ? `<div class="order-note" style="margin-top:12px;">📝 ${order.note}</div>` : ''}
     `;
 
-    document.getElementById('modalFooter').innerHTML = `
+      document.getElementById('modalFooter').innerHTML = `
       ${order.status === 'pending' ? `
         <button class="btn btn-blue" onclick="updateStatus('${order.id}','preparing');closeOrderModal()">👨‍🍳 Mark Preparing</button>
         <button class="btn btn-danger" onclick="updateStatus('${order.id}','rejected');closeOrderModal()">✕ Reject</button>
@@ -829,34 +951,34 @@
       <button class="btn btn-ghost" onclick="closeOrderModal()">Close</button>
     `;
 
-    document.getElementById('orderModal').style.display = 'flex';
-  };
+      document.getElementById('orderModal').style.display = 'flex';
+    };
 
-  window.closeOrderModal = function() {
-    document.getElementById('orderModal').style.display = 'none';
-  };
+    window.closeOrderModal = function () {
+      document.getElementById('orderModal').style.display = 'none';
+    };
 
-  // ── Print daily summary
-  window.printDailySummary = function() {
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-    const orders = (window.allOrders || []).filter(o =>
-      new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === today);
+    // ── Print daily summary
+    window.printDailySummary = function () {
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      const orders = (window.allOrders || []).filter(o =>
+        new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === today);
 
-    const done = orders.filter(o => o.status === 'done');
-    const revenue = done.reduce((s, o) => s + parseFloat(o.total || 0), 0);
-    const slip = document.getElementById('printSlip');
+      const done = orders.filter(o => o.status === 'done');
+      const revenue = done.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+      const slip = document.getElementById('printSlip');
 
-    const rows = done.map(o => {
-      const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-      return `<tr>
+      const rows = done.map(o => {
+        const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+        return `<tr>
         <td>${o.order_id}</td>
         <td>T${o.table_number}</td>
         <td>${items.map(i => `${i.name}×${i.qty}`).join(', ')}</td>
         <td style="text-align:right">Rs. ${parseFloat(o.total).toFixed(2)}</td>
       </tr>`;
-    }).join('');
+      }).join('');
 
-    slip.innerHTML = `
+      slip.innerHTML = `
       <div style="font-family:monospace;font-size:12px;color:#000;max-width:700px;margin:0 auto;">
         <h2 style="text-align:center;margin-bottom:4px;">LAXMI — Daily Summary</h2>
         <p style="text-align:center;color:#555;margin-bottom:12px;">${new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'long', year: 'numeric' })}</p>
@@ -878,116 +1000,137 @@
         </div>
       </div>
     `;
-    window.print();
-  };
+      window.print();
+    };
 
-  // ── Full Screen Mode
-  window.toggleFullscreen = function() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        window.showToast('Error', 'Cannot enable full screen mode', 'error');
-      });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
-
-  document.addEventListener('fullscreenchange', () => {
-    const isFullscreen = !!document.fullscreenElement;
-    document.body.classList.toggle('kitchen-fullscreen', isFullscreen);
-    const btn = document.getElementById('fullscreenBtn');
-    if (btn) {
-      btn.innerHTML = isFullscreen ? '❌ Exit Full Screen' : '🖥️ Full Screen';
-      btn.classList.toggle('btn-primary', isFullscreen);
-      btn.classList.toggle('btn-secondary', !isFullscreen);
-    }
-  });
-
-  // ── Export Excel
-  window.exportExcel = function() {
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-    const orders = (window.allOrders || []).filter(o =>
-      new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === today);
-
-    if (orders.length === 0) { window.showToast('No orders to export', '', 'warning'); return; }
-
-    let csv = 'Order ID,Invoice No,Table,Customer,Phone,Items,Subtotal,CGST,SGST,Total,Status,Payment,Time\n';
-    orders.forEach(o => {
-      const items = (typeof o.items === 'string' ? JSON.parse(o.items) : o.items)
-        .map(i => `${i.name}×${i.qty}`).join(' | ');
-      const time = new Date(o.created_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
-      csv += `"${o.order_id}","${o.invoice_no || ''}","${o.table_number || ''}","${o.customer_name || ''}","${o.customer_phone || ''}","${items}",${o.subtotal},${o.cgst},${o.sgst},${o.total},"${o.status}","${o.payment_status}","${time}"\n`;
-    });
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `LAXMI_Orders_${today}.csv`;
-    a.click();
-    window.showToast('✅ Exported', `${orders.length} orders downloaded`, 'success');
-  };
-
-  // ── Sidebar toggle (mobile)
-  window.toggleSidebar = function() {
-    document.getElementById('sidebar').classList.toggle('open');
-  };
-
-  // BroadcastChannel — receive orders from same browser
-  try {
-    const bc = new BroadcastChannel('rms_orders');
-    bc.onmessage = (e) => {
-      const order = e.data;
-      if (!order?.id) return;
-      const exists = (window.allOrders || []).find(o => o.id === order.id);
-      if (!exists) {
-        window.allOrders = [order, ...(window.allOrders || [])];
-        updateStats(window.allOrders);
-        updateTabCounts(window.allOrders);
-        renderOrders(window.allOrders);
-        playBell();
+    // ── Full Screen Mode
+    window.toggleFullscreen = function () {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          window.showToast('Error', 'Cannot enable full screen mode', 'error');
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
       }
     };
-  } catch(e) {}
 
-</script>
-<script>
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.toggle('open');
-    if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('open'));
-  }
-  function closeSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('show');
-  }
-  // Close sidebar on nav link click (mobile)
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.nav-item').forEach(function(el) {
-      el.addEventListener('click', closeSidebar);
+    document.addEventListener('fullscreenchange', () => {
+      const isFullscreen = !!document.fullscreenElement;
+      document.body.classList.toggle('kitchen-fullscreen', isFullscreen);
+      const btn = document.getElementById('fullscreenBtn');
+      if (btn) {
+        btn.innerHTML = isFullscreen ? '❌ Exit Full Screen' : '🖥️ Full Screen';
+        btn.classList.toggle('btn-primary', isFullscreen);
+        btn.classList.toggle('btn-secondary', !isFullscreen);
+      }
     });
-  });
 
-  // ── Assign waiter to order
-  let _waiters = [];
-  async function loadWaiters() {
-    const { data } = await window.supabaseClient.from('staff').select('id,name,role')
-      .eq('branch_id', window.getActiveBranchId())
-      .eq('is_active', true)
-      .in('role', ['waiter','manager']);
-    _waiters = data || [];
-  }
+    // ── Export Excel
+    window.exportExcel = function () {
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      const orders = (window.allOrders || []).filter(o =>
+        new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === today);
 
-  window.openAssignWaiter = function(orderId) {
-    if (!_waiters.length) { window.showToast('No waiters available','Add waiter staff first','warning'); return; }
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
+      if (orders.length === 0) { window.showToast('No orders to export', '', 'warning'); return; }
+
+      let csv = 'Order ID,Invoice No,Table,Customer,Phone,Items,Subtotal,CGST,SGST,Total,Status,Payment,Time\n';
+      orders.forEach(o => {
+        const items = (typeof o.items === 'string' ? JSON.parse(o.items) : o.items)
+          .map(i => `${i.name}×${i.qty}`).join(' | ');
+        const time = new Date(o.created_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
+        csv += `"${o.order_id}","${o.invoice_no || ''}","${o.table_number || ''}","${o.customer_name || ''}","${o.customer_phone || ''}","${items}",${o.subtotal},${o.cgst},${o.sgst},${o.total},"${o.status}","${o.payment_status}","${time}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `LAXMI_Orders_${today}.csv`;
+      a.click();
+      window.showToast('✅ Exported', `${orders.length} orders downloaded`, 'success');
+    };
+
+    // ── Sidebar toggle (mobile)
+    window.toggleSidebar = function () {
+      document.getElementById('sidebar').classList.toggle('open');
+    };
+
+    // BroadcastChannel — receive orders from same browser
+    try {
+      const bc = new BroadcastChannel('rms_orders');
+      bc.onmessage = (e) => {
+        const order = e.data;
+        if (!order?.id) return;
+        const exists = (window.allOrders || []).find(o => o.id === order.id);
+        if (!exists) {
+          window.allOrders = [order, ...(window.allOrders || [])];
+          updateStats(window.allOrders);
+          updateTabCounts(window.allOrders);
+          renderOrders(window.allOrders);
+          playBell();
+        }
+      };
+    } catch (e) { }
+
+  </script>
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('open');
+      if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('open'));
+    }
+    function closeSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.remove('open');
+      if (overlay) overlay.classList.remove('show');
+    }
+    // Close sidebar on nav link click (mobile)
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.nav-item').forEach(function (el) {
+        el.addEventListener('click', closeSidebar);
+      });
+    });
+
+    // ── Delivery boys
+    window._deliveryBoys = [];
+    async function loadDeliveryBoys() {
+      const { data } = await window.supabaseClient.from('staff').select('id,name')
+        .eq('branch_id', window.getActiveBranchId())
+        .eq('is_active', true)
+        .eq('role', 'delivery_boy');
+      window._deliveryBoys = data || [];
+    }
+
+    window.assignDeliveryBoy = async function (orderId, boyId, boyName) {
+      if (!boyId) return;
+      const { error } = await window.supabaseClient.from('orders')
+        .update({ delivery_boy_id: boyId, delivery_boy_name: boyName, updated_at: new Date().toISOString() })
+        .eq('id', orderId);
+      if (!error) {
+        window.showToast('✅ Delivery boy assigned', boyName, 'success');
+        window.logActivity && window.logActivity('order_status', `Delivery boy ${boyName} assigned`, window.currentStaff?.name || '', window.getActiveBranchId());
+      }
+    };
+
+    // ── Assign waiter to order
+    let _waiters = [];
+    async function loadWaiters() {
+      const { data } = await window.supabaseClient.from('staff').select('id,name,role')
+        .eq('branch_id', window.getActiveBranchId())
+        .eq('is_active', true)
+        .in('role', ['waiter', 'manager']);
+      _waiters = data || [];
+    }
+
+    window.openAssignWaiter = function (orderId) {
+      if (!_waiters.length) { window.showToast('No waiters available', 'Add waiter staff first', 'warning'); return; }
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.style.display = 'flex';
+      modal.innerHTML = `
       <div class="modal" style="max-width:360px;">
         <div class="modal-header">
           <h2 class="modal-title">🛎️ Assign Waiter</h2>
@@ -997,7 +1140,7 @@
           <label class="input-label">Select Waiter</label>
           <select id="waiterSelect" class="input">
             <option value="">Choose waiter…</option>
-            ${_waiters.map(w=>`<option value="${w.id}" data-name="${w.name}">${w.name} (${w.role})</option>`).join('')}
+            ${_waiters.map(w => `<option value="${w.id}" data-name="${w.name}">${w.name} (${w.role})</option>`).join('')}
           </select>
         </div>
         <div class="modal-footer">
@@ -1005,38 +1148,35 @@
           <button class="btn btn-primary" onclick="assignWaiter('${orderId}',this)">Assign</button>
         </div>
       </div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
-  };
+      document.body.appendChild(modal);
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    };
 
-  window.assignWaiter = async function(orderId, btn) {
-    const modal  = btn.closest('.modal-overlay');
-    const sel    = modal.querySelector('select');
-    const wId    = sel.value;
-    const wName  = sel.options[sel.selectedIndex]?.dataset.name;
-    if (!wId) { window.showToast('Select a waiter','','error'); return; }
-    btn.disabled = true; btn.textContent = 'Assigning…';
-    const { data, error } = await window.supabaseClient.from('orders').update({
-      assigned_waiter_id:   wId,
-      assigned_waiter_name: wName,
-      assigned_at: new Date().toISOString(),
-      updated_at:  new Date().toISOString()
-    }).eq('id', orderId).select();
-    if (error) {
-      console.error('Assign error:', error);
-      window.showToast('Error assigning waiter', error.message, 'error');
-      btn.disabled = false; btn.textContent = 'Assign';
-      return;
-    }
-    modal.remove();
-    window.showToast('✅ Waiter assigned!', `${wName} will deliver this order`, 'success');
-    window.logActivity && window.logActivity('order_status', `Waiter ${wName} assigned to order`, window.currentStaff?.name||'', window.getActiveBranchId());
-    await window.loadOrders();
-  };
-</script>
+    window.assignWaiter = async function (orderId, btn) {
+      const modal = btn.closest('.modal-overlay');
+      const sel = modal.querySelector('select');
+      const wId = sel.value;
+      const wName = sel.options[sel.selectedIndex]?.dataset.name;
+      if (!wId) { window.showToast('Select a waiter', '', 'error'); return; }
+      btn.disabled = true; btn.textContent = 'Assigning…';
+      const { data, error } = await window.supabaseClient.from('orders').update({
+        assigned_waiter_id: wId,
+        assigned_waiter_name: wName,
+        assigned_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }).eq('id', orderId).select();
+      if (error) {
+        console.error('Assign error:', error);
+        window.showToast('Error assigning waiter', error.message, 'error');
+        btn.disabled = false; btn.textContent = 'Assign';
+        return;
+      }
+      modal.remove();
+      window.showToast('✅ Waiter assigned!', `${wName} will deliver this order`, 'success');
+      window.logActivity && window.logActivity('order_status', `Waiter ${wName} assigned to order`, window.currentStaff?.name || '', window.getActiveBranchId());
+      await window.loadOrders();
+    };
+  </script>
 </body>
+
 </html>
-
-
-
-

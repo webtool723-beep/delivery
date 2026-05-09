@@ -1,763 +1,1035 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LAXMI — Admin Panel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    .admin-tabs { display:flex; gap:4px; background:var(--surface2); border-radius:var(--radius-sm); padding:4px; margin-bottom:24px; flex-wrap:wrap; }
-    .admin-tab { padding:8px 18px; border-radius:6px; font-size:0.875rem; font-weight:500; cursor:pointer; color:var(--text-dim); transition:all 0.2s; border:none; background:none; white-space:nowrap; }
-    .admin-tab.active { background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,0.3); }
-    .tab-panel { display:none; }
-    .tab-panel.active { display:block; }
+    .admin-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .admin-tab {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-dim);
+      transition: all 0.2s;
+      border: none;
+      background: none;
+      white-space: nowrap;
+    }
+
+    .admin-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
 
     /* Chart */
-    .chart-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:24px; }
-    .chart-title { font-family:var(--font-display); font-size:1rem; color:var(--text); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
-    .chart-svg { width:100%; overflow:visible; }
-    .chart-bar { fill:var(--accent-dim); transition:fill 0.2s; cursor:pointer; }
-    .chart-bar:hover { fill:var(--accent); }
-    .chart-label { font-family:var(--font-mono); font-size:10px; fill:var(--text-dim); }
-    .chart-value { font-family:var(--font-mono); font-size:10px; fill:var(--accent-bright); }
+    .chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .chart-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--text);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chart-svg {
+      width: 100%;
+      overflow: visible;
+    }
+
+    .chart-bar {
+      fill: var(--accent-dim);
+      transition: fill 0.2s;
+      cursor: pointer;
+    }
+
+    .chart-bar:hover {
+      fill: var(--accent);
+    }
+
+    .chart-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      fill: var(--text-dim);
+    }
+
+    .chart-value {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      fill: var(--accent-bright);
+    }
 
     /* QR */
-    .qr-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px; background:var(--surface2); border-radius:var(--radius-sm); border:1px solid var(--border); }
-    .qr-table-number { font-family:var(--font-mono); font-size:0.8rem; color:var(--text-mid); }
-    .qr-img { background:#fff; padding:8px; border-radius:6px; }
+    .qr-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .qr-table-number {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-mid);
+    }
+
+    .qr-img {
+      background: #fff;
+      padding: 8px;
+      border-radius: 6px;
+    }
 
     /* Tables grid */
-    .tables-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
-    .table-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; text-align:center; cursor:pointer; transition:all 0.2s; }
-    .table-card:hover { border-color:var(--border-light); box-shadow:var(--shadow-sm); }
-    .table-card.occupied { border-color:rgba(255,179,71,0.4); background:var(--gold-dim); }
-    .table-num { font-family:var(--font-display); font-size:1.6rem; color:var(--text); margin-bottom:4px; }
-    .table-seats { font-size:0.75rem; color:var(--text-dim); }
-    .table-status { font-size:0.72rem; font-weight:600; margin-top:6px; }
-    .table-status.free { color:var(--accent-bright); }
-    .table-status.occupied { color:var(--gold); }
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .table-card:hover {
+      border-color: var(--border-light);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .table-card.occupied {
+      border-color: rgba(255, 179, 71, 0.4);
+      background: var(--gold-dim);
+    }
+
+    .table-num {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .table-seats {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .table-status {
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    .table-status.free {
+      color: var(--accent-bright);
+    }
+
+    .table-status.occupied {
+      color: var(--gold);
+    }
 
     /* Settings form */
-    .settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    @media(max-width:600px) { .settings-grid { grid-template-columns:1fr; } }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media(max-width:600px) {
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
 
     /* Orders table actions */
-    .order-actions-cell { display:flex; gap:6px; flex-wrap:wrap; }
+    .order-actions-cell {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
+
 <body>
 
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-<div class="offline-banner" id="offlineBanner">⚠️ Connection lost — reconnecting…</div>
-<div class="auth-gate" id="authGate" style="display:none;"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="offline-banner" id="offlineBanner">⚠️ Connection lost — reconnecting…</div>
+  <div class="auth-gate" id="authGate" style="display:none;"></div>
 
-<div id="appContent" style="display:none;">
-  <div class="app-layout">
+  <div id="appContent" style="display:none;">
+    <div class="app-layout">
 
-    <!-- ── SIDEBAR ── -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo">
-        <div class="sidebar-logo-name">🍃 LAXMI</div>
-        <div class="sidebar-logo-sub">Admin Panel</div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="nav-section-label">Operations</div>
-        <a class="nav-item" href="kitchen.html"><span class="nav-item-icon">🍳</span> Kitchen</a>
-        <a class="nav-item active" href="admin.html"><span class="nav-item-icon">📊</span> Admin Panel</a>
-        <a class="nav-item" href="menu-manager.html"><span class="nav-item-icon">📋</span> Menu Manager</a>
-        <a class="nav-item" href="reports.html"><span class="nav-item-icon">📈</span> Reports</a>
-        <div class="nav-section-label" style="margin-top:8px;">Management</div>
-        <a class="nav-item" href="staff.html"><span class="nav-item-icon">👥</span> Staff</a>
-        <div class="nav-section-label" style="margin-top:8px;">Customer</div>
-        <a class="nav-item" href="waiter.html"><span class="nav-item-icon">🛎️</span> Waiter</a>
-        <a class="nav-item" href="payment-manager.html"><span class="nav-item-icon">💳</span> Payments</a>
-        <a class="nav-item" href="index.html" target="_blank"><span class="nav-item-icon">🛒</span> Order Page ↗</a>
-      </nav>
-      <div class="sidebar-footer">
-        <div class="sidebar-user">
-          <div class="sidebar-avatar" id="sidebarAvatar">?</div>
-          <div class="sidebar-user-info">
-            <div class="sidebar-user-name" id="sidebarUserName">Loading…</div>
-            <div class="sidebar-user-role" id="sidebarUserRole">—</div>
+      <!-- ── SIDEBAR ── -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-name">🍃 LAXMI</div>
+          <div class="sidebar-logo-sub">Admin Panel</div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-section-label">Operations</div>
+          <a class="nav-item" href="kitchen.html"><span class="nav-item-icon">🍳</span> Kitchen</a>
+          <a class="nav-item active" href="admin.html"><span class="nav-item-icon">📊</span> Admin Panel</a>
+          <a class="nav-item" href="menu-manager.html"><span class="nav-item-icon">📋</span> Menu Manager</a>
+          <a class="nav-item" href="reports.html"><span class="nav-item-icon">📈</span> Reports</a>
+          <div class="nav-section-label" style="margin-top:8px;">Management</div>
+          <a class="nav-item" href="staff.html"><span class="nav-item-icon">👥</span> Staff</a>
+          <div class="nav-section-label" style="margin-top:8px;">Customer</div>
+          <a class="nav-item" href="waiter.html"><span class="nav-item-icon">🛎️</span> Waiter</a>
+          <a class="nav-item" href="payment-manager.html"><span class="nav-item-icon">💳</span> Payments</a>
+          <a class="nav-item" href="index.html" target="_blank"><span class="nav-item-icon">🛒</span> Order Page ↗</a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatar">?</div>
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="sidebarUserName">Loading…</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">—</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost w-full btn-sm" onclick="window.rmsSignOut()">⏏ Sign Out</button>
+        </div>
+      </aside>
+
+      <!-- ── MAIN ── -->
+      <main class="main-content">
+
+        <!-- Header -->
+        <div class="page-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="hamburger" onclick="toggleSidebar()">
+              <span></span><span></span><span></span>
+            </button>
+            <div>
+              <h1 class="page-title">📊 Admin Panel</h1>
+              <div class="page-subtitle" id="adminDate">—</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="live-dot" id="liveDot"></span>
+            <span id="liveText" style="font-size:0.8rem;color:var(--text-dim);">Connecting…</span>
           </div>
         </div>
-        <button class="btn btn-ghost w-full btn-sm" onclick="window.rmsSignOut()">⏏ Sign Out</button>
-      </div>
-    </aside>
 
-    <!-- ── MAIN ── -->
-    <main class="main-content">
-
-      <!-- Header -->
-      <div class="page-header">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <button class="hamburger" onclick="toggleSidebar()">
-            <span></span><span></span><span></span>
-          </button>
-          <div>
-            <h1 class="page-title">📊 Admin Panel</h1>
-            <div class="page-subtitle" id="adminDate">—</div>
+        <!-- ── STATS ── -->
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-label">Today's Revenue</div>
+            <div class="stat-value green" id="statRevenue">Rs. 0</div>
+            <div class="stat-dot" style="background:var(--accent);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Orders Today</div>
+            <div class="stat-value" id="statOrders">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Order Value</div>
+            <div class="stat-value blue" id="statAvg">Rs. 0</div>
+            <div class="stat-dot" style="background:var(--blue);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending Now</div>
+            <div class="stat-value gold" id="statPending">0</div>
+            <div class="stat-dot" style="background:var(--pending);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value green" id="statDone">0</div>
+            <div class="stat-dot" style="background:var(--done);"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Rejected</div>
+            <div class="stat-value red" id="statRejected">0</div>
+            <div class="stat-dot" style="background:var(--red);"></div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span class="live-dot" id="liveDot"></span>
-          <span id="liveText" style="font-size:0.8rem;color:var(--text-dim);">Connecting…</span>
-        </div>
-      </div>
 
-      <!-- ── STATS ── -->
-      <div class="stats-grid" id="statsGrid">
-        <div class="stat-card">
-          <div class="stat-label">Today's Revenue</div>
-          <div class="stat-value green" id="statRevenue">Rs. 0</div>
-          <div class="stat-dot" style="background:var(--accent);"></div>
+        <!-- ── TABS ── -->
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
+          <button class="admin-tab" onclick="switchTab('orders',this)">📋 Orders</button>
+          <button class="admin-tab" onclick="switchTab('tables',this)">🪑 Tables / Rooms</button>
+          <button class="admin-tab" onclick="switchTab('settings',this)">⚙️ Settings</button>
+          <button class="admin-tab" onclick="switchTab('activity',this)">📜 Activity Log</button>
+          <button class="admin-tab" onclick="switchTab('delivery',this)">🚚 Delivery</button>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Orders Today</div>
-          <div class="stat-value" id="statOrders">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Avg Order Value</div>
-          <div class="stat-value blue" id="statAvg">Rs. 0</div>
-          <div class="stat-dot" style="background:var(--blue);"></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Pending Now</div>
-          <div class="stat-value gold" id="statPending">0</div>
-          <div class="stat-dot" style="background:var(--pending);"></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Completed</div>
-          <div class="stat-value green" id="statDone">0</div>
-          <div class="stat-dot" style="background:var(--done);"></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Rejected</div>
-          <div class="stat-value red" id="statRejected">0</div>
-          <div class="stat-dot" style="background:var(--red);"></div>
-        </div>
-      </div>
 
-      <!-- ── TABS ── -->
-      <div class="admin-tabs">
-        <button class="admin-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
-        <button class="admin-tab" onclick="switchTab('orders',this)">📋 Orders</button>
-        <button class="admin-tab" onclick="switchTab('tables',this)">🪑 Tables / Rooms</button>
-        <button class="admin-tab" onclick="switchTab('settings',this)">⚙️ Settings</button>
-        <button class="admin-tab" onclick="switchTab('activity',this)">📜 Activity Log</button>
-      </div>
+        <!-- ══ DASHBOARD TAB ══ -->
+        <div class="tab-panel active" id="tab-dashboard">
 
-      <!-- ══ DASHBOARD TAB ══ -->
-      <div class="tab-panel active" id="tab-dashboard">
-
-        <!-- Hourly Revenue Chart -->
-        <div class="chart-wrap">
-          <div class="chart-title">
-            <span>📈 Hourly Revenue — Today</span>
-            <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--accent-bright);" id="chartTotal">Rs. 0</span>
+          <!-- Hourly Revenue Chart -->
+          <div class="chart-wrap">
+            <div class="chart-title">
+              <span>📈 Hourly Revenue — Today</span>
+              <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--accent-bright);"
+                id="chartTotal">Rs. 0</span>
+            </div>
+            <svg class="chart-svg" id="revenueChart" height="180" viewBox="0 0 700 180"></svg>
           </div>
-          <svg class="chart-svg" id="revenueChart" height="180" viewBox="0 0 700 180"></svg>
-        </div>
 
-        <!-- Top Items Chart -->
-        <div class="chart-wrap">
-          <div class="chart-title">
-            <span>🍽️ Top Selling Items — Today</span>
+          <!-- Top Items Chart -->
+          <div class="chart-wrap">
+            <div class="chart-title">
+              <span>🍽️ Top Selling Items — Today</span>
+            </div>
+            <svg class="chart-svg" id="topItemsChart" height="200" viewBox="0 0 700 200"></svg>
           </div>
-          <svg class="chart-svg" id="topItemsChart" height="200" viewBox="0 0 700 200"></svg>
-        </div>
 
-        <!-- Recent Orders -->
-        <div class="section-title">🕐 Recent Orders</div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Table</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Payment</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody id="recentOrdersBody">
-              <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim);">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ══ ORDERS TAB ══ -->
-      <div class="tab-panel" id="tab-orders">
-        <div class="search-bar" style="margin-bottom:16px;">
-          <div class="search-input-wrap" style="flex:1;position:relative;">
-            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-dim);">🔍</span>
-            <input type="text" id="orderSearch" class="input" placeholder="Search order ID, table, phone…" oninput="filterOrders()" style="padding-left:36px;">
+          <!-- Recent Orders -->
+          <div class="section-title">🕐 Recent Orders</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Table</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="recentOrdersBody">
+                <tr>
+                  <td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim);">Loading…</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <select id="orderTypeFilter" class="input" style="max-width:140px;" onchange="filterOrders()">
-            <option value="all">All Types</option>
-            <option value="table">Table Orders</option>
-            <option value="room">Room Orders</option>
-          </select>
-          <select id="orderStatusFilter" class="input" style="max-width:140px;" onchange="filterOrders()">
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="preparing">Preparing</option>
-            <option value="delivered">Delivered</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <select id="orderPayFilter" class="input" style="max-width:140px;" onchange="filterOrders()">
-            <option value="all">All Payments</option>
-            <option value="paid">Paid</option>
-            <option value="unpaid">Unpaid</option>
-          </select>
-          <input type="date" id="orderDateFilter" class="input" style="max-width:160px;" onchange="loadAllOrders()">
-          <button class="btn btn-secondary btn-sm" onclick="exportOrdersCSV()">📥 Export</button>
-          <button class="btn btn-secondary btn-sm" onclick="loadAllOrders()">🔄 Refresh</button>
         </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th onclick="sortOrders('order_id')">Order ID ↕</th>
-                <th>Table/Room</th>
-                <th>Items</th>
-                <th onclick="sortOrders('total')">Total ↕</th>
-                <th onclick="sortOrders('status')">Status ↕</th>
-                <th>Payment</th>
-                <th onclick="sortOrders('created_at')">Time ↕</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="ordersTableBody">
-              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-dim);">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="pagination" id="ordersPagination"></div>
-      </div>
-
-      <!-- ══ TABLES TAB ══ -->
-      <div class="tab-panel" id="tab-tables">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-          <div class="section-title" style="margin:0;">🪑 Restaurant Tables & Rooms</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <select id="tableTypeFilter" class="input" style="max-width:140px;height:38px;padding:0 12px;font-size:0.85rem;" onchange="renderTables()">
+        <!-- ══ ORDERS TAB ══ -->
+        <div class="tab-panel" id="tab-orders">
+          <div class="search-bar" style="margin-bottom:16px;">
+            <div class="search-input-wrap" style="flex:1;position:relative;">
+              <span
+                style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-dim);">🔍</span>
+              <input type="text" id="orderSearch" class="input" placeholder="Search order ID, table, phone…"
+                oninput="filterOrders()" style="padding-left:36px;">
+            </div>
+            <select id="orderTypeFilter" class="input" style="max-width:140px;" onchange="filterOrders()">
               <option value="all">All Types</option>
-              <option value="table">Tables Only</option>
-              <option value="room">Rooms Only</option>
+              <option value="table">Table Orders</option>
+              <option value="room">Room Orders</option>
+              <option value="delivery">🚚 Delivery</option>
             </select>
-            <div class="search-input-wrap" style="position:relative;">
-              <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-dim);font-size:0.85rem;">🔍</span>
-              <input type="text" id="tableSearch" class="input" placeholder="Search number..." oninput="renderTables()" style="padding-left:30px;max-width:150px;height:38px;font-size:0.85rem;">
+            <select id="orderStatusFilter" class="input" style="max-width:140px;" onchange="filterOrders()">
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="preparing">Preparing</option>
+              <option value="delivered">Delivered</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <select id="orderPayFilter" class="input" style="max-width:140px;" onchange="filterOrders()">
+              <option value="all">All Payments</option>
+              <option value="paid">Paid</option>
+              <option value="unpaid">Unpaid</option>
+            </select>
+            <input type="date" id="orderDateFilter" class="input" style="max-width:160px;" onchange="loadAllOrders()">
+            <button class="btn btn-secondary btn-sm" onclick="exportOrdersCSV()">📥 Export</button>
+            <button class="btn btn-secondary btn-sm" onclick="loadAllOrders()">🔄 Refresh</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th onclick="sortOrders('order_id')">Order ID ↕</th>
+                  <th>Table/Room</th>
+                  <th>Items</th>
+                  <th onclick="sortOrders('total')">Total ↕</th>
+                  <th onclick="sortOrders('status')">Status ↕</th>
+                  <th>Payment</th>
+                  <th onclick="sortOrders('created_at')">Time ↕</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody">
+                <tr>
+                  <td colspan="8" style="text-align:center;padding:40px;color:var(--text-dim);">Loading…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="ordersPagination"></div>
+        </div>
+
+        <!-- ══ TABLES TAB ══ -->
+        <div class="tab-panel" id="tab-tables">
+          <div
+            style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+            <div class="section-title" style="margin:0;">🪑 Restaurant Tables & Rooms</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <select id="tableTypeFilter" class="input"
+                style="max-width:140px;height:38px;padding:0 12px;font-size:0.85rem;" onchange="renderTables()">
+                <option value="all">All Types</option>
+                <option value="table">Tables Only</option>
+                <option value="room">Rooms Only</option>
+              </select>
+              <div class="search-input-wrap" style="position:relative;">
+                <span
+                  style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-dim);font-size:0.85rem;">🔍</span>
+                <input type="text" id="tableSearch" class="input" placeholder="Search number..."
+                  oninput="renderTables()" style="padding-left:30px;max-width:150px;height:38px;font-size:0.85rem;">
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="printAllQR()" style="height:38px;">🖨️ Print All
+                QR</button>
+              <button class="btn btn-primary btn-sm" onclick="openTableModal()" style="height:38px;">+ Add</button>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="printAllQR()" style="height:38px;">🖨️ Print All QR</button>
-            <button class="btn btn-primary btn-sm" onclick="openTableModal()" style="height:38px;">+ Add</button>
+          </div>
+
+          <div class="tables-grid" id="tablesGrid">
+            <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim);">Loading…</div>
           </div>
         </div>
 
-        <div class="tables-grid" id="tablesGrid">
-          <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim);">Loading…</div>
-        </div>
-      </div>
-
-      <!-- ══ SETTINGS TAB ══ -->
-      <div class="tab-panel" id="tab-settings">
-        <div class="section-title">⚙️ Restaurant Settings</div>
-        <div class="card" style="max-width:700px;">
-          <div class="settings-grid">
-            <div class="input-group">
-              <label class="input-label">Restaurant Name</label>
-              <input type="text" id="setName" class="input" placeholder="LAXMI">
-            </div>
-            <div class="input-group">
-              <label class="input-label">Phone Number</label>
-              <input type="tel" id="setPhone" class="input" placeholder="9999999999">
-            </div>
-            <div class="input-group" style="grid-column:1/-1;">
-              <label class="input-label">Address</label>
-              <textarea id="setAddress" class="input" rows="2" placeholder="Full address…"></textarea>
-            </div>
-            <div class="input-group">
-              <label class="input-label">Legal Name</label>
-              <input type="text" id="setLegalName" class="input" placeholder="E.g. Laxmi Foods Pvt Ltd">
-            </div>
-            <div class="input-group">
-              <label class="input-label">GSTIN</label>
-              <input type="text" id="setGstin" class="input" placeholder="22AAAAA0000A1Z5" maxlength="15">
-            </div>
-            <div class="input-group">
-              <label class="input-label">FSSAI Lic No.</label>
-              <input type="text" id="setFssai" class="input" placeholder="E.g. 10020000000000">
-            </div>
-            <div class="input-group">
-              <label class="input-label">GST Rate (%)</label>
-              <select id="setGstRate" class="input">
-                <option value="0">0% (Exempt)</option>
-                <option value="5" selected>5%</option>
-                <option value="12">12%</option>
-                <option value="18">18%</option>
-                <option value="28">28%</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label class="input-label">Store Status</label>
-              <div class="toggle-wrap" style="margin-top:10px;">
-                <label class="toggle">
-                  <input type="checkbox" id="setStoreOpen" checked>
-                  <span class="toggle-slider"></span>
-                </label>
-                <span class="toggle-label" id="setStoreLabel">Store Open</span>
+        <!-- ══ SETTINGS TAB ══ -->
+        <div class="tab-panel" id="tab-settings">
+          <div class="section-title">⚙️ Restaurant Settings</div>
+          <div class="card" style="max-width:700px;">
+            <div class="settings-grid">
+              <div class="input-group">
+                <label class="input-label">Restaurant Name</label>
+                <input type="text" id="setName" class="input" placeholder="LAXMI">
+              </div>
+              <div class="input-group">
+                <label class="input-label">Phone Number</label>
+                <input type="tel" id="setPhone" class="input" placeholder="9999999999">
+              </div>
+              <div class="input-group" style="grid-column:1/-1;">
+                <label class="input-label">Address</label>
+                <textarea id="setAddress" class="input" rows="2" placeholder="Full address…"></textarea>
+              </div>
+              <div class="input-group">
+                <label class="input-label">Legal Name</label>
+                <input type="text" id="setLegalName" class="input" placeholder="E.g. Laxmi Foods Pvt Ltd">
+              </div>
+              <div class="input-group">
+                <label class="input-label">GSTIN</label>
+                <input type="text" id="setGstin" class="input" placeholder="22AAAAA0000A1Z5" maxlength="15">
+              </div>
+              <div class="input-group">
+                <label class="input-label">FSSAI Lic No.</label>
+                <input type="text" id="setFssai" class="input" placeholder="E.g. 10020000000000">
+              </div>
+              <div class="input-group">
+                <label class="input-label">GST Rate (%)</label>
+                <select id="setGstRate" class="input">
+                  <option value="0">0% (Exempt)</option>
+                  <option value="5" selected>5%</option>
+                  <option value="12">12%</option>
+                  <option value="18">18%</option>
+                  <option value="28">28%</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label class="input-label">Store Status</label>
+                <div class="toggle-wrap" style="margin-top:10px;">
+                  <label class="toggle">
+                    <input type="checkbox" id="setStoreOpen" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label" id="setStoreLabel">Store Open</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label">Bill Footer Message</label>
+                <input type="text" id="setBillFooter" class="input" placeholder="Thank you! Visit again 🌿">
+              </div>
+              <div class="input-group">
+                <label class="input-label">Currency Symbol</label>
+                <input type="text" id="setCurrency" class="input" placeholder="Rs. " maxlength="3">
               </div>
             </div>
-            <div class="input-group">
-              <label class="input-label">Bill Footer Message</label>
-              <input type="text" id="setBillFooter" class="input" placeholder="Thank you! Visit again 🌿">
-            </div>
-            <div class="input-group">
-              <label class="input-label">Currency Symbol</label>
-              <input type="text" id="setCurrency" class="input" placeholder="Rs. " maxlength="3">
+            <div style="margin-top:20px;display:flex;gap:10px;">
+              <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+              <button class="btn btn-secondary" onclick="loadSettings()">↺ Reset</button>
             </div>
           </div>
-          <div style="margin-top:20px;display:flex;gap:10px;">
-            <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
-            <button class="btn btn-secondary" onclick="loadSettings()">↺ Reset</button>
+        </div>
+
+        <!-- ══ ACTIVITY LOG TAB ══ -->
+        <div class="tab-panel" id="tab-activity">
+          <div
+            style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <div class="section-title" style="margin:0;">📜 Activity Log</div>
+            <div style="display:flex;gap:8px;">
+              <select id="activityFilter" class="input" style="max-width:160px;" onchange="filterActivity()">
+                <option value="all">All Events</option>
+                <option value="new_order">New Orders</option>
+                <option value="order_status">Status Changes</option>
+                <option value="store_toggle">Store Toggle</option>
+                <option value="staff">Staff Events</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="loadActivity()">🔄 Refresh</button>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <!-- ══ ACTIVITY LOG TAB ══ -->
-      <div class="tab-panel" id="tab-activity">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-          <div class="section-title" style="margin:0;">📜 Activity Log</div>
-          <div style="display:flex;gap:8px;">
-            <select id="activityFilter" class="input" style="max-width:160px;" onchange="filterActivity()">
-              <option value="all">All Events</option>
-              <option value="new_order">New Orders</option>
-              <option value="order_status">Status Changes</option>
-              <option value="store_toggle">Store Toggle</option>
-              <option value="staff">Staff Events</option>
-            </select>
-            <button class="btn btn-secondary btn-sm" onclick="loadActivity()">🔄 Refresh</button>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Event</th>
+                  <th>Description</th>
+                  <th>Staff</th>
+                </tr>
+              </thead>
+              <tbody id="activityBody">
+                <tr>
+                  <td colspan="4" style="text-align:center;padding:40px;color:var(--text-dim);">Loading…</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+          <div class="pagination" id="activityPagination"></div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Time</th><th>Event</th><th>Description</th><th>Staff</th></tr>
-            </thead>
-            <tbody id="activityBody">
-              <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-dim);">Loading…</td></tr>
-            </tbody>
-          </table>
+
+        <!-- ══ DELIVERY TAB ══ -->
+        <div class="tab-panel" id="tab-delivery">
+
+          <!-- Delivery Zone -->
+          <div class="section-title">📍 Delivery Zone</div>
+          <div class="card" style="max-width:700px;margin-bottom:24px;">
+            <div style="font-size:0.875rem;color:var(--text-dim);margin-bottom:14px;">
+              Set your outlet location and delivery radius. Customers outside this zone cannot place delivery orders.
+            </div>
+            <div id="zoneMap"
+              style="height:280px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:16px;border:1px solid var(--border);">
+            </div>
+            <div class="settings-grid" style="margin-bottom:14px;">
+              <div class="input-group">
+                <label class="input-label">Outlet Latitude</label>
+                <input type="number" id="zoneLat" class="input" step="0.0001" placeholder="e.g. 25.2138">
+              </div>
+              <div class="input-group">
+                <label class="input-label">Outlet Longitude</label>
+                <input type="number" id="zoneLng" class="input" step="0.0001" placeholder="e.g. 75.8648">
+              </div>
+            </div>
+            <div class="input-group" style="margin-bottom:16px;">
+              <label class="input-label">Delivery Radius: <span id="radiusLabel">5</span> km</label>
+              <input type="range" id="zoneRadius" min="1" max="20" value="5"
+                style="width:100%;accent-color:var(--accent);"
+                oninput="document.getElementById('radiusLabel').textContent=this.value;updateZoneCircle()">
+            </div>
+            <button class="btn btn-primary" onclick="saveDeliveryZone()">💾 Save Delivery Zone</button>
+          </div>
+
+          <!-- Delivery Charges -->
+          <div class="section-title">💰 Delivery Charges (by Distance)</div>
+          <div class="card" style="max-width:700px;margin-bottom:24px;">
+            <div style="font-size:0.875rem;color:var(--text-dim);margin-bottom:14px;">
+              Set tiered charges by km. First matching tier is applied.
+            </div>
+            <div id="chargeTiersList" style="margin-bottom:12px;"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="addChargeTier()">+ Add Tier</button>
+              <button class="btn btn-primary" onclick="saveChargeTiers()">💾 Save Charges</button>
+            </div>
+          </div>
+
+          <!-- Delivery Status -->
+          <div class="section-title">🔧 Delivery Status</div>
+          <div class="card" style="max-width:700px;margin-bottom:24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-weight:600;margin-bottom:4px;">Delivery Open</div>
+                <div style="font-size:0.8rem;color:var(--text-dim);">Independent of store open/close</div>
+              </div>
+              <div class="toggle-wrap">
+                <label class="toggle">
+                  <input type="checkbox" id="setDeliveryOpen"
+                    onchange="saveDeliverySetting('delivery_open', this.checked ? 'true' : 'false')">
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label" id="deliveryOpenLabel">Open</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- UPI QR -->
+          <div class="section-title">📱 UPI Payment QR</div>
+          <div class="card" style="max-width:700px;margin-bottom:24px;">
+            <div style="font-size:0.875rem;color:var(--text-dim);margin-bottom:14px;">
+              Upload your UPI QR code image — shown to customers during delivery checkout.
+            </div>
+            <input type="file" id="upiQRFile" accept="image/*" onchange="previewUpiQR(this)"
+              style="margin-bottom:12px;">
+            <div id="upiQRPreview" style="display:none;margin-bottom:12px;">
+              <img id="upiQRImg" style="max-width:200px;border-radius:var(--radius-sm);border:1px solid var(--border);">
+            </div>
+            <button class="btn btn-primary" onclick="saveUpiQR()">💾 Save UPI QR</button>
+          </div>
+
+          <!-- Delivery QR Code -->
+          <div class="section-title">🖨️ Delivery Mode QR Code</div>
+          <div class="card" style="max-width:700px;">
+            <div style="font-size:0.875rem;color:var(--text-dim);margin-bottom:16px;">
+              Generate a QR for flyers & posters. Scanning it opens the order page directly in delivery mode.
+            </div>
+            <button class="btn btn-primary" style="max-width:180px;" onclick="generateDeliveryQR()">Generate QR</button>
+            <div id="deliveryQRPreview" style="display:none;margin-top:20px;">
+              <img id="deliveryQRImg"
+                style="width:200px;height:200px;border-radius:var(--radius-sm);display:block;margin-bottom:12px;border:1px solid var(--border);">
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-secondary btn-sm" onclick="downloadDeliveryQR()">⬇️ Download</button>
+                <button class="btn btn-secondary btn-sm" onclick="printDeliveryQR()">🖨️ Print</button>
+              </div>
+            </div>
+          </div>
+
         </div>
-        <div class="pagination" id="activityPagination"></div>
-      </div>
 
-    </main>
-  </div>
-</div>
-
-<!-- ── TABLE MODAL ── -->
-<div class="modal-overlay" id="tableModal" style="display:none;" onclick="if(event.target===this)closeTableModal()">
-  <div class="modal" style="max-width:400px;">
-    <div class="modal-header">
-      <h2 class="modal-title" id="tableModalTitle">Add Table</h2>
-      <button class="modal-close" onclick="closeTableModal()">×</button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      <div class="input-group">
-        <label class="input-label">Type</label>
-        <select id="tableType" class="input">
-          <option value="table">Table</option>
-          <option value="room">Room</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <label class="input-label">Number *</label>
-        <input type="text" id="tableNum" class="input" placeholder="e.g. 01, A1, VIP, 101">
-      </div>
-      <div class="input-group">
-        <label class="input-label">Seats</label>
-        <input type="number" id="tableSeats" class="input" value="4" min="1" max="20">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeTableModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTable()" id="tableSaveBtn">Save Table</button>
+      </main>
     </div>
   </div>
-</div>
 
-<!-- ── ORDER DETAIL MODAL ── -->
-<div class="modal-overlay" id="orderDetailModal" style="display:none;" onclick="if(event.target===this)closeOrderDetail()">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <h2 class="modal-title" id="orderDetailTitle">Order Details</h2>
-      <button class="modal-close" onclick="closeOrderDetail()">×</button>
+  <!-- ── TABLE MODAL ── -->
+  <div class="modal-overlay" id="tableModal" style="display:none;" onclick="if(event.target===this)closeTableModal()">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="tableModalTitle">Add Table</h2>
+        <button class="modal-close" onclick="closeTableModal()">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="input-group">
+          <label class="input-label">Type</label>
+          <select id="tableType" class="input">
+            <option value="table">Table</option>
+            <option value="room">Room</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Number *</label>
+          <input type="text" id="tableNum" class="input" placeholder="e.g. 01, A1, VIP, 101">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Seats</label>
+          <input type="number" id="tableSeats" class="input" value="4" min="1" max="20">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeTableModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTable()" id="tableSaveBtn">Save Table</button>
+      </div>
     </div>
-    <div id="orderDetailBody"></div>
-    <div class="modal-footer" id="orderDetailFooter"></div>
   </div>
-</div>
 
-<!-- ── QR PRINT ── -->
-<div id="qrPrintArea" style="display:none;"></div>
-<div id="printSlip"></div>
-<div id="toast-container"></div>
+  <!-- ── ORDER DETAIL MODAL ── -->
+  <div class="modal-overlay" id="orderDetailModal" style="display:none;"
+    onclick="if(event.target===this)closeOrderDetail()">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title" id="orderDetailTitle">Order Details</h2>
+        <button class="modal-close" onclick="closeOrderDetail()">×</button>
+      </div>
+      <div id="orderDetailBody"></div>
+      <div class="modal-footer" id="orderDetailFooter"></div>
+    </div>
+  </div>
 
-<script type="module" src="assets/auth.js?v=3"></script>
-<script type="module">
+  <!-- ── QR PRINT ── -->
+  <div id="qrPrintArea" style="display:none;"></div>
+  <div id="printSlip"></div>
+  <div id="toast-container"></div>
 
-  // ── State
-  let allOrders = [];
-  let filteredOrders = [];
-  let allTables = [];
-  let allActivity = [];
-  let filteredActivity = [];
-  let settings = {};
-  let ordersPage = 1;
-  let activityPage = 1;
-  let orderSortKey = 'created_at';
-  let orderSortDir = -1;
-  const PAGE_SIZE = 25;
-  let editingTableId = null;
+  <script type="module" src="assets/auth.js?v=3"></script>
+  <script type="module">
 
-  // ── appInit
-  window.appInit = async function() {
-    window.renderStaffUI && window.renderStaffUI();
-    initDate();
-    await loadSettings();
-    await loadTodayOrders();
-    await loadAllOrders();
-    await loadTables();
-    await loadActivity();
-    subscribeRealtime();
-    window.startHeartbeat && window.startHeartbeat();
-    window.listenToSettings && window.listenToSettings();
-  };
+    // ── State
+    let allOrders = [];
+    let filteredOrders = [];
+    let allTables = [];
+    let allActivity = [];
+    let filteredActivity = [];
+    let settings = {};
+    let ordersPage = 1;
+    let activityPage = 1;
+    let orderSortKey = 'created_at';
+    let orderSortDir = -1;
+    const PAGE_SIZE = 25;
+    let editingTableId = null;
 
-  function initDate() {
-    const el = document.getElementById('adminDate');
-    if (el) el.textContent = new Date().toLocaleDateString('en-IN', {
-      timeZone:'Asia/Kolkata', weekday:'long', day:'2-digit', month:'long', year:'numeric'
-    });
-    // Set today's date in date filter
-    const df = document.getElementById('orderDateFilter');
-    if (df) df.value = window.todayIST ? window.todayIST() : new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
-  }
-
-  // ── Load settings
-  window.loadSettings = async function() {
-    const sb = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    const { data } = await sb.from('settings').select('key,value').eq('branch_id', bid);
-    if (!data) return;
-    settings = {};
-    data.forEach(r => settings[r.key] = r.value);
-    window.kitchenSettings = settings;
-
-    // Populate settings form
-    document.getElementById('setName').value        = settings.restaurant_name || 'LAXMI';
-    document.getElementById('setPhone').value       = settings.phone || '';
-    document.getElementById('setAddress').value     = settings.address || '';
-    document.getElementById('setLegalName').value   = settings.legal_name || '';
-    document.getElementById('setGstin').value       = settings.gstin || '';
-    document.getElementById('setFssai').value       = settings.fssai_lic || '';
-    document.getElementById('setGstRate').value     = settings.gst_rate || '5';
-    document.getElementById('setBillFooter').value  = settings.bill_footer || '';
-    document.getElementById('setCurrency').value    = settings.currency || 'Rs. ';
-    const isOpen = settings.store_open !== 'false';
-    document.getElementById('setStoreOpen').checked = isOpen;
-    document.getElementById('setStoreLabel').textContent = isOpen ? 'Store Open' : 'Store Closed';
-    document.getElementById('setStoreOpen').onchange = function() {
-      document.getElementById('setStoreLabel').textContent = this.checked ? 'Store Open' : 'Store Closed';
+    // ── appInit
+    window.appInit = async function () {
+      window.renderStaffUI && window.renderStaffUI();
+      initDate();
+      await loadSettings();
+      await loadTodayOrders();
+      await loadAllOrders();
+      await loadTables();
+      await loadActivity();
+      subscribeRealtime();
+      window.startHeartbeat && window.startHeartbeat();
+      window.listenToSettings && window.listenToSettings();
     };
-  };
 
-  // ── Save settings
-  window.saveSettings = async function() {
-    const sb = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    
-    // Fetch existing settings to get their IDs for reliable upsert
-    const { data: existing } = await sb.from('settings').select('id, key').eq('branch_id', bid);
-    const idMap = {};
-    if (existing) {
-      existing.forEach(r => idMap[r.key] = r.id);
+    function initDate() {
+      const el = document.getElementById('adminDate');
+      if (el) el.textContent = new Date().toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+      });
+      // Set today's date in date filter
+      const df = document.getElementById('orderDateFilter');
+      if (df) df.value = window.todayIST ? window.todayIST() : new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     }
 
-    const rows = [
-      { key:'restaurant_name', value: document.getElementById('setName').value.trim() },
-      { key:'phone',           value: document.getElementById('setPhone').value.trim() },
-      { key:'address',         value: document.getElementById('setAddress').value.trim() },
-      { key:'legal_name',      value: document.getElementById('setLegalName').value.trim() },
-      { key:'gstin',           value: document.getElementById('setGstin').value.trim() },
-      { key:'fssai_lic',       value: document.getElementById('setFssai').value.trim() },
-      { key:'gst_rate',        value: document.getElementById('setGstRate').value },
-      { key:'store_open',      value: String(document.getElementById('setStoreOpen').checked) },
-      { key:'bill_footer',     value: document.getElementById('setBillFooter').value.trim() },
-      { key:'currency',        value: document.getElementById('setCurrency').value.trim() || 'Rs. ' },
-    ];
-    
-    const payload = rows.map(r => ({
-      branch_id: bid,
-      key: r.key,
-      value: r.value,
-      ...(idMap[r.key] ? { id: idMap[r.key] } : {})
-    }));
+    // ── Load settings
+    window.loadSettings = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const { data } = await sb.from('settings').select('key,value').eq('branch_id', bid);
+      if (!data) return;
+      settings = {};
+      data.forEach(r => settings[r.key] = r.value);
+      window.kitchenSettings = settings;
 
-    const toUpdate = payload.filter(p => p.id);
-    const toInsert = payload.filter(p => !p.id);
+      // Populate settings form
+      document.getElementById('setName').value = settings.restaurant_name || 'LAXMI';
+      document.getElementById('setPhone').value = settings.phone || '';
+      document.getElementById('setAddress').value = settings.address || '';
+      document.getElementById('setLegalName').value = settings.legal_name || '';
+      document.getElementById('setGstin').value = settings.gstin || '';
+      document.getElementById('setFssai').value = settings.fssai_lic || '';
+      document.getElementById('setGstRate').value = settings.gst_rate || '5';
+      document.getElementById('setBillFooter').value = settings.bill_footer || '';
+      document.getElementById('setCurrency').value = settings.currency || 'Rs. ';
+      const isOpen = settings.store_open !== 'false';
+      document.getElementById('setStoreOpen').checked = isOpen;
+      document.getElementById('setStoreLabel').textContent = isOpen ? 'Store Open' : 'Store Closed';
+      document.getElementById('setStoreOpen').onchange = function () {
+        document.getElementById('setStoreLabel').textContent = this.checked ? 'Store Open' : 'Store Closed';
+      };
+    };
 
-    if (toUpdate.length > 0) {
-      const { error } = await sb.from('settings').upsert(toUpdate);
-      if (error) { window.showToast('Error saving settings', error.message, 'error'); return; }
+    // ── Save settings
+    window.saveSettings = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+
+      // Fetch existing settings to get their IDs for reliable upsert
+      const { data: existing } = await sb.from('settings').select('id, key').eq('branch_id', bid);
+      const idMap = {};
+      if (existing) {
+        existing.forEach(r => idMap[r.key] = r.id);
+      }
+
+      const rows = [
+        { key: 'restaurant_name', value: document.getElementById('setName').value.trim() },
+        { key: 'phone', value: document.getElementById('setPhone').value.trim() },
+        { key: 'address', value: document.getElementById('setAddress').value.trim() },
+        { key: 'legal_name', value: document.getElementById('setLegalName').value.trim() },
+        { key: 'gstin', value: document.getElementById('setGstin').value.trim() },
+        { key: 'fssai_lic', value: document.getElementById('setFssai').value.trim() },
+        { key: 'gst_rate', value: document.getElementById('setGstRate').value },
+        { key: 'store_open', value: String(document.getElementById('setStoreOpen').checked) },
+        { key: 'bill_footer', value: document.getElementById('setBillFooter').value.trim() },
+        { key: 'currency', value: document.getElementById('setCurrency').value.trim() || 'Rs. ' },
+      ];
+
+      const payload = rows.map(r => ({
+        branch_id: bid,
+        key: r.key,
+        value: r.value,
+        ...(idMap[r.key] ? { id: idMap[r.key] } : {})
+      }));
+
+      const toUpdate = payload.filter(p => p.id);
+      const toInsert = payload.filter(p => !p.id);
+
+      if (toUpdate.length > 0) {
+        const { error } = await sb.from('settings').upsert(toUpdate);
+        if (error) { window.showToast('Error saving settings', error.message, 'error'); return; }
+      }
+      if (toInsert.length > 0) {
+        const { error } = await sb.from('settings').insert(toInsert);
+        if (error) { window.showToast('Error inserting settings', error.message, 'error'); return; }
+      }
+
+      window.showToast('✅ Settings saved!', '', 'success');
+      window.logActivity && window.logActivity('settings', 'Settings updated', window.currentStaff?.name || '', bid);
+      await loadSettings();
+    };
+
+    // ── Load today's orders for stats + charts
+    async function loadTodayOrders() {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      const { data } = await sb.from('orders').select('*').eq('branch_id', bid)
+        .gte('created_at', today + 'T00:00:00+05:30').order('created_at', { ascending: false });
+      const orders = data || [];
+      updateStats(orders);
+      drawRevenueChart(orders);
+      drawTopItemsChart(orders);
+      renderRecentOrders(orders.slice(0, 10));
+      window.setConnectionStatus('online');
     }
-    if (toInsert.length > 0) {
-      const { error } = await sb.from('settings').insert(toInsert);
-      if (error) { window.showToast('Error inserting settings', error.message, 'error'); return; }
+
+    function updateStats(orders) {
+      const done = orders.filter(o => o.status === 'done' || o.status === 'delivered');
+      const revenue = done.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+      const avg = done.length ? revenue / done.length : 0;
+      const pending = orders.filter(o => o.status === 'pending' || o.status === 'preparing').length;
+      const rejected = orders.filter(o => o.status === 'rejected').length;
+
+      document.getElementById('statRevenue').textContent = 'Rs. ' + revenue.toFixed(0);
+      document.getElementById('statOrders').textContent = orders.length;
+      document.getElementById('statAvg').textContent = 'Rs. ' + avg.toFixed(0);
+      document.getElementById('statPending').textContent = pending;
+      document.getElementById('statDone').textContent = done.length;
+      document.getElementById('statRejected').textContent = rejected;
     }
-    
-    window.showToast('✅ Settings saved!', '', 'success');
-    window.logActivity && window.logActivity('settings', 'Settings updated', window.currentStaff?.name || '', bid);
-    await loadSettings();
-  };
 
-  // ── Load today's orders for stats + charts
-  async function loadTodayOrders() {
-    const sb  = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    const today = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Kolkata' });
-    const { data } = await sb.from('orders').select('*').eq('branch_id', bid)
-      .gte('created_at', today + 'T00:00:00+05:30').order('created_at', { ascending:false });
-    const orders = data || [];
-    updateStats(orders);
-    drawRevenueChart(orders);
-    drawTopItemsChart(orders);
-    renderRecentOrders(orders.slice(0, 10));
-    window.setConnectionStatus('online');
-  }
+    // ── Revenue Chart (SVG bar chart by hour)
+    function drawRevenueChart(orders) {
+      const svg = document.getElementById('revenueChart');
+      if (!svg) return;
 
-  function updateStats(orders) {
-    const done     = orders.filter(o => o.status === 'done' || o.status === 'delivered');
-    const revenue  = done.reduce((s,o) => s + parseFloat(o.total||0), 0);
-    const avg      = done.length ? revenue / done.length : 0;
-    const pending  = orders.filter(o => o.status === 'pending' || o.status === 'preparing').length;
-    const rejected = orders.filter(o => o.status === 'rejected').length;
+      const hourly = Array(24).fill(0);
+      orders.filter(o => o.status === 'done' || o.status === 'delivered').forEach(o => {
+        const h = new Date(o.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', hour12: false });
+        const hr = parseInt(h) || 0;
+        if (hr >= 0 && hr < 24) hourly[hr] += parseFloat(o.total || 0);
+      });
 
-    document.getElementById('statRevenue').textContent  = 'Rs. ' + revenue.toFixed(0);
-    document.getElementById('statOrders').textContent   = orders.length;
-    document.getElementById('statAvg').textContent      = 'Rs. ' + avg.toFixed(0);
-    document.getElementById('statPending').textContent  = pending;
-    document.getElementById('statDone').textContent     = done.length;
-    document.getElementById('statRejected').textContent = rejected;
-  }
+      // Only show hours 6am-11pm
+      const hours = Array.from({ length: 18 }, (_, i) => i + 6);
+      const values = hours.map(h => hourly[h]);
+      const maxVal = Math.max(...values, 1);
+      const total = values.reduce((s, v) => s + v, 0);
 
-  // ── Revenue Chart (SVG bar chart by hour)
-  function drawRevenueChart(orders) {
-    const svg = document.getElementById('revenueChart');
-    if (!svg) return;
+      document.getElementById('chartTotal').textContent = 'Rs. ' + total.toFixed(0);
 
-    const hourly = Array(24).fill(0);
-    orders.filter(o => o.status === 'done' || o.status === 'delivered').forEach(o => {
-      const h = new Date(o.created_at).toLocaleString('en-IN', { timeZone:'Asia/Kolkata', hour:'numeric', hour12:false });
-      const hr = parseInt(h) || 0;
-      if (hr >= 0 && hr < 24) hourly[hr] += parseFloat(o.total || 0);
-    });
+      const W = 700, H = 160, pad = 10;
+      const barW = Math.floor((W - pad * 2) / hours.length) - 4;
+      const chartH = H - 30;
 
-    // Only show hours 6am-11pm
-    const hours = Array.from({length:18}, (_,i) => i+6);
-    const values = hours.map(h => hourly[h]);
-    const maxVal = Math.max(...values, 1);
-    const total  = values.reduce((s,v) => s+v, 0);
+      let svgContent = '';
+      hours.forEach((hr, i) => {
+        const val = values[i];
+        const barH = val > 0 ? Math.max(4, Math.floor((val / maxVal) * chartH)) : 2;
+        const x = pad + i * ((W - pad * 2) / hours.length);
+        const y = H - 30 - barH;
+        const label = hr < 12 ? `${hr}am` : hr === 12 ? '12pm' : `${hr - 12}pm`;
 
-    document.getElementById('chartTotal').textContent = 'Rs. ' + total.toFixed(0);
-
-    const W = 700, H = 160, pad = 10;
-    const barW = Math.floor((W - pad*2) / hours.length) - 4;
-    const chartH = H - 30;
-
-    let svgContent = '';
-    hours.forEach((hr, i) => {
-      const val    = values[i];
-      const barH   = val > 0 ? Math.max(4, Math.floor((val / maxVal) * chartH)) : 2;
-      const x      = pad + i * ((W - pad*2) / hours.length);
-      const y      = H - 30 - barH;
-      const label  = hr < 12 ? `${hr}am` : hr === 12 ? '12pm' : `${hr-12}pm`;
-
-      svgContent += `<rect class="chart-bar" x="${x}" y="${y}" width="${barW}" height="${barH}" rx="3"
+        svgContent += `<rect class="chart-bar" x="${x}" y="${y}" width="${barW}" height="${barH}" rx="3"
         title="${label}: Rs. ${val.toFixed(0)}">
         <title>${label}: Rs. ${val.toFixed(0)}</title>
       </rect>`;
-      svgContent += `<text class="chart-label" x="${x + barW/2}" y="${H-14}" text-anchor="middle">${label}</text>`;
-      if (val > 0) {
-        svgContent += `<text class="chart-value" x="${x + barW/2}" y="${y - 4}" text-anchor="middle">Rs. ${val>=1000?(val/1000).toFixed(1)+'k':val.toFixed(0)}</text>`;
-      }
-    });
-
-    // Grid lines
-    [0.25, 0.5, 0.75, 1].forEach(ratio => {
-      const y = H - 30 - Math.floor(ratio * chartH);
-      const val = (maxVal * ratio).toFixed(0);
-      svgContent = `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
-        <text class="chart-label" x="${pad-2}" y="${y+4}" text-anchor="end">Rs. ${val}</text>` + svgContent;
-    });
-
-    svg.innerHTML = svgContent;
-  }
-
-  // ── Top Items Chart (SVG horizontal bars)
-  function drawTopItemsChart(orders) {
-    const svg = document.getElementById('topItemsChart');
-    if (!svg) return;
-
-    const itemCounts = {};
-    orders.filter(o => o.status !== 'rejected' && o.status !== 'cancelled').forEach(o => {
-      const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-      items.forEach(i => {
-        if (!itemCounts[i.name]) itemCounts[i.name] = { qty:0, revenue:0, emoji: i.emoji||'🍽️' };
-        itemCounts[i.name].qty     += i.qty;
-        itemCounts[i.name].revenue += i.price * i.qty;
+        svgContent += `<text class="chart-label" x="${x + barW / 2}" y="${H - 14}" text-anchor="middle">${label}</text>`;
+        if (val > 0) {
+          svgContent += `<text class="chart-value" x="${x + barW / 2}" y="${y - 4}" text-anchor="middle">Rs. ${val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val.toFixed(0)}</text>`;
+        }
       });
-    });
 
-    const sorted = Object.entries(itemCounts)
-      .sort((a,b) => b[1].qty - a[1].qty).slice(0, 8);
+      // Grid lines
+      [0.25, 0.5, 0.75, 1].forEach(ratio => {
+        const y = H - 30 - Math.floor(ratio * chartH);
+        const val = (maxVal * ratio).toFixed(0);
+        svgContent = `<line x1="${pad}" y1="${y}" x2="${W - pad}" y2="${y}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+        <text class="chart-label" x="${pad - 2}" y="${y + 4}" text-anchor="end">Rs. ${val}</text>` + svgContent;
+      });
 
-    if (sorted.length === 0) {
-      svg.innerHTML = `<text x="350" y="100" text-anchor="middle" fill="var(--text-dim)" font-size="14">No data yet today</text>`;
-      return;
+      svg.innerHTML = svgContent;
     }
 
-    const W = 700, rowH = 24, pad = 20, labelW = 180, rightPad = 80;
-    const maxQty = Math.max(...sorted.map(([,v]) => v.qty), 1);
-    const barAreaW = W - labelW - pad - rightPad;
+    // ── Top Items Chart (SVG horizontal bars)
+    function drawTopItemsChart(orders) {
+      const svg = document.getElementById('topItemsChart');
+      if (!svg) return;
 
-    let svgContent = '';
-    sorted.forEach(([name, data], i) => {
-      const y      = pad + i * (rowH + 8);
-      const barW   = Math.floor((data.qty / maxQty) * barAreaW);
-      const shortName = name.length > 22 ? name.slice(0,20)+'…' : name;
+      const itemCounts = {};
+      orders.filter(o => o.status !== 'rejected' && o.status !== 'cancelled').forEach(o => {
+        const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+        items.forEach(i => {
+          if (!itemCounts[i.name]) itemCounts[i.name] = { qty: 0, revenue: 0, emoji: i.emoji || '🍽️' };
+          itemCounts[i.name].qty += i.qty;
+          itemCounts[i.name].revenue += i.price * i.qty;
+        });
+      });
 
-      svgContent += `<text x="${pad}" y="${y + rowH/2 + 4}" fill="var(--text-dim)" font-size="12" font-family="DM Mono">${data.emoji} ${shortName}</text>`;
-      svgContent += `<rect x="${labelW}" y="${y}" width="${Math.max(barW,2)}" height="${rowH}" rx="4" fill="var(--accent-dim)"/>`;
-      svgContent += `<text x="${labelW + Math.max(barW,2) + 6}" y="${y + rowH/2 + 4}" fill="var(--accent-bright)" font-size="11" font-family="DM Mono">×${data.qty} · Rs. ${data.revenue.toFixed(0)}</text>`;
-    });
+      const sorted = Object.entries(itemCounts)
+        .sort((a, b) => b[1].qty - a[1].qty).slice(0, 8);
 
-    const svgHeight = pad + sorted.length * (rowH + 8) + pad;
-    svg.setAttribute('viewBox', `0 0 700 ${svgHeight}`);
-    svg.setAttribute('height', svgHeight);
-    svg.innerHTML = svgContent;
-  }
+      if (sorted.length === 0) {
+        svg.innerHTML = `<text x="350" y="100" text-anchor="middle" fill="var(--text-dim)" font-size="14">No data yet today</text>`;
+        return;
+      }
 
-  // ── Recent orders table
-  function renderRecentOrders(orders) {
-    const tbody = document.getElementById('recentOrdersBody');
-    if (!tbody) return;
-    if (!orders.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim);">No orders today yet.</td></tr>`;
-      return;
+      const W = 700, rowH = 24, pad = 20, labelW = 180, rightPad = 80;
+      const maxQty = Math.max(...sorted.map(([, v]) => v.qty), 1);
+      const barAreaW = W - labelW - pad - rightPad;
+
+      let svgContent = '';
+      sorted.forEach(([name, data], i) => {
+        const y = pad + i * (rowH + 8);
+        const barW = Math.floor((data.qty / maxQty) * barAreaW);
+        const shortName = name.length > 22 ? name.slice(0, 20) + '…' : name;
+
+        svgContent += `<text x="${pad}" y="${y + rowH / 2 + 4}" fill="var(--text-dim)" font-size="12" font-family="DM Mono">${data.emoji} ${shortName}</text>`;
+        svgContent += `<rect x="${labelW}" y="${y}" width="${Math.max(barW, 2)}" height="${rowH}" rx="4" fill="var(--accent-dim)"/>`;
+        svgContent += `<text x="${labelW + Math.max(barW, 2) + 6}" y="${y + rowH / 2 + 4}" fill="var(--accent-bright)" font-size="11" font-family="DM Mono">×${data.qty} · Rs. ${data.revenue.toFixed(0)}</text>`;
+      });
+
+      const svgHeight = pad + sorted.length * (rowH + 8) + pad;
+      svg.setAttribute('viewBox', `0 0 700 ${svgHeight}`);
+      svg.setAttribute('height', svgHeight);
+      svg.innerHTML = svgContent;
     }
-    tbody.innerHTML = orders.map(o => {
-      const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-      const summary = items.map(i => `${i.emoji||''}${i.name}×${i.qty}`).join(', ');
-      const dispStatus = o.status === 'done' ? 'delivered' : o.status;
-        const time = new Date(o.created_at).toLocaleTimeString('en-IN', { timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit' });
-      return `<tr>
+
+    // ── Recent orders table
+    function renderRecentOrders(orders) {
+      const tbody = document.getElementById('recentOrdersBody');
+      if (!tbody) return;
+      if (!orders.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim);">No orders today yet.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = orders.map(o => {
+        const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+        const summary = items.map(i => `${i.emoji || ''}${i.name}×${i.qty}`).join(', ');
+        const dispStatus = o.status === 'done' ? 'delivered' : o.status;
+        const time = new Date(o.created_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+        return `<tr>
         <td><span style="font-family:var(--font-mono);font-size:0.82rem;">${o.order_id}</span></td>
-        <td>${o.room_number ? 'R' + o.room_number : 'T' + (o.table_number || '—')}</td>
+        <td>${o.order_type === 'delivery'
+            ? `<span style="color:#00bcd4;font-weight:600;">🚚 Delivery</span>`
+            : o.room_number ? 'R' + o.room_number : 'T' + (o.table_number || '—')}</td>
         <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.8rem;">${summary}</td>
         <td><span style="font-family:var(--font-mono);color:var(--accent-bright);">Rs. ${parseFloat(o.total).toFixed(2)}</span></td>
         <td><span class="badge badge-${o.status}">${o.status}</span></td>
-        <td><span class="badge ${o.payment_status==='paid'?'badge-paid':'badge-unpaid'}">${o.payment_status}</span></td>
+        <td><span class="badge ${o.payment_status === 'paid' ? 'badge-paid' : 'badge-unpaid'}">${o.payment_status}</span></td>
         <td style="color:var(--text-dim);font-size:0.8rem;">${time}</td>
       </tr>`;
-    }).join('');
-  }
-
-  // ── All Orders (orders tab)
-  window.loadAllOrders = async function() {
-    const sb  = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    const dateVal = document.getElementById('orderDateFilter')?.value;
-    const date = dateVal || new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Kolkata' });
-
-    const { data } = await sb.from('orders').select('*').eq('branch_id', bid)
-      .gte('created_at', date + 'T00:00:00+05:30')
-      .lte('created_at', date + 'T23:59:59+05:30')
-      .order('created_at', { ascending:false });
-
-    allOrders = data || [];
-    filterOrders();
-  };
-
-  window.filterOrders = function() {
-    const search    = document.getElementById('orderSearch')?.value?.toLowerCase() || '';
-    const status    = document.getElementById('orderStatusFilter')?.value || 'all';
-    const payment   = document.getElementById('orderPayFilter')?.value || 'all';
-    const type      = document.getElementById('orderTypeFilter')?.value || 'all';
-
-    filteredOrders = allOrders.filter(o => {
-      const matchSearch = !search ||
-        o.order_id?.toLowerCase().includes(search) ||
-        o.table_number?.toLowerCase().includes(search) ||
-        o.room_number?.toLowerCase().includes(search) ||
-        o.customer_phone?.includes(search) ||
-        o.customer_name?.toLowerCase().includes(search);
-      const matchStatus  = status === 'all' || o.status === status || (status === 'delivered' && o.status === 'done');
-      const matchPayment = payment === 'all' || o.payment_status === payment;
-      const matchType    = type === 'all' || (type === 'room' ? !!o.room_number : !o.room_number);
-      return matchSearch && matchStatus && matchPayment && matchType;
-    });
-
-    // Sort
-    filteredOrders.sort((a, b) => {
-      let av = a[orderSortKey], bv = b[orderSortKey];
-      if (typeof av === 'string') av = av.toLowerCase();
-      if (typeof bv === 'string') bv = bv.toLowerCase();
-      return av < bv ? -orderSortDir : av > bv ? orderSortDir : 0;
-    });
-
-    ordersPage = 1;
-    renderOrdersTable();
-    renderOrdersPagination();
-  };
-
-  window.sortOrders = function(key) {
-    if (orderSortKey === key) orderSortDir *= -1;
-    else { orderSortKey = key; orderSortDir = -1; }
-    filterOrders();
-  };
-
-  function renderOrdersTable() {
-    const tbody = document.getElementById('ordersTableBody');
-    const start = (ordersPage - 1) * PAGE_SIZE;
-    const page  = filteredOrders.slice(start, start + PAGE_SIZE);
-
-    if (!page.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-dim);">No orders found.</td></tr>`;
-      return;
+      }).join('');
     }
 
-    tbody.innerHTML = page.map(o => {
-      const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-      const summary = items.slice(0,2).map(i=>`${i.name}×${i.qty}`).join(', ') + (items.length>2?` +${items.length-2}`:'');
-      const dispStatus = o.status === 'done' ? 'delivered' : o.status;
-        const time = new Date(o.created_at).toLocaleTimeString('en-IN', { timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit' });
-      return `<tr>
+    // ── All Orders (orders tab)
+    window.loadAllOrders = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const dateVal = document.getElementById('orderDateFilter')?.value;
+      const date = dateVal || new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+
+      const { data } = await sb.from('orders').select('*').eq('branch_id', bid)
+        .gte('created_at', date + 'T00:00:00+05:30')
+        .lte('created_at', date + 'T23:59:59+05:30')
+        .order('created_at', { ascending: false });
+
+      allOrders = data || [];
+      filterOrders();
+    };
+
+    window.filterOrders = function () {
+      const search = document.getElementById('orderSearch')?.value?.toLowerCase() || '';
+      const status = document.getElementById('orderStatusFilter')?.value || 'all';
+      const payment = document.getElementById('orderPayFilter')?.value || 'all';
+      const type = document.getElementById('orderTypeFilter')?.value || 'all';
+
+      filteredOrders = allOrders.filter(o => {
+        const matchSearch = !search ||
+          o.order_id?.toLowerCase().includes(search) ||
+          o.table_number?.toLowerCase().includes(search) ||
+          o.room_number?.toLowerCase().includes(search) ||
+          o.customer_phone?.includes(search) ||
+          o.customer_name?.toLowerCase().includes(search);
+        const matchStatus = status === 'all' || o.status === status || (status === 'delivered' && o.status === 'done');
+        const matchPayment = payment === 'all' || o.payment_status === payment;
+        const matchType = type === 'all'
+          || (type === 'delivery' ? o.order_type === 'delivery'
+            : type === 'room' ? !!o.room_number
+              : !o.room_number && o.order_type !== 'delivery');
+        return matchSearch && matchStatus && matchPayment && matchType;
+      });
+
+      // Sort
+      filteredOrders.sort((a, b) => {
+        let av = a[orderSortKey], bv = b[orderSortKey];
+        if (typeof av === 'string') av = av.toLowerCase();
+        if (typeof bv === 'string') bv = bv.toLowerCase();
+        return av < bv ? -orderSortDir : av > bv ? orderSortDir : 0;
+      });
+
+      ordersPage = 1;
+      renderOrdersTable();
+      renderOrdersPagination();
+    };
+
+    window.sortOrders = function (key) {
+      if (orderSortKey === key) orderSortDir *= -1;
+      else { orderSortKey = key; orderSortDir = -1; }
+      filterOrders();
+    };
+
+    function renderOrdersTable() {
+      const tbody = document.getElementById('ordersTableBody');
+      const start = (ordersPage - 1) * PAGE_SIZE;
+      const page = filteredOrders.slice(start, start + PAGE_SIZE);
+
+      if (!page.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-dim);">No orders found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = page.map(o => {
+        const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+        const summary = items.slice(0, 2).map(i => `${i.name}×${i.qty}`).join(', ') + (items.length > 2 ? ` +${items.length - 2}` : '');
+        const dispStatus = o.status === 'done' ? 'delivered' : o.status;
+        const time = new Date(o.created_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+        return `<tr>
         <td><span style="font-family:var(--font-mono);font-size:0.8rem;cursor:pointer;color:var(--accent-bright);" onclick="openOrderDetail('${o.id}')">${o.order_id}</span></td>
         <td>${o.room_number ? 'R' + o.room_number : 'T' + (o.table_number || '—')}</td>
         <td style="font-size:0.8rem;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${summary}</td>
         <td><span style="font-family:var(--font-mono);">Rs. ${parseFloat(o.total).toFixed(2)}</span></td>
         <td><span class="badge badge-${o.status}">${o.status}</span></td>
-        <td><span class="badge ${o.payment_status==='paid'?'badge-paid':'badge-unpaid'}">${o.payment_status}</span></td>
+        <td><span class="badge ${o.payment_status === 'paid' ? 'badge-paid' : 'badge-unpaid'}">${o.payment_status}</span></td>
         <td style="color:var(--text-dim);font-size:0.8rem;">${time}</td>
         <td>
           <div class="order-actions-cell">
@@ -767,70 +1039,81 @@
           </div>
         </td>
       </tr>`;
-    }).join('');
-  }
-
-  function renderOrdersPagination() {
-    const total = Math.ceil(filteredOrders.length / PAGE_SIZE);
-    const el = document.getElementById('ordersPagination');
-    if (total <= 1) { el.innerHTML=''; return; }
-    let html = `<button class="page-btn" onclick="ordersGoPage(${ordersPage-1})" ${ordersPage===1?'disabled':''}>‹</button>`;
-    for (let i=1; i<=total; i++) {
-      if (i===1||i===total||Math.abs(i-ordersPage)<=1)
-        html += `<button class="page-btn ${i===ordersPage?'active':''}" onclick="ordersGoPage(${i})">${i}</button>`;
-      else if (Math.abs(i-ordersPage)===2)
-        html += `<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
+      }).join('');
     }
-    html += `<button class="page-btn" onclick="ordersGoPage(${ordersPage+1})" ${ordersPage===total?'disabled':''}>›</button>`;
-    el.innerHTML = html;
-  }
 
-  window.ordersGoPage = function(p) {
-    const total = Math.ceil(filteredOrders.length / PAGE_SIZE);
-    if (p<1||p>total) return;
-    ordersPage = p;
-    renderOrdersTable();
-    renderOrdersPagination();
-  };
-
-  window.markPaid = async function(orderId) {
-    const sb = window.supabaseClient;
-    const { error } = await sb.from('orders').update({ payment_status:'paid', updated_at:new Date().toISOString() }).eq('id', orderId);
-    if (!error) {
-      window.showToast('✅ Marked as paid','','success');
-      await loadAllOrders();
-      await loadTodayOrders();
+    function renderOrdersPagination() {
+      const total = Math.ceil(filteredOrders.length / PAGE_SIZE);
+      const el = document.getElementById('ordersPagination');
+      if (total <= 1) { el.innerHTML = ''; return; }
+      let html = `<button class="page-btn" onclick="ordersGoPage(${ordersPage - 1})" ${ordersPage === 1 ? 'disabled' : ''}>‹</button>`;
+      for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || Math.abs(i - ordersPage) <= 1)
+          html += `<button class="page-btn ${i === ordersPage ? 'active' : ''}" onclick="ordersGoPage(${i})">${i}</button>`;
+        else if (Math.abs(i - ordersPage) === 2)
+          html += `<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
+      }
+      html += `<button class="page-btn" onclick="ordersGoPage(${ordersPage + 1})" ${ordersPage === total ? 'disabled' : ''}>›</button>`;
+      el.innerHTML = html;
     }
-  };
 
-  window.printSingleBill = function(orderId) {
-    const order = allOrders.find(o => o.id === orderId);
-    if (order) window.printBill && window.printBill(order, window.restaurantSettings || settings);
-  };
+    window.ordersGoPage = function (p) {
+      const total = Math.ceil(filteredOrders.length / PAGE_SIZE);
+      if (p < 1 || p > total) return;
+      ordersPage = p;
+      renderOrdersTable();
+      renderOrdersPagination();
+    };
 
-  // ── Order Detail Modal
-  window.openOrderDetail = function(orderId) {
-    const order = allOrders.find(o => o.id === orderId);
-    if (!order) return;
-    const items = typeof order.items==='string' ? JSON.parse(order.items) : order.items;
-    const rate = parseFloat(settings.gst_rate || 5);
-    const half = rate / 2;
+    window.markPaid = async function (orderId) {
+      const sb = window.supabaseClient;
+      const { error } = await sb.from('orders').update({ payment_status: 'paid', updated_at: new Date().toISOString() }).eq('id', orderId);
+      if (!error) {
+        window.showToast('✅ Marked as paid', '', 'success');
+        await loadAllOrders();
+        await loadTodayOrders();
+      }
+    };
 
-    document.getElementById('orderDetailTitle').textContent = `${order.order_id} — ${order.room_number ? 'Room ' + order.room_number : 'Table ' + (order.table_number||'—')}`;
-    document.getElementById('orderDetailBody').innerHTML = `
+    window.printSingleBill = function (orderId) {
+      const order = allOrders.find(o => o.id === orderId);
+      if (order) window.printBill && window.printBill(order, window.restaurantSettings || settings);
+    };
+
+    // ── Order Detail Modal
+    window.openOrderDetail = function (orderId) {
+      const order = allOrders.find(o => o.id === orderId);
+      if (!order) return;
+      const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+      const rate = parseFloat(settings.gst_rate || 5);
+      const half = rate / 2;
+
+      document.getElementById('orderDetailTitle').textContent = order.order_type === 'delivery'
+        ? `${order.order_id} — 🚚 Delivery`
+        : `${order.order_id} — ${order.room_number ? 'Room ' + order.room_number : 'Table ' + (order.table_number || '—')}`;
+      document.getElementById('orderDetailBody').innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;font-size:0.875rem;">
         <div><span style="color:var(--text-dim);">Status</span><br><span class="badge badge-${order.status}" style="margin-top:4px;">${order.status}</span></div>
-        <div><span style="color:var(--text-dim);">Payment</span><br><span class="badge ${order.payment_status==='paid'?'badge-paid':'badge-unpaid'}" style="margin-top:4px;">${order.payment_status}</span></div>
-        <div><span style="color:var(--text-dim);">Customer</span><br>${order.customer_name||'—'}</div>
-        <div><span style="color:var(--text-dim);">Mobile</span><br>${order.customer_phone||'—'}</div>
-        <div><span style="color:var(--text-dim);">Invoice</span><br><span style="font-family:var(--font-mono);font-size:0.8rem;">${order.invoice_no||'—'}</span></div>
-        <div><span style="color:var(--text-dim);">Time</span><br>${new Date(order.created_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}</div>
+        <div><span style="color:var(--text-dim);">Payment</span><br><span class="badge ${order.payment_status === 'paid' ? 'badge-paid' : 'badge-unpaid'}" style="margin-top:4px;">${order.payment_status}</span></div>
+        <div><span style="color:var(--text-dim);">Customer</span><br>${order.customer_name || '—'}</div>
+        <div><span style="color:var(--text-dim);">Mobile</span><br>${order.customer_phone || '—'}</div>
+        <div><span style="color:var(--text-dim);">Invoice</span><br><span style="font-family:var(--font-mono);font-size:0.8rem;">${order.invoice_no || '—'}</span></div>
+        <div><span style="color:var(--text-dim);">Time</span><br>${new Date(order.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</div>
+        ${order.order_type === 'delivery' ? `
+          <div style="grid-column:1/-1;background:rgba(0,188,212,0.08);border-radius:8px;padding:12px;border:1px solid rgba(0,188,212,0.2);">
+            <div style="color:#00bcd4;font-weight:600;font-size:0.8rem;margin-bottom:8px;">🚚 DELIVERY DETAILS</div>
+            <div style="color:var(--text-dim);margin-bottom:4px;">📍 ${order.delivery_address || '—'}</div>
+            ${order.delivery_boy_name ? `<div style="color:var(--text-dim);margin-bottom:4px;">🛵 ${order.delivery_boy_name}</div>` : ''}
+            ${order.delivery_fee ? `<div style="color:var(--text-dim);margin-bottom:4px;">💰 Delivery Fee: Rs. ${order.delivery_fee}</div>` : ''}
+            ${order.otp ? `<div style="color:#00bcd4;font-weight:700;">🔐 OTP: ${order.otp}</div>` : ''}
+            ${order.delivery_maps_link ? `<a href="${order.delivery_maps_link}" target="_blank" style="color:#00bcd4;font-size:0.8rem;">🗺️ View on Maps ↗</a>` : ''}
+          </div>` : ''}
       </div>
       <div class="table-wrap" style="margin-bottom:16px;">
         <table>
           <thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th></tr></thead>
           <tbody>
-            ${items.map(i=>`<tr><td>${i.emoji||'🍽️'} ${i.name}</td><td style="text-align:center">×${i.qty}</td><td style="text-align:right;font-family:var(--font-mono)">Rs. ${(i.price*i.qty).toFixed(2)}</td></tr>`).join('')}
+            ${items.map(i => `<tr><td>${i.emoji || '🍽️'} ${i.name}</td><td style="text-align:center">×${i.qty}</td><td style="text-align:right;font-family:var(--font-mono)">Rs. ${(i.price * i.qty).toFixed(2)}</td></tr>`).join('')}
           </tbody>
         </table>
       </div>
@@ -842,138 +1125,138 @@
           <span>Total</span><span style="font-family:var(--font-mono);color:var(--accent-bright);">Rs. ${parseFloat(order.total).toFixed(2)}</span>
         </div>
       </div>
-      ${order.note?`<div class="order-note" style="margin-top:12px;">📝 ${order.note}</div>`:''}
+      ${order.note ? `<div class="order-note" style="margin-top:12px;">📝 ${order.note}</div>` : ''}
     `;
-    document.getElementById('orderDetailFooter').innerHTML = `
+      document.getElementById('orderDetailFooter').innerHTML = `
       
       <button class="btn btn-secondary" onclick="printSingleBill('${order.id}')">🖨️ Print Bill</button>
       <button class="btn btn-ghost" onclick="closeOrderDetail()">Close</button>
     `;
-    document.getElementById('orderDetailModal').style.display = 'flex';
-  };
-  window.closeOrderDetail = () => document.getElementById('orderDetailModal').style.display = 'none';
+      document.getElementById('orderDetailModal').style.display = 'flex';
+    };
+    window.closeOrderDetail = () => document.getElementById('orderDetailModal').style.display = 'none';
 
-  // ── Export Orders CSV
-  window.exportOrdersCSV = function() {
-    if (!filteredOrders.length) { window.showToast('No orders to export','','warning'); return; }
-    let csv = 'Order ID,Invoice,Table,Customer,Phone,Items,Subtotal,CGST,SGST,Total,Status,Payment,Time\n';
-    filteredOrders.forEach(o => {
-      const items = (typeof o.items==='string'?JSON.parse(o.items):o.items).map(i=>`${i.name}×${i.qty}`).join(' | ');
-      const time = new Date(o.created_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
-      csv += `"${o.order_id}","${o.invoice_no||''}","${o.table_number||''}","${o.customer_name||''}","${o.customer_phone||''}","${items}",${o.subtotal},${o.cgst},${o.sgst},${o.total},"${o.status}","${o.payment_status}","${time}"\n`;
-    });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-    a.download = `LAXMI_Orders_${new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'})}.csv`;
-    a.click();
-    window.showToast('✅ Exported','','success');
-  };
-
-  // ── Tables
-  async function loadTables() {
-    const sb  = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    const { data } = await sb.from('restaurant_tables').select('*').eq('branch_id', bid).order('table_number');
-    allTables = data || [];
-    renderTables();
-  }
-
-  function renderTables() {
-    const grid = document.getElementById('tablesGrid');
-    const typeFilter = document.getElementById('tableTypeFilter')?.value || 'all';
-    const searchQuery = document.getElementById('tableSearch')?.value.toLowerCase() || '';
-
-    let filtered = allTables || [];
-
-    if (typeFilter === 'room') {
-      filtered = filtered.filter(t => !!t.room_number);
-    } else if (typeFilter === 'table') {
-      filtered = filtered.filter(t => !t.room_number);
-    }
-
-    if (searchQuery) {
-      filtered = filtered.filter(t => {
-        const str = t.room_number ? String(t.room_number) : String(t.table_number);
-        return str.toLowerCase().includes(searchQuery);
+    // ── Export Orders CSV
+    window.exportOrdersCSV = function () {
+      if (!filteredOrders.length) { window.showToast('No orders to export', '', 'warning'); return; }
+      let csv = 'Order ID,Invoice,Table,Customer,Phone,Items,Subtotal,CGST,SGST,Total,Status,Payment,Time\n';
+      filteredOrders.forEach(o => {
+        const items = (typeof o.items === 'string' ? JSON.parse(o.items) : o.items).map(i => `${i.name}×${i.qty}`).join(' | ');
+        const time = new Date(o.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+        csv += `"${o.order_id}","${o.invoice_no || ''}","${o.table_number || ''}","${o.customer_name || ''}","${o.customer_phone || ''}","${items}",${o.subtotal},${o.cgst},${o.sgst},${o.total},"${o.status}","${o.payment_status}","${time}"\n`;
       });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      a.download = `LAXMI_Orders_${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}.csv`;
+      a.click();
+      window.showToast('✅ Exported', '', 'success');
+    };
+
+    // ── Tables
+    async function loadTables() {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const { data } = await sb.from('restaurant_tables').select('*').eq('branch_id', bid).order('table_number');
+      allTables = data || [];
+      renderTables();
     }
 
-    if (!filtered.length) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim);">No tables or rooms match your filters.</div>`;
-      return;
-    }
+    function renderTables() {
+      const grid = document.getElementById('tablesGrid');
+      const typeFilter = document.getElementById('tableTypeFilter')?.value || 'all';
+      const searchQuery = document.getElementById('tableSearch')?.value.toLowerCase() || '';
 
-    grid.innerHTML = filtered.map(t => {
-      const isRoom = !!t.room_number;
-      const numLabel = isRoom ? '🛏️ ' + t.room_number : '🪑 ' + t.table_number;
-      return `
-      <div class="table-card ${t.is_occupied?'occupied':''}" onclick="openTableModal(${t.id})">
+      let filtered = allTables || [];
+
+      if (typeFilter === 'room') {
+        filtered = filtered.filter(t => !!t.room_number);
+      } else if (typeFilter === 'table') {
+        filtered = filtered.filter(t => !t.room_number);
+      }
+
+      if (searchQuery) {
+        filtered = filtered.filter(t => {
+          const str = t.room_number ? String(t.room_number) : String(t.table_number);
+          return str.toLowerCase().includes(searchQuery);
+        });
+      }
+
+      if (!filtered.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim);">No tables or rooms match your filters.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(t => {
+        const isRoom = !!t.room_number;
+        const numLabel = isRoom ? '🛏️ ' + t.room_number : '🪑 ' + t.table_number;
+        return `
+      <div class="table-card ${t.is_occupied ? 'occupied' : ''}" onclick="openTableModal(${t.id})">
         <div class="table-num" style="font-size:1.5rem;">${numLabel}</div>
         <div class="table-seats">👥 ${t.seats} seats</div>
-        <div class="table-status ${t.is_occupied?'occupied':'free'}">${t.is_occupied?'🔴 Occupied':'🟢 Free'}</div>
+        <div class="table-status ${t.is_occupied ? 'occupied' : 'free'}">${t.is_occupied ? '🔴 Occupied' : '🟢 Free'}</div>
         <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
           <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showQR(${t.id})">📱 QR</button>
           <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteTable(${t.id},'${isRoom ? t.room_number : t.table_number}')">🗑</button>
         </div>
       </div>`}).join('');
-  }
-
-  window.openTableModal = function(tableId = null) {
-    editingTableId = tableId;
-    const t = allTables.find(t => t.id === tableId);
-    document.getElementById('tableModalTitle').textContent = t ? `Edit ${t.room_number ? 'Room ' + t.room_number : 'Table ' + t.table_number}` : 'Add Table / Room';
-    if (document.getElementById('tableType')) document.getElementById('tableType').value = t?.room_number ? 'room' : 'table';
-    document.getElementById('tableNum').value   = t?.room_number || t?.table_number || '';
-    document.getElementById('tableSeats').value = t?.seats || 4;
-    document.getElementById('tableModal').style.display = 'flex';
-  };
-  window.closeTableModal = () => { document.getElementById('tableModal').style.display='none'; editingTableId=null; };
-
-  window.saveTable = async function() {
-    const sb  = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    const type  = document.getElementById('tableType')?.value || 'table';
-    const num   = document.getElementById('tableNum').value.trim();
-    const seats = parseInt(document.getElementById('tableSeats').value) || 4;
-    if (!num) { window.showToast('Number required','','error'); return; }
-    const btn = document.getElementById('tableSaveBtn');
-    btn.disabled=true; btn.textContent='Saving…';
-    const payload = { branch_id:bid, seats };
-    if (type === 'room') { payload.room_number = num; payload.table_number = null; }
-    else { payload.table_number = num; payload.room_number = null; }
-    let error;
-    if (editingTableId) {
-      ({error} = await sb.from('restaurant_tables').update(payload).eq('id', editingTableId));
-    } else {
-      ({error} = await sb.from('restaurant_tables').insert(payload));
     }
-    btn.disabled=false; btn.textContent='Save Table';
-    if (error) { window.showToast('Error saving table', error.message, 'error'); return; }
-    window.showToast('✅ Table saved!','','success');
-    closeTableModal();
-    await loadTables();
-  };
 
-  window.deleteTable = async function(tableId, tableNum) {
-    if (!confirm(`Delete Table ${tableNum}? This cannot be undone.`)) return;
-    const sb = window.supabaseClient;
-    const { error } = await sb.from('restaurant_tables').delete().eq('id', tableId);
-    if (!error) { window.showToast('🗑 Table deleted','','success'); await loadTables(); }
-  };
+    window.openTableModal = function (tableId = null) {
+      editingTableId = tableId;
+      const t = allTables.find(t => t.id === tableId);
+      document.getElementById('tableModalTitle').textContent = t ? `Edit ${t.room_number ? 'Room ' + t.room_number : 'Table ' + t.table_number}` : 'Add Table / Room';
+      if (document.getElementById('tableType')) document.getElementById('tableType').value = t?.room_number ? 'room' : 'table';
+      document.getElementById('tableNum').value = t?.room_number || t?.table_number || '';
+      document.getElementById('tableSeats').value = t?.seats || 4;
+      document.getElementById('tableModal').style.display = 'flex';
+    };
+    window.closeTableModal = () => { document.getElementById('tableModal').style.display = 'none'; editingTableId = null; };
 
-  // ── QR Code Generator
-  window.showQR = function(tableId) {
-    const table = allTables.find(t => t.id === tableId);
-    if (!table) return;
-    const isRoom = !!table.room_number;
-    const baseUrl = window.location.origin + window.location.pathname.replace('admin.html','index.html');
-    const url = isRoom ? `${baseUrl}?room=${encodeURIComponent(table.room_number)}&token=${table.qr_token}` : `${baseUrl}?table=${encodeURIComponent(table.table_number)}&token=${table.qr_token}`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    window.saveTable = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const type = document.getElementById('tableType')?.value || 'table';
+      const num = document.getElementById('tableNum').value.trim();
+      const seats = parseInt(document.getElementById('tableSeats').value) || 4;
+      if (!num) { window.showToast('Number required', '', 'error'); return; }
+      const btn = document.getElementById('tableSaveBtn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      const payload = { branch_id: bid, seats };
+      if (type === 'room') { payload.room_number = num; payload.table_number = null; }
+      else { payload.table_number = num; payload.room_number = null; }
+      let error;
+      if (editingTableId) {
+        ({ error } = await sb.from('restaurant_tables').update(payload).eq('id', editingTableId));
+      } else {
+        ({ error } = await sb.from('restaurant_tables').insert(payload));
+      }
+      btn.disabled = false; btn.textContent = 'Save Table';
+      if (error) { window.showToast('Error saving table', error.message, 'error'); return; }
+      window.showToast('✅ Table saved!', '', 'success');
+      closeTableModal();
+      await loadTables();
+    };
 
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
+    window.deleteTable = async function (tableId, tableNum) {
+      if (!confirm(`Delete Table ${tableNum}? This cannot be undone.`)) return;
+      const sb = window.supabaseClient;
+      const { error } = await sb.from('restaurant_tables').delete().eq('id', tableId);
+      if (!error) { window.showToast('🗑 Table deleted', '', 'success'); await loadTables(); }
+    };
+
+    // ── QR Code Generator
+    window.showQR = function (tableId) {
+      const table = allTables.find(t => t.id === tableId);
+      if (!table) return;
+      const isRoom = !!table.room_number;
+      const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
+      const url = isRoom ? `${baseUrl}?room=${encodeURIComponent(table.room_number)}&token=${table.qr_token}` : `${baseUrl}?table=${encodeURIComponent(table.table_number)}&token=${table.qr_token}`;
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.style.display = 'flex';
+      modal.innerHTML = `
       <div class="modal" style="max-width:320px;text-align:center;">
         <div class="modal-header">
           <h2 class="modal-title">📱 ${isRoom ? 'Room ' + table.room_number : 'Table ' + table.table_number} QR</h2>
@@ -990,144 +1273,310 @@
           <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Close</button>
         </div>
       </div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
-  };
+      document.body.appendChild(modal);
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    };
 
-  window.printQR = function(num, qrUrl, isRoom = false) {
-    const slip = document.getElementById('printSlip');
-    slip.innerHTML = `
+    window.printQR = function (num, qrUrl, isRoom = false) {
+      const slip = document.getElementById('printSlip');
+      slip.innerHTML = `
       <div style="font-family:monospace;text-align:center;padding:20px;">
         <div style="font-size:20px;font-weight:700;margin-bottom:4px;">🍃 LAXMI</div>
         <div style="font-size:14px;margin-bottom:12px;">Scan to Order</div>
         <img src="${qrUrl}" width="200" height="200" style="margin:0 auto;display:block;">
         <div style="font-size:18px;font-weight:700;margin-top:12px;">${isRoom ? 'Room ' + num : 'Table ' + num}</div>
       </div>`;
-    window.print();
-  };
+      window.print();
+    };
 
-  window.printAllQR = function() {
-    if (!allTables.length) { window.showToast('No tables to print','','warning'); return; }
-    const baseUrl = window.location.origin + window.location.pathname.replace('admin.html','index.html');
-    const slip = document.getElementById('printSlip');
-    slip.innerHTML = allTables.map(table => {
-      const isRoom = !!table.room_number;
-      const url = isRoom ? `${baseUrl}?room=${encodeURIComponent(table.room_number)}&token=${table.qr_token}` : `${baseUrl}?table=${encodeURIComponent(table.table_number)}&token=${table.qr_token}`;
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
-      return `<div style="font-family:monospace;text-align:center;padding:16px;display:inline-block;width:200px;margin:8px;break-inside:avoid;">
+    window.printAllQR = function () {
+      if (!allTables.length) { window.showToast('No tables to print', '', 'warning'); return; }
+      const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
+      const slip = document.getElementById('printSlip');
+      slip.innerHTML = allTables.map(table => {
+        const isRoom = !!table.room_number;
+        const url = isRoom ? `${baseUrl}?room=${encodeURIComponent(table.room_number)}&token=${table.qr_token}` : `${baseUrl}?table=${encodeURIComponent(table.table_number)}&token=${table.qr_token}`;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
+        return `<div style="font-family:monospace;text-align:center;padding:16px;display:inline-block;width:200px;margin:8px;break-inside:avoid;">
         <div style="font-size:16px;font-weight:700;">🍃 LAXMI</div>
         <div style="font-size:11px;margin-bottom:8px;">Scan to Order</div>
         <img src="${qrUrl}" width="180" height="180" style="margin:0 auto;display:block;">
         <div style="font-size:16px;font-weight:700;margin-top:12px;">${isRoom ? 'Room ' + table.room_number : 'Table ' + table.table_number}</div>
       </div>`;
-    }).join('');
-    window.print();
-  };
+      }).join('');
+      window.print();
+    };
 
-  // ── Activity Log
-  window.loadActivity = async function() {
-    const sb  = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    const { data } = await sb.from('activity_log').select('*').eq('branch_id', bid)
-      .order('created_at', { ascending:false }).limit(200);
-    allActivity = data || [];
-    filterActivity();
-  };
+    // ── Activity Log
+    window.loadActivity = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const { data } = await sb.from('activity_log').select('*').eq('branch_id', bid)
+        .order('created_at', { ascending: false }).limit(200);
+      allActivity = data || [];
+      filterActivity();
+    };
 
-  window.filterActivity = function() {
-    const filter = document.getElementById('activityFilter')?.value || 'all';
-    filteredActivity = filter==='all' ? allActivity : allActivity.filter(a => a.event_type === filter);
-    activityPage = 1;
-    renderActivity();
-    renderActivityPagination();
-  };
+    window.filterActivity = function () {
+      const filter = document.getElementById('activityFilter')?.value || 'all';
+      filteredActivity = filter === 'all' ? allActivity : allActivity.filter(a => a.event_type === filter);
+      activityPage = 1;
+      renderActivity();
+      renderActivityPagination();
+    };
 
-  function renderActivity() {
-    const tbody = document.getElementById('activityBody');
-    const start = (activityPage-1) * PAGE_SIZE;
-    const page  = filteredActivity.slice(start, start+PAGE_SIZE);
-    if (!page.length) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-dim);">No activity yet.</td></tr>`;
-      return;
-    }
-    const icons = { new_order:'🔔', order_status:'🔄', store_toggle:'🏪', settings:'⚙️', staff:'👥' };
-    tbody.innerHTML = page.map(a => {
-      const time = new Date(a.created_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-      return `<tr>
+    function renderActivity() {
+      const tbody = document.getElementById('activityBody');
+      const start = (activityPage - 1) * PAGE_SIZE;
+      const page = filteredActivity.slice(start, start + PAGE_SIZE);
+      if (!page.length) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-dim);">No activity yet.</td></tr>`;
+        return;
+      }
+      const icons = { new_order: '🔔', order_status: '🔄', store_toggle: '🏪', settings: '⚙️', staff: '👥' };
+      tbody.innerHTML = page.map(a => {
+        const time = new Date(a.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        return `<tr>
         <td style="font-size:0.8rem;color:var(--text-dim);white-space:nowrap;">${time}</td>
-        <td><span class="chip">${icons[a.event_type]||'📌'} ${a.event_type}</span></td>
-        <td style="font-size:0.875rem;">${a.description||'—'}</td>
-        <td style="font-size:0.8rem;color:var(--text-dim);">${a.staff_name||'—'}</td>
+        <td><span class="chip">${icons[a.event_type] || '📌'} ${a.event_type}</span></td>
+        <td style="font-size:0.875rem;">${a.description || '—'}</td>
+        <td style="font-size:0.8rem;color:var(--text-dim);">${a.staff_name || '—'}</td>
       </tr>`;
-    }).join('');
-  }
-
-  function renderActivityPagination() {
-    const total = Math.ceil(filteredActivity.length / PAGE_SIZE);
-    const el = document.getElementById('activityPagination');
-    if (total<=1) { el.innerHTML=''; return; }
-    let html = `<button class="page-btn" onclick="actGoPage(${activityPage-1})" ${activityPage===1?'disabled':''}>‹</button>`;
-    for (let i=1;i<=total;i++) {
-      if(i===1||i===total||Math.abs(i-activityPage)<=1)
-        html+=`<button class="page-btn ${i===activityPage?'active':''}" onclick="actGoPage(${i})">${i}</button>`;
-      else if(Math.abs(i-activityPage)===2)
-        html+=`<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
+      }).join('');
     }
-    html+=`<button class="page-btn" onclick="actGoPage(${activityPage+1})" ${activityPage===total?'disabled':''}>›</button>`;
-    el.innerHTML = html;
-  }
-  window.actGoPage = function(p) {
-    const total = Math.ceil(filteredActivity.length/PAGE_SIZE);
-    if(p<1||p>total) return;
-    activityPage=p; renderActivity(); renderActivityPagination();
-  };
 
-  // ── Realtime
-  function subscribeRealtime() {
-    const sb  = window.supabaseClient;
-    const bid = window.getActiveBranchId();
-    sb.channel('admin-orders')
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',filter:`branch_id=eq.${bid}`},
-        async () => { await loadTodayOrders(); await loadAllOrders(); })
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',filter:`branch_id=eq.${bid}`},
-        async () => { await loadTodayOrders(); await loadAllOrders(); })
-      .subscribe(s => { if(s==='SUBSCRIBED') window.setConnectionStatus('online'); });
-  }
+    function renderActivityPagination() {
+      const total = Math.ceil(filteredActivity.length / PAGE_SIZE);
+      const el = document.getElementById('activityPagination');
+      if (total <= 1) { el.innerHTML = ''; return; }
+      let html = `<button class="page-btn" onclick="actGoPage(${activityPage - 1})" ${activityPage === 1 ? 'disabled' : ''}>‹</button>`;
+      for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || Math.abs(i - activityPage) <= 1)
+          html += `<button class="page-btn ${i === activityPage ? 'active' : ''}" onclick="actGoPage(${i})">${i}</button>`;
+        else if (Math.abs(i - activityPage) === 2)
+          html += `<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
+      }
+      html += `<button class="page-btn" onclick="actGoPage(${activityPage + 1})" ${activityPage === total ? 'disabled' : ''}>›</button>`;
+      el.innerHTML = html;
+    }
+    window.actGoPage = function (p) {
+      const total = Math.ceil(filteredActivity.length / PAGE_SIZE);
+      if (p < 1 || p > total) return;
+      activityPage = p; renderActivity(); renderActivityPagination();
+    };
 
-  // ── Tab switching
-  window.switchTab = function(tab, el) {
-    document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    if(el) el.classList.add('active');
-    document.getElementById(`tab-${tab}`).classList.add('active');
-    if(tab==='orders') loadAllOrders();
-    if(tab==='tables') loadTables();
-    if(tab==='activity') loadActivity();
-    if(tab==='settings') loadSettings();
-  };
+    // ══════════════════════════════════════════════
+    // DELIVERY TAB
+    // ══════════════════════════════════════════════
+    let _zoneMap = null, _zoneMarker = null, _zoneCircle = null;
+    let _chargeTiers = [];
 
-</script>
-<script>
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.toggle('open');
-    if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('open'));
-  }
-  function closeSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('show');
-  }
-  // Close sidebar on nav link click (mobile)
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.nav-item').forEach(function(el) {
-      el.addEventListener('click', closeSidebar);
+    window.loadDeliveryTab = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const { data } = await sb.from('settings').select('key,value').eq('branch_id', bid)
+        .in('key', ['delivery_zone', 'delivery_charges', 'delivery_open', 'delivery_upi_qr']);
+
+      const s = {};
+      (data || []).forEach(r => s[r.key] = r.value);
+
+      // Zone map
+      let lat = 25.2138, lng = 75.8648, radius = 5;
+      if (s.delivery_zone) {
+        try { const z = JSON.parse(s.delivery_zone); lat = z.lat; lng = z.lng; radius = z.radius_km; } catch { }
+      }
+      document.getElementById('zoneLat').value = lat;
+      document.getElementById('zoneLng').value = lng;
+      document.getElementById('zoneRadius').value = radius;
+      document.getElementById('radiusLabel').textContent = radius;
+      setTimeout(() => initZoneMap(lat, lng, radius), 80);
+
+      // Charges
+      let tiers = [{ max_km: 1, fee: 10 }, { max_km: 3, fee: 25 }, { max_km: 5, fee: 50 }];
+      if (s.delivery_charges) { try { tiers = JSON.parse(s.delivery_charges); } catch { } }
+      renderChargeTiers(tiers);
+
+      // Delivery open
+      const isOpen = s.delivery_open !== 'false';
+      document.getElementById('setDeliveryOpen').checked = isOpen;
+      document.getElementById('deliveryOpenLabel').textContent = isOpen ? 'Open' : 'Closed';
+
+      // UPI QR
+      if (s.delivery_upi_qr) {
+        document.getElementById('upiQRImg').src = s.delivery_upi_qr;
+        document.getElementById('upiQRPreview').style.display = 'block';
+      }
+    };
+
+    function initZoneMap(lat, lng, radius) {
+      if (_zoneMap) { _zoneMap.setView([lat, lng], 13); return; }
+      _zoneMap = L.map('zoneMap', { attributionControl: false }).setView([lat, lng], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(_zoneMap);
+
+      _zoneMarker = L.marker([lat, lng], { draggable: true }).addTo(_zoneMap);
+      _zoneCircle = L.circle([lat, lng], { radius: radius * 1000, color: '#00bcd4', fillOpacity: 0.08 }).addTo(_zoneMap);
+
+      _zoneMarker.on('dragend', () => {
+        const p = _zoneMarker.getLatLng();
+        document.getElementById('zoneLat').value = p.lat.toFixed(6);
+        document.getElementById('zoneLng').value = p.lng.toFixed(6);
+        _zoneCircle.setLatLng(p);
+      });
+    }
+
+    window.updateZoneCircle = function () {
+      const km = parseFloat(document.getElementById('zoneRadius').value);
+      if (_zoneCircle) _zoneCircle.setRadius(km * 1000);
+    };
+
+    window.saveDeliveryZone = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const lat = parseFloat(document.getElementById('zoneLat').value);
+      const lng = parseFloat(document.getElementById('zoneLng').value);
+      const radius_km = parseFloat(document.getElementById('zoneRadius').value);
+      if (!lat || !lng) { window.showToast('Enter lat/lng', '', 'error'); return; }
+      const value = JSON.stringify({ lat, lng, radius_km });
+      await sb.from('settings').upsert({ branch_id: bid, key: 'delivery_zone', value }, { onConflict: 'branch_id,key' });
+      if (_zoneMarker) _zoneMarker.setLatLng([lat, lng]);
+      if (_zoneCircle) { _zoneCircle.setLatLng([lat, lng]); _zoneCircle.setRadius(radius_km * 1000); }
+      window.showToast('✅ Delivery zone saved', '', 'success');
+    };
+
+    // ── Charge Tiers
+    function renderChargeTiers(tiers) {
+      _chargeTiers = tiers;
+      document.getElementById('chargeTiersList').innerHTML = tiers.map((t, i) => `
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;">
+        <div class="input-group" style="margin:0">
+          <label class="input-label">Max KM</label>
+          <input type="number" class="input" value="${t.max_km}" min="0.5" step="0.5"
+            onchange="_chargeTiers[${i}].max_km=parseFloat(this.value)">
+        </div>
+        <div class="input-group" style="margin:0">
+          <label class="input-label">Fee (Rs.)</label>
+          <input type="number" class="input" value="${t.fee}" min="0"
+            onchange="_chargeTiers[${i}].fee=parseFloat(this.value)">
+        </div>
+        <button onclick="removeChargeTier(${i})"
+          style="background:rgba(244,67,54,0.1);color:var(--red);border:1px solid rgba(244,67,54,0.3);border-radius:var(--radius-sm);padding:8px 12px;cursor:pointer;margin-bottom:0;">✕</button>
+      </div>`).join('');
+    }
+
+    window.addChargeTier = () => { _chargeTiers.push({ max_km: 0, fee: 0 }); renderChargeTiers(_chargeTiers); };
+    window.removeChargeTier = i => { _chargeTiers.splice(i, 1); renderChargeTiers(_chargeTiers); };
+
+    window.saveChargeTiers = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      await sb.from('settings').upsert(
+        { branch_id: bid, key: 'delivery_charges', value: JSON.stringify(_chargeTiers) },
+        { onConflict: 'branch_id,key' }
+      );
+      window.showToast('✅ Delivery charges saved', '', 'success');
+    };
+
+    // ── Delivery open/close
+    window.saveDeliverySetting = async function (key, value) {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      await sb.from('settings').upsert({ branch_id: bid, key, value }, { onConflict: 'branch_id,key' });
+      document.getElementById('deliveryOpenLabel').textContent = value === 'true' ? 'Open' : 'Closed';
+      window.showToast(`✅ Delivery ${value === 'true' ? 'opened' : 'closed'}`, '', 'success');
+    };
+
+    // ── UPI QR
+    window.previewUpiQR = function (input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('upiQRImg').src = e.target.result;
+        document.getElementById('upiQRPreview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.saveUpiQR = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const img = document.getElementById('upiQRImg').src;
+      if (!img || !img.startsWith('data:')) { window.showToast('Upload an image first', '', 'error'); return; }
+      await sb.from('settings').upsert({ branch_id: bid, key: 'delivery_upi_qr', value: img }, { onConflict: 'branch_id,key' });
+      window.showToast('✅ UPI QR saved', '', 'success');
+    };
+
+    // ── Delivery mode QR
+    window.generateDeliveryQR = function () {
+      const bid = window.getActiveBranchId();
+      const base = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
+      const url = `${base}?branch=${bid}&mode=delivery`;
+      const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+      document.getElementById('deliveryQRImg').src = qrSrc;
+      document.getElementById('deliveryQRPreview').style.display = 'block';
+    };
+
+    window.downloadDeliveryQR = function () {
+      const a = document.createElement('a');
+      a.href = document.getElementById('deliveryQRImg').src;
+      a.download = 'delivery-qr.png';
+      a.click();
+    };
+
+    window.printDeliveryQR = function () {
+      const img = document.getElementById('deliveryQRImg').src;
+      const w = window.open('');
+      w.document.write(`<img src="${img}" style="width:300px;display:block;margin:20px auto"><br>
+      <button onclick="window.print()" style="display:block;margin:0 auto;padding:10px 20px;cursor:pointer;">Print</button>`);
+    };
+    // ══════════════════════════════════════════════
+
+    // ── Realtime
+    function subscribeRealtime() {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      sb.channel('admin-orders')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders', filter: `branch_id=eq.${bid}` },
+          async () => { await loadTodayOrders(); await loadAllOrders(); })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `branch_id=eq.${bid}` },
+          async () => { await loadTodayOrders(); await loadAllOrders(); })
+        .subscribe(s => { if (s === 'SUBSCRIBED') window.setConnectionStatus('online'); });
+    }
+
+    // ── Tab switching
+    window.switchTab = function (tab, el) {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      if (el) el.classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      if (tab === 'orders') loadAllOrders();
+      if (tab === 'tables') loadTables();
+      if (tab === 'activity') loadActivity();
+      if (tab === 'settings') loadSettings();
+      if (tab === 'delivery') loadDeliveryTab();
+    };
+
+  </script>
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('open');
+      if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('open'));
+    }
+    function closeSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.remove('open');
+      if (overlay) overlay.classList.remove('show');
+    }
+    // Close sidebar on nav link click (mobile)
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.nav-item').forEach(function (el) {
+        el.addEventListener('click', closeSidebar);
+      });
     });
-  });
-</script>
+  </script>
 </body>
+
 </html>
-
-

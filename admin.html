@@ -1282,116 +1282,7 @@
       modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
     };
 
-    // ── Fetch QR image as base64 data URL (avoids blank print)
-    async function fetchQRAsDataURL(qrUrl) {
-      try {
-        const res  = await fetch(qrUrl);
-        const blob = await res.blob();
-        return await new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(blob);
-        });
-      } catch { return qrUrl; } // fallback to raw URL
-    }
-
-    window.printQR = async function (num, qrUrl, isRoom = false) {
-      const restName = window.restaurantSettings?.restaurant_name || 'LAXMI';
-      window.showToast('⏳ Preparing QR…', '', 'info');
-      const dataUrl = await fetchQRAsDataURL(qrUrl);
-
-      const win = window.open('', '_blank');
-      if (!win) { window.showToast('❌ Allow popups to print', '', 'error'); return; }
-      win.document.write(`<!DOCTYPE html><html><head>
-        <title>QR — ${isRoom ? 'Room' : 'Table'} ${num}</title>
-        <style>
-          body { margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:sans-serif; }
-          .qr-box { text-align:center; padding:30px; border:1.5px dashed #ccc; border-radius:12px; width:260px; }
-          .no-print { margin-bottom:16px; }
-          @media print { .no-print { display:none; } body { min-height:unset; } }
-        </style>
-      </head><body>
-        <div>
-          <div class="no-print" style="text-align:center;">
-            <button onclick="window.print()" style="padding:10px 24px;font-size:15px;cursor:pointer;margin-right:8px;">🖨️ Print</button>
-            <button onclick="window.close()" style="padding:10px 18px;font-size:15px;cursor:pointer;">✕ Close</button>
-          </div>
-          <div class="qr-box">
-            <div style="font-size:20px;font-weight:800;margin-bottom:2px;">🍃 ${restName}</div>
-            <div style="font-size:12px;color:#777;margin-bottom:12px;">Scan to Order</div>
-            <img src="${dataUrl}" width="200" height="200" style="display:block;margin:0 auto;">
-            <div style="font-size:22px;font-weight:800;margin-top:12px;">${isRoom ? '🛏️ Room ' + num : '🪑 Table ' + num}</div>
-          </div>
-        </div>
-      </body></html>`);
-      win.document.close();
-      setTimeout(() => win.print(), 400);
-    };
-
-    window.printAllQR = async function () {
-      if (!allTables.length) { window.showToast('No tables to print', '', 'warning'); return; }
-
-      // Respect current filter
-      const typeFilter = document.getElementById('tableTypeFilter')?.value || 'all';
-      let tablesToPrint = [...allTables];
-      if (typeFilter === 'room')  tablesToPrint = tablesToPrint.filter(t => !!t.room_number);
-      if (typeFilter === 'table') tablesToPrint = tablesToPrint.filter(t => !t.room_number);
-      if (!tablesToPrint.length) { window.showToast('No tables match current filter', '', 'warning'); return; }
-
-      const bid      = window.getActiveBranchId();
-      const baseUrl  = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
-      const restName = window.restaurantSettings?.restaurant_name || 'LAXMI';
-
-      window.showToast(`⏳ Generating ${tablesToPrint.length} QR codes…`, '', 'info');
-
-      // Pre-fetch all QR images as data URLs in parallel
-      const items = await Promise.all(tablesToPrint.map(async table => {
-        const isRoom = !!table.room_number;
-        const url    = isRoom
-          ? `${baseUrl}?branch=${bid}&room=${encodeURIComponent(table.room_number)}&token=${table.qr_token}`
-          : `${baseUrl}?branch=${bid}&table=${encodeURIComponent(table.table_number)}&token=${table.qr_token}`;
-        const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
-        const dataUrl = await fetchQRAsDataURL(qrUrl);
-        return { table, isRoom, dataUrl };
-      }));
-
-      const cardsHtml = items.map(({ table, isRoom, dataUrl }) => `
-        <div class="qr-card">
-          <div style="font-size:16px;font-weight:800;margin-bottom:2px;">🍃 ${restName}</div>
-          <div style="font-size:10px;color:#777;margin-bottom:10px;">Scan to Order</div>
-          <img src="${dataUrl}" width="180" height="180" style="display:block;margin:0 auto;">
-          <div style="font-size:18px;font-weight:800;margin-top:10px;">
-            ${isRoom ? '🛏️ Room ' + table.room_number : '🪑 Table ' + table.table_number}
-          </div>
-          <div style="font-size:10px;color:#999;margin-top:4px;">${table.seats} seats</div>
-        </div>`).join('');
-
-      const win = window.open('', '_blank');
-      if (!win) { window.showToast('❌ Allow popups to print', '', 'error'); return; }
-      win.document.write(`<!DOCTYPE html><html><head>
-        <title>Print All QR Codes</title>
-        <style>
-          * { box-sizing:border-box; }
-          body { margin:0; padding:16px; font-family:sans-serif; }
-          .qr-card {
-            display:inline-block; text-align:center; width:210px;
-            margin:8px; padding:16px; vertical-align:top;
-            border:1.5px dashed #ccc; border-radius:10px;
-            break-inside:avoid; page-break-inside:avoid;
-          }
-          .no-print { text-align:center; margin-bottom:16px; }
-          @media print { .no-print { display:none; } }
-        </style>
-      </head><body>
-        <div class="no-print">
-          <button onclick="window.print()" style="padding:10px 24px;font-size:15px;cursor:pointer;margin-right:8px;">🖨️ Print All (${tablesToPrint.length})</button>
-          <button onclick="window.close()" style="padding:10px 18px;font-size:15px;cursor:pointer;">✕ Close</button>
-        </div>
-        ${cardsHtml}
-      </body></html>`);
-      win.document.close();
-      setTimeout(() => win.print(), 400);
-    };
+    window.printQR = function (num, qrUrl, isRoom = false) {
       const restName = window.restaurantSettings?.restaurant_name || 'LAXMI';
       const slip = document.getElementById('printSlip');
       slip.innerHTML = `
@@ -1410,7 +1301,7 @@
         img.onload  = () => setTimeout(() => window.print(), 200);
         img.onerror = () => window.print();
       }
-    ;
+    };
 
     window.printAllQR = function () {
       if (!allTables.length) { window.showToast('No tables to print', '', 'warning'); return; }

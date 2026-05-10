@@ -1251,8 +1251,11 @@
       const table = allTables.find(t => t.id === tableId);
       if (!table) return;
       const isRoom = !!table.room_number;
+      const bid = window.getActiveBranchId();
       const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
-      const url = isRoom ? `${baseUrl}?room=${encodeURIComponent(table.room_number)}&token=${table.qr_token}` : `${baseUrl}?table=${encodeURIComponent(table.table_number)}&token=${table.qr_token}`;
+      const url = isRoom
+        ? `${baseUrl}?branch=${bid}&room=${encodeURIComponent(table.room_number)}&token=${table.qr_token}`
+        : `${baseUrl}?branch=${bid}&table=${encodeURIComponent(table.table_number)}&token=${table.qr_token}`;
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
 
       const modal = document.createElement('div');
@@ -1280,33 +1283,75 @@
     };
 
     window.printQR = function (num, qrUrl, isRoom = false) {
+      const restName = window.restaurantSettings?.restaurant_name || 'LAXMI';
       const slip = document.getElementById('printSlip');
       slip.innerHTML = `
-      <div style="font-family:monospace;text-align:center;padding:20px;">
-        <div style="font-size:20px;font-weight:700;margin-bottom:4px;">🍃 LAXMI</div>
-        <div style="font-size:14px;margin-bottom:12px;">Scan to Order</div>
-        <img src="${qrUrl}" width="200" height="200" style="margin:0 auto;display:block;">
-        <div style="font-size:18px;font-weight:700;margin-top:12px;">${isRoom ? 'Room ' + num : 'Table ' + num}</div>
+      <div style="font-family:sans-serif;text-align:center;padding:30px;">
+        <div style="font-size:22px;font-weight:800;margin-bottom:4px;">🍃 ${restName}</div>
+        <div style="font-size:13px;color:#666;margin-bottom:14px;">Scan to Order</div>
+        <img src="${qrUrl}" width="220" height="220"
+             style="display:block;margin:0 auto;" crossorigin="anonymous">
+        <div style="font-size:22px;font-weight:800;margin-top:14px;">${isRoom ? '🛏️ Room ' + num : '🪑 Table ' + num}</div>
       </div>`;
-      window.print();
+      const img = slip.querySelector('img');
+      if (img.complete && img.naturalWidth > 0) {
+        setTimeout(() => window.print(), 200);
+      } else {
+        window.showToast('⏳ Loading QR, please wait…', '', 'info');
+        img.onload  = () => setTimeout(() => window.print(), 200);
+        img.onerror = () => window.print();
+      }
     };
 
     window.printAllQR = function () {
       if (!allTables.length) { window.showToast('No tables to print', '', 'warning'); return; }
-      const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
-      const slip = document.getElementById('printSlip');
-      slip.innerHTML = allTables.map(table => {
+
+      // Respect current filter
+      const typeFilter = document.getElementById('tableTypeFilter')?.value || 'all';
+      let tablesToPrint = [...allTables];
+      if (typeFilter === 'room')  tablesToPrint = tablesToPrint.filter(t => !!t.room_number);
+      if (typeFilter === 'table') tablesToPrint = tablesToPrint.filter(t => !t.room_number);
+      if (!tablesToPrint.length) { window.showToast('No tables match current filter', '', 'warning'); return; }
+
+      const bid      = window.getActiveBranchId();
+      const baseUrl  = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
+      const restName = window.restaurantSettings?.restaurant_name || 'LAXMI';
+      const slip     = document.getElementById('printSlip');
+
+      slip.innerHTML = tablesToPrint.map(table => {
         const isRoom = !!table.room_number;
-        const url = isRoom ? `${baseUrl}?room=${encodeURIComponent(table.room_number)}&token=${table.qr_token}` : `${baseUrl}?table=${encodeURIComponent(table.table_number)}&token=${table.qr_token}`;
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
-        return `<div style="font-family:monospace;text-align:center;padding:16px;display:inline-block;width:200px;margin:8px;break-inside:avoid;">
-        <div style="font-size:16px;font-weight:700;">🍃 LAXMI</div>
-        <div style="font-size:11px;margin-bottom:8px;">Scan to Order</div>
-        <img src="${qrUrl}" width="180" height="180" style="margin:0 auto;display:block;">
-        <div style="font-size:16px;font-weight:700;margin-top:12px;">${isRoom ? 'Room ' + table.room_number : 'Table ' + table.table_number}</div>
-      </div>`;
+        const url = isRoom
+          ? `${baseUrl}?branch=${bid}&room=${encodeURIComponent(table.room_number)}&token=${table.qr_token}`
+          : `${baseUrl}?branch=${bid}&table=${encodeURIComponent(table.table_number)}&token=${table.qr_token}`;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+        return `
+        <div style="font-family:sans-serif;text-align:center;padding:20px;display:inline-block;
+                    width:220px;margin:10px;break-inside:avoid;
+                    border:1.5px dashed #ccc;border-radius:10px;vertical-align:top;">
+          <div style="font-size:17px;font-weight:800;margin-bottom:2px;">🍃 ${restName}</div>
+          <div style="font-size:11px;color:#777;margin-bottom:10px;">Scan to Order</div>
+          <img src="${qrUrl}" width="190" height="190"
+               style="display:block;margin:0 auto;" crossorigin="anonymous">
+          <div style="font-size:20px;font-weight:800;margin-top:10px;">
+            ${isRoom ? '🛏️ Room ' + table.room_number : '🪑 Table ' + table.table_number}
+          </div>
+          <div style="font-size:10px;color:#999;margin-top:4px;">${table.seats} seats</div>
+        </div>`;
       }).join('');
-      window.print();
+
+      // Wait for ALL QR images to finish loading before printing
+      const imgs  = Array.from(slip.querySelectorAll('img'));
+      let loaded  = 0;
+      const total = imgs.length;
+      if (total === 0) { window.print(); return; }
+
+      window.showToast('⏳ Loading QR codes, please wait…', '', 'info');
+
+      const tryPrint = () => { loaded++; if (loaded >= total) setTimeout(() => window.print(), 400); };
+      imgs.forEach(img => {
+        if (img.complete && img.naturalWidth > 0) { tryPrint(); }
+        else { img.onload = tryPrint; img.onerror = tryPrint; }
+      });
     };
 
     // ── Activity Log

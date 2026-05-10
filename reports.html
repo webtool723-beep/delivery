@@ -1,167 +1,357 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LAXMI — Reports & Analytics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
   <style>
-    .report-tabs { display:flex; gap:4px; background:var(--surface2); border-radius:var(--radius-sm); padding:4px; margin-bottom:24px; flex-wrap:wrap; }
-    .report-tab  { padding:8px 18px; border-radius:6px; font-size:0.875rem; font-weight:500; cursor:pointer; color:var(--text-dim); transition:all 0.2s; border:none; background:none; white-space:nowrap; }
-    .report-tab.active { background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,0.3); }
-    .tab-panel  { display:none; }
-    .tab-panel.active { display:block; }
+    .report-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
 
-    .chart-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
-    .chart-title { font-family:var(--font-display); font-size:1rem; color:var(--text); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
-    .chart-svg  { width:100%; overflow:visible; display:block; }
+    .report-tab {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-dim);
+      transition: all 0.2s;
+      border: none;
+      background: none;
+      white-space: nowrap;
+    }
 
-    .date-range-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:20px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
-    .date-label { font-size:0.8rem; color:var(--text-dim); white-space:nowrap; }
+    .report-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
 
-    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:24px; }
-    .kpi-card  { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; }
-    .kpi-label { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:6px; }
-    .kpi-value { font-family:var(--font-mono); font-size:1.5rem; font-weight:500; color:var(--text); }
-    .kpi-value.green { color:var(--accent-bright); }
-    .kpi-value.gold  { color:var(--gold); }
-    .kpi-value.blue  { color:var(--blue); }
-    .kpi-value.red   { color:var(--red); }
-    .kpi-sub   { font-size:0.75rem; color:var(--text-dim); margin-top:4px; }
+    .tab-panel {
+      display: none;
+    }
 
-    .top-item-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
-    .top-item-row:last-child { border-bottom:none; }
-    .top-item-rank { font-family:var(--font-mono); font-size:0.8rem; color:var(--text-dim); width:24px; }
-    .top-item-bar-wrap { flex:1; }
-    .top-item-bar-bg { background:var(--surface2); border-radius:4px; height:8px; overflow:hidden; }
-    .top-item-bar-fill { background:var(--accent); height:8px; border-radius:4px; transition:width 0.6s ease; }
-    .top-item-name { font-size:0.875rem; font-weight:500; }
-    .top-item-stats { font-family:var(--font-mono); font-size:0.78rem; color:var(--accent-bright); white-space:nowrap; }
+    .tab-panel.active {
+      display: block;
+    }
+
+    .chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .chart-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--text);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chart-svg {
+      width: 100%;
+      overflow: visible;
+      display: block;
+    }
+
+    .date-range-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+
+    .date-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .kpi-value.green {
+      color: var(--accent-bright);
+    }
+
+    .kpi-value.gold {
+      color: var(--gold);
+    }
+
+    .kpi-value.blue {
+      color: var(--blue);
+    }
+
+    .kpi-value.red {
+      color: var(--red);
+    }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    .top-item-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .top-item-row:last-child {
+      border-bottom: none;
+    }
+
+    .top-item-rank {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      width: 24px;
+    }
+
+    .top-item-bar-wrap {
+      flex: 1;
+    }
+
+    .top-item-bar-bg {
+      background: var(--surface2);
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .top-item-bar-fill {
+      background: var(--accent);
+      height: 8px;
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+
+    .top-item-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .top-item-stats {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--accent-bright);
+      white-space: nowrap;
+    }
   </style>
 </head>
+
 <body>
 
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-<div class="offline-banner" id="offlineBanner">⚠️ Connection lost — reconnecting…</div>
-<div class="auth-gate" id="authGate" style="display:none;"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="offline-banner" id="offlineBanner">⚠️ Connection lost — reconnecting…</div>
+  <div class="auth-gate" id="authGate" style="display:none;"></div>
 
-<div id="appContent" style="display:none;">
-  <div class="app-layout">
+  <div id="appContent" style="display:none;">
+    <div class="app-layout">
 
-    <!-- ── SIDEBAR ── -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo">
-        <div class="sidebar-logo-name">🍃 LAXMI</div>
-        <div class="sidebar-logo-sub">Reports & Analytics</div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="nav-section-label">Operations</div>
-        <a class="nav-item" href="kitchen.html"><span class="nav-item-icon">🍳</span> Kitchen</a>
-        <a class="nav-item" href="admin.html"><span class="nav-item-icon">📊</span> Admin Panel</a>
-        <a class="nav-item" href="menu-manager.html"><span class="nav-item-icon">📋</span> Menu Manager</a>
-        <a class="nav-item active" href="reports.html"><span class="nav-item-icon">📈</span> Reports</a>
-        <div class="nav-section-label" style="margin-top:8px;">Management</div>
-        <a class="nav-item" href="staff.html"><span class="nav-item-icon">👥</span> Staff</a>
-        <div class="nav-section-label" style="margin-top:8px;">Customer</div>
-        <a class="nav-item" href="waiter.html"><span class="nav-item-icon">🛎️</span> Waiter</a>
-        <a class="nav-item" href="payment-manager.html"><span class="nav-item-icon">💳</span> Payments</a>
-        <a class="nav-item" href="index.html" target="_blank"><span class="nav-item-icon">🛒</span> Order Page ↗</a>
-      </nav>
-      <div class="sidebar-footer">
-        <div class="sidebar-user">
-          <div class="sidebar-avatar" id="sidebarAvatar">?</div>
-          <div class="sidebar-user-info">
-            <div class="sidebar-user-name" id="sidebarUserName">Loading…</div>
-            <div class="sidebar-user-role" id="sidebarUserRole">—</div>
+      <!-- ── SIDEBAR ── -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-name">🍃 LAXMI</div>
+          <div class="sidebar-logo-sub">Reports & Analytics</div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-section-label">Operations</div>
+          <a class="nav-item" href="kitchen.html"><span class="nav-item-icon">🍳</span> Kitchen</a>
+          <a class="nav-item" href="admin.html"><span class="nav-item-icon">📊</span> Admin Panel</a>
+          <a class="nav-item" href="menu-manager.html"><span class="nav-item-icon">📋</span> Menu Manager</a>
+          <a class="nav-item active" href="reports.html"><span class="nav-item-icon">📈</span> Reports</a>
+          <div class="nav-section-label" style="margin-top:8px;">Management</div>
+          <a class="nav-item" href="staff.html"><span class="nav-item-icon">👥</span> Staff</a>
+          <div class="nav-section-label" style="margin-top:8px;">Customer</div>
+          <a class="nav-item" href="waiter.html"><span class="nav-item-icon">🛎️</span> Waiter</a>
+          <a class="nav-item" href="payment-manager.html"><span class="nav-item-icon">💳</span> Payments</a>
+          <a class="nav-item" href="index.html" target="_blank"><span class="nav-item-icon">🛒</span> Order Page ↗</a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <div class="sidebar-avatar" id="sidebarAvatar">?</div>
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="sidebarUserName">Loading…</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">—</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost w-full btn-sm" onclick="window.rmsSignOut()">⏏ Sign Out</button>
+        </div>
+      </aside>
+
+      <!-- ── MAIN ── -->
+      <main class="main-content">
+
+        <div class="page-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="hamburger" onclick="toggleSidebar()">
+              <span></span><span></span><span></span>
+            </button>
+            <div>
+              <h1 class="page-title">📈 Reports & Analytics</h1>
+              <div class="page-subtitle">Business insights for LAXMI</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="exportReport()">📥 Export CSV</button>
+            <button class="btn btn-secondary btn-sm" onclick="loadReport()">🔄 Refresh</button>
           </div>
         </div>
-        <button class="btn btn-ghost w-full btn-sm" onclick="window.rmsSignOut()">⏏ Sign Out</button>
-      </div>
-    </aside>
 
-    <!-- ── MAIN ── -->
-    <main class="main-content">
+        <!-- Date Range Bar -->
+        <div class="date-range-bar">
+          <span class="date-label">📅 Date Range:</span>
+          <input type="date" id="dateFrom" class="input" style="max-width:150px;">
+          <span class="date-label">to</span>
+          <input type="date" id="dateTo" class="input" style="max-width:150px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="setRange('today')">Today</button>
+            <button class="btn btn-secondary btn-sm" onclick="setRange('week')">This Week</button>
+            <button class="btn btn-secondary btn-sm" onclick="setRange('month')">This Month</button>
+            <button class="btn btn-secondary btn-sm" onclick="setRange('last30')">Last 30 Days</button>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="loadReport()">Apply</button>
+        </div>
 
-      <div class="page-header">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <button class="hamburger" onclick="toggleSidebar()">
-            <span></span><span></span><span></span>
-          </button>
-          <div>
-            <h1 class="page-title">📈 Reports & Analytics</h1>
-            <div class="page-subtitle">Business insights for LAXMI</div>
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpiGrid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Revenue</div>
+            <div class="kpi-value green" id="kpiRevenue">Rs. 0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total Orders</div>
+            <div class="kpi-value" id="kpiOrders">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Avg Order Value</div>
+            <div class="kpi-value blue" id="kpiAvg">Rs. 0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Completion Rate</div>
+            <div class="kpi-value green" id="kpiCompletion">0%</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total GST</div>
+            <div class="kpi-value gold" id="kpiGst">Rs. 0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Rejected Orders</div>
+            <div class="kpi-value red" id="kpiRejected">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Paid Orders</div>
+            <div class="kpi-value green" id="kpiPaid">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Unpaid Orders</div>
+            <div class="kpi-value gold" id="kpiUnpaid">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Delivery Orders</div>
+            <div class="kpi-value" id="kpiDeliveryOrders" style="color:#00bcd4;">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Delivery Revenue</div>
+            <div class="kpi-value" id="kpiDeliveryRevenue" style="color:#00bcd4;">Rs. 0</div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" onclick="exportReport()">📥 Export CSV</button>
-          <button class="btn btn-secondary btn-sm" onclick="loadReport()">🔄 Refresh</button>
+
+        <!-- Report Tabs -->
+        <div class="report-tabs">
+          <button class="report-tab active" onclick="switchTab('revenue',this)">📈 Revenue</button>
+          <button class="report-tab" onclick="switchTab('orders',this)">📋 Orders</button>
+          <button class="report-tab" onclick="switchTab('items',this)">🍽️ Top Items</button>
+          <button class="report-tab" onclick="switchTab('tables',this)">🪑 Tables</button>
+          <button class="report-tab" onclick="switchTab('hourly',this)">⏰ Hourly</button>
+          <button class="report-tab" onclick="switchTab('delivery',this)">🚚 Delivery</button>
         </div>
-      </div>
 
-      <!-- Date Range Bar -->
-      <div class="date-range-bar">
-        <span class="date-label">📅 Date Range:</span>
-        <input type="date" id="dateFrom" class="input" style="max-width:150px;">
-        <span class="date-label">to</span>
-        <input type="date" id="dateTo" class="input" style="max-width:150px;">
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" onclick="setRange('today')">Today</button>
-          <button class="btn btn-secondary btn-sm" onclick="setRange('week')">This Week</button>
-          <button class="btn btn-secondary btn-sm" onclick="setRange('month')">This Month</button>
-          <button class="btn btn-secondary btn-sm" onclick="setRange('last30')">Last 30 Days</button>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="loadReport()">Apply</button>
-      </div>
-
-      <!-- KPI Cards -->
-      <div class="kpi-grid" id="kpiGrid">
-        <div class="kpi-card"><div class="kpi-label">Total Revenue</div><div class="kpi-value green" id="kpiRevenue">Rs. 0</div></div>
-        <div class="kpi-card"><div class="kpi-label">Total Orders</div><div class="kpi-value" id="kpiOrders">0</div></div>
-        <div class="kpi-card"><div class="kpi-label">Avg Order Value</div><div class="kpi-value blue" id="kpiAvg">Rs. 0</div></div>
-        <div class="kpi-card"><div class="kpi-label">Completion Rate</div><div class="kpi-value green" id="kpiCompletion">0%</div></div>
-        <div class="kpi-card"><div class="kpi-label">Total GST</div><div class="kpi-value gold" id="kpiGst">Rs. 0</div></div>
-        <div class="kpi-card"><div class="kpi-label">Rejected Orders</div><div class="kpi-value red" id="kpiRejected">0</div></div>
-        <div class="kpi-card"><div class="kpi-label">Paid Orders</div><div class="kpi-value green" id="kpiPaid">0</div></div>
-        <div class="kpi-card"><div class="kpi-label">Unpaid Orders</div><div class="kpi-value gold" id="kpiUnpaid">0</div></div>
-      </div>
-
-      <!-- Report Tabs -->
-      <div class="report-tabs">
-        <button class="report-tab active" onclick="switchTab('revenue',this)">📈 Revenue</button>
-        <button class="report-tab" onclick="switchTab('orders',this)">📋 Orders</button>
-        <button class="report-tab" onclick="switchTab('items',this)">🍽️ Top Items</button>
-        <button class="report-tab" onclick="switchTab('tables',this)">🪑 Tables</button>
-        <button class="report-tab" onclick="switchTab('hourly',this)">⏰ Hourly</button>
-      </div>
-
-      <!-- ══ REVENUE TAB ══ -->
-      <div class="tab-panel active" id="tab-revenue">
-        <div class="chart-wrap">
-          <div class="chart-title">
-            <span>📈 Daily Revenue</span>
-            <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--accent-bright);" id="revChartTotal">Rs. 0</span>
+        <!-- ══ REVENUE TAB ══ -->
+        <div class="tab-panel active" id="tab-revenue">
+          <div class="chart-wrap">
+            <div class="chart-title">
+              <span>📈 Daily Revenue</span>
+              <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--accent-bright);"
+                id="revChartTotal">Rs. 0</span>
+            </div>
+            <svg class="chart-svg" id="dailyRevenueChart" height="200" viewBox="0 0 700 200"></svg>
           </div>
-          <svg class="chart-svg" id="dailyRevenueChart" height="200" viewBox="0 0 700 200"></svg>
-        </div>
-        <div class="chart-wrap">
-          <div class="chart-title"><span>📊 Daily Order Count</span></div>
-          <svg class="chart-svg" id="dailyOrdersChart" height="160" viewBox="0 0 700 160"></svg>
-        </div>
-      </div>
-
-      <!-- ══ ORDERS TAB ══ -->
-      <div class="tab-panel" id="tab-orders">
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-          <div class="search-input-wrap" style="flex:1;min-width:200px;position:relative;">
-            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-dim);">🔍</span>
-            <input type="text" id="repOrderSearch" class="input" placeholder="Search order, table, phone…" oninput="filterReportOrders()" style="padding-left:36px;">
+          <div class="chart-wrap">
+            <div class="chart-title"><span>📊 Daily Order Count</span></div>
+            <svg class="chart-svg" id="dailyOrdersChart" height="160" viewBox="0 0 700 160"></svg>
           </div>
+        </div>
+
+        <!-- ══ ORDERS TAB ══ -->
+        <div class="tab-panel" id="tab-orders">
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+            <div class="search-input-wrap" style="flex:1;min-width:200px;position:relative;">
+              <span
+                style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-dim);">🔍</span>
+              <input type="text" id="repOrderSearch" class="input" placeholder="Search order, table, phone…"
+                oninput="filterReportOrders()" style="padding-left:36px;">
+            </div>
             <select id="repTypeFilter" class="input" style="max-width:140px;" onchange="filterReportOrders()">
               <option value="all">All Types</option>
               <option value="table">Table Orders</option>
               <option value="room">Room Orders</option>
+              <option value="delivery">🚚 Delivery</option>
             </select>
             <select id="repStatusFilter" class="input" style="max-width:140px;" onchange="filterReportOrders()">
               <option value="all">All Status</option>
@@ -170,328 +360,461 @@
               <option value="preparing">Preparing</option>
               <option value="rejected">Rejected</option>
             </select>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Order ID</th><th>Invoice</th><th>Table</th>
-                <th>Items</th><th>Subtotal</th><th>GST</th><th>Total</th>
-                <th>Status</th><th>Payment</th><th>Date & Time</th>
-              </tr>
-            </thead>
-            <tbody id="repOrdersBody">
-              <tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-dim);">Select a date range and click Apply</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="pagination" id="repOrdersPagination"></div>
-      </div>
-
-      <!-- ══ TOP ITEMS TAB ══ -->
-      <div class="tab-panel" id="tab-items">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-          <div>
-            <div class="section-title">🏆 Top by Quantity Sold</div>
-            <div id="topByQty"></div>
           </div>
-          <div>
-            <div class="section-title">💰 Top by Revenue</div>
-            <div id="topByRevenue"></div>
-          </div>
-        </div>
-        <div style="margin-top:20px;">
-          <div class="section-title">📋 Full Item Report</div>
           <div class="table-wrap">
             <table>
               <thead>
-                <tr><th>Item</th><th>Category</th><th>Qty Sold</th><th>Revenue</th><th>Avg Price</th><th>Orders</th></tr>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Invoice</th>
+                  <th>Table</th>
+                  <th>Items</th>
+                  <th>Subtotal</th>
+                  <th>GST</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                  <th>Date & Time</th>
+                </tr>
               </thead>
-              <tbody id="itemsReportBody"></tbody>
+              <tbody id="repOrdersBody">
+                <tr>
+                  <td colspan="10" style="text-align:center;padding:40px;color:var(--text-dim);">Select a date range and
+                    click Apply</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="repOrdersPagination"></div>
+        </div>
+
+        <!-- ══ TOP ITEMS TAB ══ -->
+        <div class="tab-panel" id="tab-items">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div>
+              <div class="section-title">🏆 Top by Quantity Sold</div>
+              <div id="topByQty"></div>
+            </div>
+            <div>
+              <div class="section-title">💰 Top by Revenue</div>
+              <div id="topByRevenue"></div>
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <div class="section-title">📋 Full Item Report</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Category</th>
+                    <th>Qty Sold</th>
+                    <th>Revenue</th>
+                    <th>Avg Price</th>
+                    <th>Orders</th>
+                  </tr>
+                </thead>
+                <tbody id="itemsReportBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ TABLES TAB ══ -->
+        <div class="tab-panel" id="tab-tables">
+          <div class="chart-wrap">
+            <div class="chart-title"><span>🪑 Revenue by Table</span></div>
+            <svg class="chart-svg" id="tableChart" height="200" viewBox="0 0 700 200"></svg>
+          </div>
+          <div class="table-wrap" style="margin-top:20px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Table</th>
+                  <th>Orders</th>
+                  <th>Revenue</th>
+                  <th>Avg Order</th>
+                  <th>% of Total</th>
+                </tr>
+              </thead>
+              <tbody id="tableReportBody"></tbody>
             </table>
           </div>
         </div>
-      </div>
 
-      <!-- ══ TABLES TAB ══ -->
-      <div class="tab-panel" id="tab-tables">
-        <div class="chart-wrap">
-          <div class="chart-title"><span>🪑 Revenue by Table</span></div>
-          <svg class="chart-svg" id="tableChart" height="200" viewBox="0 0 700 200"></svg>
+        <!-- ══ HOURLY TAB ══ -->
+        <div class="tab-panel" id="tab-hourly">
+          <div class="chart-wrap">
+            <div class="chart-title"><span>⏰ Avg Revenue by Hour of Day</span></div>
+            <svg class="chart-svg" id="hourlyChart" height="180" viewBox="0 0 700 180"></svg>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-title"><span>📅 Revenue by Day of Week</span></div>
+            <svg class="chart-svg" id="dowChart" height="160" viewBox="0 0 700 160"></svg>
+          </div>
         </div>
-        <div class="table-wrap" style="margin-top:20px;">
-          <table>
-            <thead>
-              <tr><th>Table</th><th>Orders</th><th>Revenue</th><th>Avg Order</th><th>% of Total</th></tr>
-            </thead>
-            <tbody id="tableReportBody"></tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- ══ HOURLY TAB ══ -->
-      <div class="tab-panel" id="tab-hourly">
-        <div class="chart-wrap">
-          <div class="chart-title"><span>⏰ Avg Revenue by Hour of Day</span></div>
-          <svg class="chart-svg" id="hourlyChart" height="180" viewBox="0 0 700 180"></svg>
-        </div>
-        <div class="chart-wrap">
-          <div class="chart-title"><span>📅 Revenue by Day of Week</span></div>
-          <svg class="chart-svg" id="dowChart" height="160" viewBox="0 0 700 160"></svg>
-        </div>
-      </div>
+        <!-- ══ DELIVERY TAB ══ -->
+        <div class="tab-panel" id="tab-delivery">
 
-    </main>
+          <!-- Delivery KPIs -->
+          <div class="kpi-grid" id="deliveryKpiGrid" style="margin-bottom:20px;">
+            <div class="kpi-card">
+              <div class="kpi-label">Total Deliveries</div>
+              <div class="kpi-value" id="dkpiTotal" style="color:#00bcd4;">0</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Delivered</div>
+              <div class="kpi-value green" id="dkpiDelivered">0</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Delivery Revenue</div>
+              <div class="kpi-value" id="dkpiRevenue" style="color:#00bcd4;">Rs. 0</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Avg Delivery Time</div>
+              <div class="kpi-value" id="dkpiAvgTime">—</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Success Rate</div>
+              <div class="kpi-value green" id="dkpiSuccess">0%</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Live Now</div>
+              <div class="kpi-value" id="dkpiLive" style="color:#ff9800;">0</div>
+            </div>
+          </div>
+
+          <!-- Live Tracker -->
+          <div class="section-title" style="margin-bottom:12px;">📡 Live Deliveries</div>
+          <div class="table-wrap" style="margin-bottom:24px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Address</th>
+                  <th>Delivery Boy</th>
+                  <th>Status</th>
+                  <th>Elapsed</th>
+                </tr>
+              </thead>
+              <tbody id="liveDeliveryBody">
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:24px;color:var(--text-dim);">No active deliveries
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Delivery Boy Performance -->
+          <div class="section-title" style="margin-bottom:12px;">👥 Delivery Boy Performance</div>
+          <div class="table-wrap" style="margin-bottom:24px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Total Orders</th>
+                  <th>Delivered</th>
+                  <th>Avg Time</th>
+                  <th>Success Rate</th>
+                </tr>
+              </thead>
+              <tbody id="dboyPerfBody">
+                <tr>
+                  <td colspan="5" style="text-align:center;padding:24px;color:var(--text-dim);">No data</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- All Delivery Orders -->
+          <div class="section-title" style="margin-bottom:12px;">📋 Delivery Orders</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Address</th>
+                  <th>Delivery Boy</th>
+                  <th>Fee</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Delivered At</th>
+                </tr>
+              </thead>
+              <tbody id="deliveryOrdersBody">
+                <tr>
+                  <td colspan="8" style="text-align:center;padding:24px;color:var(--text-dim);">Apply a date range and
+                    click Apply</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
   </div>
-</div>
 
-<div id="toast-container"></div>
-<div id="printSlip"></div>
+  <div id="toast-container"></div>
+  <div id="printSlip"></div>
 
-<script type="module" src="assets/auth.js?v=3"></script>
-<script type="module">
+  <script type="module" src="assets/auth.js?v=3"></script>
+  <script type="module">
 
-  let reportOrders = [];
-  let filteredReportOrders = [];
-  let repPage = 1;
-  const PAGE_SIZE = 30;
+    let reportOrders = [];
+    let filteredReportOrders = [];
+    let repPage = 1;
+    const PAGE_SIZE = 30;
 
-  // ── appInit
-  window.appInit = async function() {
-    window.renderStaffUI && window.renderStaffUI();
-    initDates();
-    await loadReport();
-    window.startHeartbeat && window.startHeartbeat();
-    window.listenToSettings && window.listenToSettings();
-  };
+    // ── appInit
+    window.appInit = async function () {
+      window.renderStaffUI && window.renderStaffUI();
+      initDates();
+      await loadReport();
+      window.startHeartbeat && window.startHeartbeat();
+      window.listenToSettings && window.listenToSettings();
+    };
 
-  function initDates() {
-    const today = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Kolkata' });
-    document.getElementById('dateFrom').value = today;
-    document.getElementById('dateTo').value   = today;
-  }
-
-  // ── Set quick ranges
-  window.setRange = function(range) {
-    const now   = new Date();
-    const today = now.toLocaleDateString('en-CA', { timeZone:'Asia/Kolkata' });
-
-    let from = today, to = today;
-
-    if (range === 'week') {
-      const d = new Date();
-      d.setDate(d.getDate() - d.getDay());
-      from = d.toLocaleDateString('en-CA', { timeZone:'Asia/Kolkata' });
-    } else if (range === 'month') {
-      from = today.slice(0,7) + '-01';
-    } else if (range === 'last30') {
-      const d = new Date();
-      d.setDate(d.getDate() - 29);
-      from = d.toLocaleDateString('en-CA', { timeZone:'Asia/Kolkata' });
+    function initDates() {
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      document.getElementById('dateFrom').value = today;
+      document.getElementById('dateTo').value = today;
     }
 
-    document.getElementById('dateFrom').value = from;
-    document.getElementById('dateTo').value   = to;
-    loadReport();
-  };
+    // ── Set quick ranges
+    window.setRange = function (range) {
+      const now = new Date();
+      const today = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 
-  // ── Load report data
-  window.loadReport = async function() {
-    const sb   = window.supabaseClient;
-    const bid  = window.getActiveBranchId();
-    const from = document.getElementById('dateFrom').value;
-    const to   = document.getElementById('dateTo').value;
+      let from = today, to = today;
 
-    if (!from || !to) { window.showToast('Select date range','','warning'); return; }
+      if (range === 'week') {
+        const d = new Date();
+        d.setDate(d.getDate() - d.getDay());
+        from = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      } else if (range === 'month') {
+        from = today.slice(0, 7) + '-01';
+      } else if (range === 'last30') {
+        const d = new Date();
+        d.setDate(d.getDate() - 29);
+        from = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      }
 
-    const { data, error } = await sb.from('orders').select('*')
-      .eq('branch_id', bid)
-      .gte('created_at', from + 'T00:00:00+05:30')
-      .lte('created_at', to   + 'T23:59:59+05:30')
-      .order('created_at', { ascending: true });
+      document.getElementById('dateFrom').value = from;
+      document.getElementById('dateTo').value = to;
+      loadReport();
+    };
 
-    if (error) { window.showToast('Error loading data', error.message, 'error'); return; }
-    reportOrders = data || [];
+    // ── Load report data
+    window.loadReport = async function () {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const from = document.getElementById('dateFrom').value;
+      const to = document.getElementById('dateTo').value;
 
-    updateKPIs(reportOrders);
-    drawDailyRevenueChart(reportOrders);
-    drawDailyOrdersChart(reportOrders);
-    renderTopItems(reportOrders);
-    renderTableReport(reportOrders);
-    drawHourlyChart(reportOrders);
-    drawDOWChart(reportOrders);
-    filteredReportOrders = [...reportOrders].reverse();
-    repPage = 1;
-    renderReportOrders();
-    renderRepPagination();
-    window.setConnectionStatus('online');
-  };
+      if (!from || !to) { window.showToast('Select date range', '', 'warning'); return; }
 
-  // ── KPIs
-  function updateKPIs(orders) {
-    const done     = orders.filter(o => o.status === 'done' || o.status === 'delivered');
-    const revenue  = done.reduce((s,o) => s + parseFloat(o.total||0), 0);
-    const gst      = done.reduce((s,o) => s + parseFloat(o.cgst||0) + parseFloat(o.sgst||0), 0);
-    const avg      = done.length ? revenue/done.length : 0;
-    const compRate = orders.length ? Math.round((done.length/orders.length)*100) : 0;
-    const paid     = done.filter(o => o.payment_status==='paid').length;
-    const unpaid   = done.filter(o => o.payment_status==='unpaid').length;
-    const rejected = orders.filter(o => o.status==='rejected').length;
+      const { data, error } = await sb.from('orders').select('*')
+        .eq('branch_id', bid)
+        .gte('created_at', from + 'T00:00:00+05:30')
+        .lte('created_at', to + 'T23:59:59+05:30')
+        .order('created_at', { ascending: true });
 
-    document.getElementById('kpiRevenue').textContent    = 'Rs. ' + revenue.toFixed(0);
-    document.getElementById('kpiOrders').textContent     = orders.length;
-    document.getElementById('kpiAvg').textContent        = 'Rs. ' + avg.toFixed(0);
-    document.getElementById('kpiCompletion').textContent = compRate + '%';
-    document.getElementById('kpiGst').textContent        = 'Rs. ' + gst.toFixed(0);
-    document.getElementById('kpiRejected').textContent   = rejected;
-    document.getElementById('kpiPaid').textContent       = paid;
-    document.getElementById('kpiUnpaid').textContent     = unpaid;
-  }
+      if (error) { window.showToast('Error loading data', error.message, 'error'); return; }
+      reportOrders = data || [];
 
-  // ── SVG Helpers
-  function buildBarChart(svgId, labels, values, W=700, H=160, color='var(--accent-dim)', hoverColor='var(--accent)') {
-    const svg    = document.getElementById(svgId); if(!svg) return;
-    const maxVal = Math.max(...values, 1);
-    const pad    = 36, barAreaH = H - 30;
-    const barW   = Math.max(4, Math.floor((W - pad*2) / labels.length) - 4);
-    let html = '';
+      updateKPIs(reportOrders);
+      drawDailyRevenueChart(reportOrders);
+      drawDailyOrdersChart(reportOrders);
+      renderTopItems(reportOrders);
+      renderTableReport(reportOrders);
+      drawHourlyChart(reportOrders);
+      drawDOWChart(reportOrders);
+      filteredReportOrders = [...reportOrders].reverse();
+      repPage = 1;
+      renderReportOrders();
+      renderRepPagination();
+      renderDeliveryTab(reportOrders);
+      window.setConnectionStatus('online');
+    };
 
-    // Grid lines
-    [0.25,0.5,0.75,1].forEach(r => {
-      const y   = H - 30 - Math.floor(r * barAreaH);
-      const val = (maxVal * r);
-      const lbl = val >= 1000 ? (val/1000).toFixed(1)+'k' : val.toFixed(0);
-      html += `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
-        <text x="${pad-4}" y="${y+4}" fill="var(--text-dim)" font-size="9" text-anchor="end" font-family="DM Mono">${lbl}</text>`;
-    });
+    // ── KPIs
+    function updateKPIs(orders) {
+      const done = orders.filter(o => o.status === 'done' || o.status === 'delivered');
+      const revenue = done.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+      const gst = done.reduce((s, o) => s + parseFloat(o.cgst || 0) + parseFloat(o.sgst || 0), 0);
+      const avg = done.length ? revenue / done.length : 0;
+      const compRate = orders.length ? Math.round((done.length / orders.length) * 100) : 0;
+      const paid = done.filter(o => o.payment_status === 'paid').length;
+      const unpaid = done.filter(o => o.payment_status === 'unpaid').length;
+      const rejected = orders.filter(o => o.status === 'rejected').length;
 
-    labels.forEach((lbl, i) => {
-      const val  = values[i];
-      const barH = val>0 ? Math.max(3, Math.floor((val/maxVal)*barAreaH)) : 2;
-      const x    = pad + i * ((W - pad*2) / labels.length);
-      const y    = H - 30 - barH;
+      document.getElementById('kpiRevenue').textContent = 'Rs. ' + revenue.toFixed(0);
+      document.getElementById('kpiOrders').textContent = orders.length;
+      document.getElementById('kpiAvg').textContent = 'Rs. ' + avg.toFixed(0);
+      document.getElementById('kpiCompletion').textContent = compRate + '%';
+      document.getElementById('kpiGst').textContent = 'Rs. ' + gst.toFixed(0);
+      document.getElementById('kpiRejected').textContent = rejected;
+      document.getElementById('kpiPaid').textContent = paid;
+      document.getElementById('kpiUnpaid').textContent = unpaid;
 
-      html += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="3"
+      // Delivery KPIs in main grid
+      const deliveryOrders = orders.filter(o => o.order_type === 'delivery');
+      const deliveryRevenue = deliveryOrders.filter(o => o.status === 'delivered')
+        .reduce((s, o) => s + parseFloat(o.total || 0), 0);
+      document.getElementById('kpiDeliveryOrders').textContent = deliveryOrders.length;
+      document.getElementById('kpiDeliveryRevenue').textContent = 'Rs. ' + deliveryRevenue.toFixed(0);
+    }
+
+    // ── SVG Helpers
+    function buildBarChart(svgId, labels, values, W = 700, H = 160, color = 'var(--accent-dim)', hoverColor = 'var(--accent)') {
+      const svg = document.getElementById(svgId); if (!svg) return;
+      const maxVal = Math.max(...values, 1);
+      const pad = 36, barAreaH = H - 30;
+      const barW = Math.max(4, Math.floor((W - pad * 2) / labels.length) - 4);
+      let html = '';
+
+      // Grid lines
+      [0.25, 0.5, 0.75, 1].forEach(r => {
+        const y = H - 30 - Math.floor(r * barAreaH);
+        const val = (maxVal * r);
+        const lbl = val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val.toFixed(0);
+        html += `<line x1="${pad}" y1="${y}" x2="${W - pad}" y2="${y}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="${pad - 4}" y="${y + 4}" fill="var(--text-dim)" font-size="9" text-anchor="end" font-family="DM Mono">${lbl}</text>`;
+      });
+
+      labels.forEach((lbl, i) => {
+        const val = values[i];
+        const barH = val > 0 ? Math.max(3, Math.floor((val / maxVal) * barAreaH)) : 2;
+        const x = pad + i * ((W - pad * 2) / labels.length);
+        const y = H - 30 - barH;
+
+        html += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="3"
         fill="${color}" style="cursor:pointer;transition:fill 0.2s"
         onmouseover="this.setAttribute('fill','${hoverColor}')"
         onmouseout="this.setAttribute('fill','${color}')">
-        <title>${lbl}: ${val >= 1000 ? 'Rs. '+(val/1000).toFixed(1)+'k' : 'Rs. '+val.toFixed(0)}</title>
+        <title>${lbl}: ${val >= 1000 ? 'Rs. ' + (val / 1000).toFixed(1) + 'k' : 'Rs. ' + val.toFixed(0)}</title>
       </rect>`;
-      if (val > 0) {
-        const dispVal = val>=1000 ? 'Rs. '+(val/1000).toFixed(1)+'k' : 'Rs. '+val.toFixed(0);
-        html += `<text x="${x+barW/2}" y="${y-4}" fill="var(--accent-bright)" font-size="9" text-anchor="middle" font-family="DM Mono">${dispVal}</text>`;
-      }
-      // Label — rotate if many bars
-      if (labels.length <= 14) {
-        html += `<text x="${x+barW/2}" y="${H-12}" fill="var(--text-dim)" font-size="9" text-anchor="middle" font-family="DM Mono">${lbl}</text>`;
-      } else {
-        html += `<text x="${x+barW/2}" y="${H-6}" fill="var(--text-dim)" font-size="8" text-anchor="middle"
-          transform="rotate(-40,${x+barW/2},${H-6})" font-family="DM Mono">${lbl}</text>`;
-      }
-    });
+        if (val > 0) {
+          const dispVal = val >= 1000 ? 'Rs. ' + (val / 1000).toFixed(1) + 'k' : 'Rs. ' + val.toFixed(0);
+          html += `<text x="${x + barW / 2}" y="${y - 4}" fill="var(--accent-bright)" font-size="9" text-anchor="middle" font-family="DM Mono">${dispVal}</text>`;
+        }
+        // Label — rotate if many bars
+        if (labels.length <= 14) {
+          html += `<text x="${x + barW / 2}" y="${H - 12}" fill="var(--text-dim)" font-size="9" text-anchor="middle" font-family="DM Mono">${lbl}</text>`;
+        } else {
+          html += `<text x="${x + barW / 2}" y="${H - 6}" fill="var(--text-dim)" font-size="8" text-anchor="middle"
+          transform="rotate(-40,${x + barW / 2},${H - 6})" font-family="DM Mono">${lbl}</text>`;
+        }
+      });
 
-    svg.innerHTML = html;
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  }
-
-  // ── Daily revenue chart
-  function drawDailyRevenueChart(orders) {
-    const from = document.getElementById('dateFrom').value;
-    const to   = document.getElementById('dateTo').value;
-    const days = getDayRange(from, to);
-    const byDay = {};
-    days.forEach(d => byDay[d] = 0);
-    orders.filter(o=>o.status==='done'||o.status==='delivered').forEach(o => {
-      const d = new Date(o.created_at).toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
-      if (byDay[d] !== undefined) byDay[d] += parseFloat(o.total||0);
-    });
-    const labels = days.map(d => d.slice(5)); // MM-DD
-    const values = days.map(d => byDay[d]);
-    const total  = values.reduce((s,v)=>s+v,0);
-    document.getElementById('revChartTotal').textContent = 'Rs. ' + total.toFixed(0);
-    buildBarChart('dailyRevenueChart', labels, values, 700, 200);
-  }
-
-  function drawDailyOrdersChart(orders) {
-    const from = document.getElementById('dateFrom').value;
-    const to   = document.getElementById('dateTo').value;
-    const days = getDayRange(from, to);
-    const byDay = {};
-    days.forEach(d => byDay[d] = 0);
-    orders.forEach(o => {
-      const d = new Date(o.created_at).toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
-      if (byDay[d] !== undefined) byDay[d]++;
-    });
-    const labels = days.map(d => d.slice(5));
-    const values = days.map(d => byDay[d]);
-    buildBarChart('dailyOrdersChart', labels, values, 700, 160, 'var(--blue-dim)', 'var(--blue)');
-  }
-
-  function getDayRange(from, to) {
-    const days = [];
-    const cur  = new Date(from + 'T00:00:00');
-    const end  = new Date(to   + 'T00:00:00');
-    while (cur <= end) {
-      days.push(cur.toLocaleDateString('en-CA'));
-      cur.setDate(cur.getDate() + 1);
+      svg.innerHTML = html;
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     }
-    return days;
-  }
 
-  // ── Hourly chart (avg across date range)
-  function drawHourlyChart(orders) {
-    const hourRevenue = Array(24).fill(0);
-    const hourCount   = Array(24).fill(0);
-    orders.filter(o=>o.status==='done'||o.status==='delivered').forEach(o => {
-      const h = parseInt(new Date(o.created_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour:'numeric',hour12:false})) || 0;
-      if (h>=0&&h<24) { hourRevenue[h]+=parseFloat(o.total||0); hourCount[h]++; }
-    });
-    const hours = Array.from({length:18},(_,i)=>i+6);
-    const labels = hours.map(h => h<12?`${h}am`:h===12?'12pm':`${h-12}pm`);
-    const values = hours.map(h => hourRevenue[h]);
-    buildBarChart('hourlyChart', labels, values, 700, 180);
-  }
-
-  // ── Day of week chart
-  function drawDOWChart(orders) {
-    const days  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const rev   = Array(7).fill(0);
-    orders.filter(o=>o.status==='done'||o.status==='delivered').forEach(o => {
-      const d = new Date(o.created_at).getDay();
-      rev[d] += parseFloat(o.total||0);
-    });
-    buildBarChart('dowChart', days, rev, 700, 160, 'var(--gold-dim)', 'var(--gold)');
-  }
-
-  // ── Table revenue chart
-  function renderTableReport(orders) {
-    const svg   = document.getElementById('tableChart');
-    const tbody = document.getElementById('tableReportBody');
-    const byTable = {};
-    const doneOrders = orders.filter(o => o.status==='done'||o.status==='delivered');
-    doneOrders.forEach(o => {
-      const t = o.room_number ? 'Room ' + o.room_number : (o.table_number ? 'Table ' + o.table_number : 'No Table');
-      if (!byTable[t]) byTable[t] = { orders:0, revenue:0 };
-      byTable[t].orders++;
-      byTable[t].revenue += parseFloat(o.total||0);
-    });
-    const sorted = Object.entries(byTable).sort((a,b)=>b[1].revenue-a[1].revenue).slice(0,15);
-    const totalRev = sorted.reduce((s,[,v])=>s+v.revenue,0);
-
-    // Chart
-    const labels = sorted.map(([t])=>t);
-    const values = sorted.map(([,v])=>v.revenue);
-    buildBarChart('tableChart', labels, values, 700, 200);
-
-    // Table
-    if (!sorted.length) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim);">No data for selected range.</td></tr>`;
-      return;
+    // ── Daily revenue chart
+    function drawDailyRevenueChart(orders) {
+      const from = document.getElementById('dateFrom').value;
+      const to = document.getElementById('dateTo').value;
+      const days = getDayRange(from, to);
+      const byDay = {};
+      days.forEach(d => byDay[d] = 0);
+      orders.filter(o => o.status === 'done' || o.status === 'delivered').forEach(o => {
+        const d = new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        if (byDay[d] !== undefined) byDay[d] += parseFloat(o.total || 0);
+      });
+      const labels = days.map(d => d.slice(5)); // MM-DD
+      const values = days.map(d => byDay[d]);
+      const total = values.reduce((s, v) => s + v, 0);
+      document.getElementById('revChartTotal').textContent = 'Rs. ' + total.toFixed(0);
+      buildBarChart('dailyRevenueChart', labels, values, 700, 200);
     }
-    tbody.innerHTML = sorted.map(([table,data]) => {
-      const avg = data.orders ? (data.revenue/data.orders).toFixed(2) : '0.00';
-      const pct = totalRev ? ((data.revenue/totalRev)*100).toFixed(1) : '0.0';
-      return `<tr>
+
+    function drawDailyOrdersChart(orders) {
+      const from = document.getElementById('dateFrom').value;
+      const to = document.getElementById('dateTo').value;
+      const days = getDayRange(from, to);
+      const byDay = {};
+      days.forEach(d => byDay[d] = 0);
+      orders.forEach(o => {
+        const d = new Date(o.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        if (byDay[d] !== undefined) byDay[d]++;
+      });
+      const labels = days.map(d => d.slice(5));
+      const values = days.map(d => byDay[d]);
+      buildBarChart('dailyOrdersChart', labels, values, 700, 160, 'var(--blue-dim)', 'var(--blue)');
+    }
+
+    function getDayRange(from, to) {
+      const days = [];
+      const cur = new Date(from + 'T00:00:00');
+      const end = new Date(to + 'T00:00:00');
+      while (cur <= end) {
+        days.push(cur.toLocaleDateString('en-CA'));
+        cur.setDate(cur.getDate() + 1);
+      }
+      return days;
+    }
+
+    // ── Hourly chart (avg across date range)
+    function drawHourlyChart(orders) {
+      const hourRevenue = Array(24).fill(0);
+      const hourCount = Array(24).fill(0);
+      orders.filter(o => o.status === 'done' || o.status === 'delivered').forEach(o => {
+        const h = parseInt(new Date(o.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', hour12: false })) || 0;
+        if (h >= 0 && h < 24) { hourRevenue[h] += parseFloat(o.total || 0); hourCount[h]++; }
+      });
+      const hours = Array.from({ length: 18 }, (_, i) => i + 6);
+      const labels = hours.map(h => h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h - 12}pm`);
+      const values = hours.map(h => hourRevenue[h]);
+      buildBarChart('hourlyChart', labels, values, 700, 180);
+    }
+
+    // ── Day of week chart
+    function drawDOWChart(orders) {
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const rev = Array(7).fill(0);
+      orders.filter(o => o.status === 'done' || o.status === 'delivered').forEach(o => {
+        const d = new Date(o.created_at).getDay();
+        rev[d] += parseFloat(o.total || 0);
+      });
+      buildBarChart('dowChart', days, rev, 700, 160, 'var(--gold-dim)', 'var(--gold)');
+    }
+
+    // ── Table revenue chart
+    function renderTableReport(orders) {
+      const svg = document.getElementById('tableChart');
+      const tbody = document.getElementById('tableReportBody');
+      const byTable = {};
+      const doneOrders = orders.filter(o => o.status === 'done' || o.status === 'delivered');
+      doneOrders.forEach(o => {
+        const t = o.room_number ? 'Room ' + o.room_number : (o.table_number ? 'Table ' + o.table_number : 'No Table');
+        if (!byTable[t]) byTable[t] = { orders: 0, revenue: 0 };
+        byTable[t].orders++;
+        byTable[t].revenue += parseFloat(o.total || 0);
+      });
+      const sorted = Object.entries(byTable).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 15);
+      const totalRev = sorted.reduce((s, [, v]) => s + v.revenue, 0);
+
+      // Chart
+      const labels = sorted.map(([t]) => t);
+      const values = sorted.map(([, v]) => v.revenue);
+      buildBarChart('tableChart', labels, values, 700, 200);
+
+      // Table
+      if (!sorted.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim);">No data for selected range.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = sorted.map(([table, data]) => {
+        const avg = data.orders ? (data.revenue / data.orders).toFixed(2) : '0.00';
+        const pct = totalRev ? ((data.revenue / totalRev) * 100).toFixed(1) : '0.0';
+        return `<tr>
         <td><strong>${table}</strong></td>
         <td style="font-family:var(--font-mono);">${data.orders}</td>
         <td style="font-family:var(--font-mono);color:var(--accent-bright);">Rs. ${data.revenue.toFixed(2)}</td>
@@ -505,56 +828,56 @@
           </div>
         </td>
       </tr>`;
-    }).join('');
-  }
+      }).join('');
+    }
 
-  // ── Top items
-  function renderTopItems(orders) {
-    const itemData = {};
-    orders.filter(o=>!['rejected','cancelled','pending','preparing'].includes(o.status)).forEach(o => {
-      const items = typeof o.items==='string'?JSON.parse(o.items):o.items;
-      items.forEach(i => {
-        if (!itemData[i.name]) itemData[i.name] = { qty:0, revenue:0, orders:new Set(), emoji:i.emoji||'🍽️', category:'', price:i.price };
-        itemData[i.name].qty     += i.qty;
-        itemData[i.name].revenue += i.price * i.qty;
-        itemData[i.name].orders.add(o.id);
+    // ── Top items
+    function renderTopItems(orders) {
+      const itemData = {};
+      orders.filter(o => !['rejected', 'cancelled', 'pending', 'preparing'].includes(o.status)).forEach(o => {
+        const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+        items.forEach(i => {
+          if (!itemData[i.name]) itemData[i.name] = { qty: 0, revenue: 0, orders: new Set(), emoji: i.emoji || '🍽️', category: '', price: i.price };
+          itemData[i.name].qty += i.qty;
+          itemData[i.name].revenue += i.price * i.qty;
+          itemData[i.name].orders.add(o.id);
+        });
       });
-    });
 
-    const entries = Object.entries(itemData).map(([name,d])=>({
-      name, qty:d.qty, revenue:d.revenue, orders:d.orders.size,
-      emoji:d.emoji, avgPrice:d.qty?d.revenue/d.qty:0
-    }));
+      const entries = Object.entries(itemData).map(([name, d]) => ({
+        name, qty: d.qty, revenue: d.revenue, orders: d.orders.size,
+        emoji: d.emoji, avgPrice: d.qty ? d.revenue / d.qty : 0
+      }));
 
-    const byQty = [...entries].sort((a,b)=>b.qty-a.qty).slice(0,10);
-    const byRev = [...entries].sort((a,b)=>b.revenue-a.revenue).slice(0,10);
-    const maxQty = Math.max(...byQty.map(i=>i.qty),1);
-    const maxRev = Math.max(...byRev.map(i=>i.revenue),1);
+      const byQty = [...entries].sort((a, b) => b.qty - a.qty).slice(0, 10);
+      const byRev = [...entries].sort((a, b) => b.revenue - a.revenue).slice(0, 10);
+      const maxQty = Math.max(...byQty.map(i => i.qty), 1);
+      const maxRev = Math.max(...byRev.map(i => i.revenue), 1);
 
-    function renderTopList(items, valKey, maxVal, prefix='') {
-      if (!items.length) return `<div style="padding:20px;text-align:center;color:var(--text-dim);">No data</div>`;
-      return items.map((item,idx) => `
+      function renderTopList(items, valKey, maxVal, prefix = '') {
+        if (!items.length) return `<div style="padding:20px;text-align:center;color:var(--text-dim);">No data</div>`;
+        return items.map((item, idx) => `
         <div class="top-item-row">
-          <div class="top-item-rank">#${idx+1}</div>
+          <div class="top-item-rank">#${idx + 1}</div>
           <div style="flex:1;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
               <span class="top-item-name">${item.emoji} ${item.name}</span>
-              <span class="top-item-stats">${prefix}${valKey==='qty'?item.qty+'×':'Rs. '+item.revenue.toFixed(0)}</span>
+              <span class="top-item-stats">${prefix}${valKey === 'qty' ? item.qty + '×' : 'Rs. ' + item.revenue.toFixed(0)}</span>
             </div>
             <div class="top-item-bar-bg">
-              <div class="top-item-bar-fill" style="width:${Math.floor((item[valKey]/maxVal)*100)}%"></div>
+              <div class="top-item-bar-fill" style="width:${Math.floor((item[valKey] / maxVal) * 100)}%"></div>
             </div>
           </div>
         </div>`).join('');
-    }
+      }
 
-    document.getElementById('topByQty').innerHTML     = renderTopList(byQty, 'qty', maxQty);
-    document.getElementById('topByRevenue').innerHTML = renderTopList(byRev, 'revenue', maxRev);
+      document.getElementById('topByQty').innerHTML = renderTopList(byQty, 'qty', maxQty);
+      document.getElementById('topByRevenue').innerHTML = renderTopList(byRev, 'revenue', maxRev);
 
-    // Full table
-    const allSorted = [...entries].sort((a,b)=>b.revenue-a.revenue);
-    document.getElementById('itemsReportBody').innerHTML = allSorted.length
-      ? allSorted.map(item => `<tr>
+      // Full table
+      const allSorted = [...entries].sort((a, b) => b.revenue - a.revenue);
+      document.getElementById('itemsReportBody').innerHTML = allSorted.length
+        ? allSorted.map(item => `<tr>
           <td><span style="margin-right:6px;">${item.emoji}</span>${item.name}</td>
           <td><span class="chip">—</span></td>
           <td style="font-family:var(--font-mono);">${item.qty}</td>
@@ -562,126 +885,235 @@
           <td style="font-family:var(--font-mono);">Rs. ${item.avgPrice.toFixed(2)}</td>
           <td style="font-family:var(--font-mono);">${item.orders}</td>
         </tr>`).join('')
-      : `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim);">No data for selected range.</td></tr>`;
-  }
-
-  // ── Orders table (orders tab)
-  window.filterReportOrders = function() {
-    const search = document.getElementById('repOrderSearch').value.toLowerCase();
-    const status = document.getElementById('repStatusFilter').value;
-    const type   = document.getElementById('repTypeFilter')?.value || 'all';
-    filteredReportOrders = [...reportOrders].reverse().filter(o => {
-      const matchSearch = !search ||
-        o.order_id?.toLowerCase().includes(search) ||
-        o.table_number?.toLowerCase().includes(search) ||
-        o.room_number?.toLowerCase().includes(search) ||
-        o.customer_phone?.includes(search);
-      const matchStatus = status==='all' || o.status===status || (status==='delivered' && o.status==='done');
-      const matchType   = type==='all' || (type==='room' && o.room_number) || (type==='table' && !o.room_number);
-      return matchSearch && matchStatus && matchType;
-    });
-    repPage = 1;
-    renderReportOrders();
-    renderRepPagination();
-  };
-
-  function renderReportOrders() {
-    const tbody = document.getElementById('repOrdersBody');
-    const start = (repPage-1)*PAGE_SIZE;
-    const page  = filteredReportOrders.slice(start, start+PAGE_SIZE);
-
-    if (!page.length) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-dim);">No orders found.</td></tr>`;
-      return;
+        : `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim);">No data for selected range.</td></tr>`;
     }
 
-    tbody.innerHTML = page.map(o => {
-      const items   = typeof o.items==='string'?JSON.parse(o.items):o.items;
-      const summary = items.slice(0,2).map(i=>`${i.name}×${i.qty}`).join(', ')+(items.length>2?` +${items.length-2}`:'');
-      const gst     = (parseFloat(o.cgst||0)+parseFloat(o.sgst||0)).toFixed(2);
-      const dt      = new Date(o.created_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-      return `<tr>
+    // ── Orders table (orders tab)
+    window.filterReportOrders = function () {
+      const search = document.getElementById('repOrderSearch').value.toLowerCase();
+      const status = document.getElementById('repStatusFilter').value;
+      const type = document.getElementById('repTypeFilter')?.value || 'all';
+      filteredReportOrders = [...reportOrders].reverse().filter(o => {
+        const matchSearch = !search ||
+          o.order_id?.toLowerCase().includes(search) ||
+          o.table_number?.toLowerCase().includes(search) ||
+          o.room_number?.toLowerCase().includes(search) ||
+          o.customer_phone?.includes(search);
+        const matchStatus = status === 'all' || o.status === status || (status === 'delivered' && o.status === 'done');
+        const matchType = type === 'all'
+          || (type === 'delivery' && o.order_type === 'delivery')
+          || (type === 'room' && o.room_number && o.order_type !== 'delivery')
+          || (type === 'table' && !o.room_number && o.order_type !== 'delivery');
+        return matchSearch && matchStatus && matchType;
+      });
+      repPage = 1;
+      renderReportOrders();
+      renderRepPagination();
+    };
+
+    function renderReportOrders() {
+      const tbody = document.getElementById('repOrdersBody');
+      const start = (repPage - 1) * PAGE_SIZE;
+      const page = filteredReportOrders.slice(start, start + PAGE_SIZE);
+
+      if (!page.length) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-dim);">No orders found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = page.map(o => {
+        const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+        const summary = items.slice(0, 2).map(i => `${i.name}×${i.qty}`).join(', ') + (items.length > 2 ? ` +${items.length - 2}` : '');
+        const gst = (parseFloat(o.cgst || 0) + parseFloat(o.sgst || 0)).toFixed(2);
+        const dt = new Date(o.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        return `<tr>
         <td style="font-family:var(--font-mono);font-size:0.8rem;">${o.order_id}</td>
-        <td style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-dim);">${o.invoice_no||'—'}</td>
-        <td>${o.room_number ? '🛏️ R' + o.room_number : (o.table_number ? '🪑 T' + o.table_number : '—')}</td>
+        <td style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-dim);">${o.invoice_no || '—'}</td>
+        <td>${o.order_type === 'delivery'
+            ? `<span style="color:#00bcd4;font-weight:600;">🚚 Delivery</span>`
+            : o.room_number ? '🛏️ R' + o.room_number : (o.table_number ? '🪑 T' + o.table_number : '—')}</td>
         <td style="font-size:0.8rem;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${summary}</td>
         <td style="font-family:var(--font-mono);">Rs. ${parseFloat(o.subtotal).toFixed(2)}</td>
         <td style="font-family:var(--font-mono);color:var(--gold);">Rs. ${gst}</td>
         <td style="font-family:var(--font-mono);color:var(--accent-bright);">Rs. ${parseFloat(o.total).toFixed(2)}</td>
         <td><span class="badge badge-${o.status === 'done' ? 'delivered' : o.status}">${o.status === 'done' ? 'delivered' : o.status}</span></td>
-        <td><span class="badge ${o.payment_status==='paid'?'badge-paid':'badge-unpaid'}">${o.payment_status}</span></td>
+        <td><span class="badge ${o.payment_status === 'paid' ? 'badge-paid' : 'badge-unpaid'}">${o.payment_status}</span></td>
         <td style="font-size:0.78rem;color:var(--text-dim);white-space:nowrap;">${dt}</td>
       </tr>`;
-    }).join('');
-  }
-
-  function renderRepPagination() {
-    const total = Math.ceil(filteredReportOrders.length/PAGE_SIZE);
-    const el    = document.getElementById('repOrdersPagination');
-    if (total<=1) { el.innerHTML=''; return; }
-    let html = `<button class="page-btn" onclick="repGoPage(${repPage-1})" ${repPage===1?'disabled':''}>‹</button>`;
-    for (let i=1;i<=total;i++) {
-      if(i===1||i===total||Math.abs(i-repPage)<=1)
-        html+=`<button class="page-btn ${i===repPage?'active':''}" onclick="repGoPage(${i})">${i}</button>`;
-      else if(Math.abs(i-repPage)===2)
-        html+=`<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
+      }).join('');
     }
-    html+=`<button class="page-btn" onclick="repGoPage(${repPage+1})" ${repPage===total?'disabled':''}>›</button>`;
-    el.innerHTML = html;
-  }
-  window.repGoPage = function(p) {
-    const total = Math.ceil(filteredReportOrders.length/PAGE_SIZE);
-    if(p<1||p>total) return;
-    repPage=p; renderReportOrders(); renderRepPagination();
-  };
 
-  // ── Export CSV
-  window.exportReport = function() {
-    if (!reportOrders.length) { window.showToast('No data to export','','warning'); return; }
-    const from = document.getElementById('dateFrom').value;
-    const to   = document.getElementById('dateTo').value;
-    let csv = 'Order ID,Invoice,Table,Customer,Phone,Items,Subtotal,CGST,SGST,Total,Status,Payment,DateTime\n';
-    reportOrders.forEach(o => {
-      const items = (typeof o.items==='string'?JSON.parse(o.items):o.items).map(i=>`${i.name}×${i.qty}`).join(' | ');
-      const dt    = new Date(o.created_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
-      csv += `"${o.order_id}","${o.invoice_no||''}","${o.table_number||''}","${o.customer_name||''}","${o.customer_phone||''}","${items}",${o.subtotal},${o.cgst},${o.sgst},${o.total},"${o.status}","${o.payment_status}","${dt}"\n`;
+    function renderRepPagination() {
+      const total = Math.ceil(filteredReportOrders.length / PAGE_SIZE);
+      const el = document.getElementById('repOrdersPagination');
+      if (total <= 1) { el.innerHTML = ''; return; }
+      let html = `<button class="page-btn" onclick="repGoPage(${repPage - 1})" ${repPage === 1 ? 'disabled' : ''}>‹</button>`;
+      for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || Math.abs(i - repPage) <= 1)
+          html += `<button class="page-btn ${i === repPage ? 'active' : ''}" onclick="repGoPage(${i})">${i}</button>`;
+        else if (Math.abs(i - repPage) === 2)
+          html += `<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
+      }
+      html += `<button class="page-btn" onclick="repGoPage(${repPage + 1})" ${repPage === total ? 'disabled' : ''}>›</button>`;
+      el.innerHTML = html;
+    }
+    window.repGoPage = function (p) {
+      const total = Math.ceil(filteredReportOrders.length / PAGE_SIZE);
+      if (p < 1 || p > total) return;
+      repPage = p; renderReportOrders(); renderRepPagination();
+    };
+
+    // ── Export CSV
+    window.exportReport = function () {
+      if (!reportOrders.length) { window.showToast('No data to export', '', 'warning'); return; }
+      const from = document.getElementById('dateFrom').value;
+      const to = document.getElementById('dateTo').value;
+      let csv = 'Order ID,Invoice,Table,Customer,Phone,Items,Subtotal,CGST,SGST,Total,Status,Payment,DateTime\n';
+      reportOrders.forEach(o => {
+        const items = (typeof o.items === 'string' ? JSON.parse(o.items) : o.items).map(i => `${i.name}×${i.qty}`).join(' | ');
+        const dt = new Date(o.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+        csv += `"${o.order_id}","${o.invoice_no || ''}","${o.table_number || ''}","${o.customer_name || ''}","${o.customer_phone || ''}","${items}",${o.subtotal},${o.cgst},${o.sgst},${o.total},"${o.status}","${o.payment_status}","${dt}"\n`;
+      });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      a.download = `LAXMI_Report_${from}_to_${to}.csv`;
+      a.click();
+      window.showToast('✅ Report exported!', '', 'success');
+    };
+
+    // ── Delivery Tab
+    let _deliveryRealtime = null;
+
+    function renderDeliveryTab(orders) {
+      const sb = window.supabaseClient;
+      const bid = window.getActiveBranchId();
+      const deliveryOrders = orders.filter(o => o.order_type === 'delivery');
+
+      // ── KPIs
+      const delivered = deliveryOrders.filter(o => o.status === 'delivered');
+      const revenue = delivered.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+      const success = deliveryOrders.length ? Math.round((delivered.length / deliveryOrders.length) * 100) : 0;
+
+      // Avg delivery time (created_at → delivered_at)
+      const times = delivered.filter(o => o.delivered_at).map(o =>
+        (new Date(o.delivered_at) - new Date(o.created_at)) / 60000);
+      const avgMins = times.length ? Math.round(times.reduce((s, t) => s + t, 0) / times.length) : 0;
+
+      document.getElementById('dkpiTotal').textContent = deliveryOrders.length;
+      document.getElementById('dkpiDelivered').textContent = delivered.length;
+      document.getElementById('dkpiRevenue').textContent = 'Rs. ' + revenue.toFixed(0);
+      document.getElementById('dkpiAvgTime').textContent = avgMins ? avgMins + ' min' : '—';
+      document.getElementById('dkpiSuccess').textContent = success + '%';
+
+      // ── Live tracker (realtime query)
+      sb.from('orders').select('id,order_id,customer_name,delivery_address,delivery_boy_name,status,created_at')
+        .eq('branch_id', bid)
+        .eq('order_type', 'delivery')
+        .in('status', ['picked_up', 'out_for_delivery'])
+        .then(({ data: live }) => {
+          document.getElementById('dkpiLive').textContent = live?.length || 0;
+          const liveBody = document.getElementById('liveDeliveryBody');
+          if (!live?.length) {
+            liveBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-dim);">No active deliveries right now</td></tr>`;
+          } else {
+            const sMap = { picked_up: '📦 Picked Up', out_for_delivery: '🚚 Out for Delivery' };
+            liveBody.innerHTML = live.map(o => {
+              const elapsed = Math.round((Date.now() - new Date(o.created_at)) / 60000);
+              return `<tr>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">${o.order_id}</td>
+              <td>${o.customer_name || '—'}</td>
+              <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(o.delivery_address || '').substring(0, 30)}…</td>
+              <td style="color:#00bcd4;">${o.delivery_boy_name || '—'}</td>
+              <td><span style="font-size:0.8rem;">${sMap[o.status] || o.status}</span></td>
+              <td style="font-family:var(--font-mono);">${elapsed} min</td>
+            </tr>`;
+            }).join('');
+          }
+        });
+
+      // ── Delivery Boy Performance
+      const perf = {};
+      deliveryOrders.forEach(o => {
+        const n = o.delivery_boy_name || 'Unassigned';
+        if (!perf[n]) perf[n] = { total: 0, delivered: 0, totalMins: 0 };
+        perf[n].total++;
+        if (o.status === 'delivered' && o.delivered_at) {
+          perf[n].delivered++;
+          perf[n].totalMins += (new Date(o.delivered_at) - new Date(o.created_at)) / 60000;
+        }
+      });
+      const dboyBody = document.getElementById('dboyPerfBody');
+      const perfRows = Object.entries(perf).sort((a, b) => b[1].total - a[1].total);
+      dboyBody.innerHTML = perfRows.length
+        ? perfRows.map(([name, d]) => `<tr>
+          <td style="font-weight:600;color:#00bcd4;">${name}</td>
+          <td style="font-family:var(--font-mono);">${d.total}</td>
+          <td style="font-family:var(--font-mono);color:var(--accent-bright);">${d.delivered}</td>
+          <td style="font-family:var(--font-mono);">${d.delivered ? Math.round(d.totalMins / d.delivered) + ' min' : '—'}</td>
+          <td style="font-family:var(--font-mono);">${d.total ? Math.round((d.delivered / d.total) * 100) + '%' : '0%'}</td>
+        </tr>`).join('')
+        : `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-dim);">No delivery data in this range</td></tr>`;
+
+      // ── All Delivery Orders Table
+      const dBody = document.getElementById('deliveryOrdersBody');
+      dBody.innerHTML = deliveryOrders.length
+        ? [...deliveryOrders].reverse().map(o => {
+          const dt = o.delivered_at
+            ? new Date(o.delivered_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+            : '—';
+          return `<tr>
+            <td style="font-family:var(--font-mono);font-size:0.8rem;">${o.order_id}</td>
+            <td>${o.customer_name || '—'}</td>
+            <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.8rem;">${(o.delivery_address || '').substring(0, 28)}…</td>
+            <td style="color:#00bcd4;">${o.delivery_boy_name || '—'}</td>
+            <td style="font-family:var(--font-mono);">Rs. ${parseFloat(o.delivery_fee || 0).toFixed(0)}</td>
+            <td style="font-family:var(--font-mono);color:var(--accent-bright);">Rs. ${parseFloat(o.total || 0).toFixed(0)}</td>
+            <td><span class="badge badge-${o.status === 'delivered' ? 'delivered' : o.status}">${o.status}</span></td>
+            <td style="font-size:0.78rem;color:var(--text-dim);">${dt}</td>
+          </tr>`;
+        }).join('')
+        : `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-dim);">No delivery orders in this range</td></tr>`;
+
+      // ── Subscribe realtime for live updates
+      if (_deliveryRealtime) sb.removeChannel(_deliveryRealtime);
+      _deliveryRealtime = sb.channel('rpt_delivery_' + bid)
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'orders',
+          filter: `branch_id=eq.${bid}`
+        },
+          () => renderDeliveryTab(reportOrders))
+        .subscribe();
+    }
+
+    // ── Tab switch
+    window.switchTab = function (tab, el) {
+      document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      if (el) el.classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+    };
+
+  </script>
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('open');
+      if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('open'));
+    }
+    function closeSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.remove('open');
+      if (overlay) overlay.classList.remove('show');
+    }
+    // Close sidebar on nav link click (mobile)
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.nav-item').forEach(function (el) {
+        el.addEventListener('click', closeSidebar);
+      });
     });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-    a.download = `LAXMI_Report_${from}_to_${to}.csv`;
-    a.click();
-    window.showToast('✅ Report exported!','','success');
-  };
-
-  // ── Tab switch
-  window.switchTab = function(tab, el) {
-    document.querySelectorAll('.report-tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    if(el) el.classList.add('active');
-    document.getElementById(`tab-${tab}`).classList.add('active');
-  };
-
-</script>
-<script>
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.toggle('open');
-    if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('open'));
-  }
-  function closeSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('show');
-  }
-  // Close sidebar on nav link click (mobile)
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.nav-item').forEach(function(el) {
-      el.addEventListener('click', closeSidebar);
-    });
-  });
-</script>
+  </script>
 </body>
-</html>
 
+</html>

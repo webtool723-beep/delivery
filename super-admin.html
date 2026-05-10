@@ -297,7 +297,7 @@
               </thead>
               <tbody id="branchesTableBody">
                   <tr>
-                    <td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim);">Loading...</td>
+                    <td colspan="8" style="text-align:center;padding:30px;color:var(--text-dim);">Loading...</td>
                 </tr>
               </tbody>
             </table>
@@ -364,6 +364,11 @@
               <option value="rejected">Rejected</option>
               <option value="cancelled">Cancelled</option>
             </select>
+            <select id="orderTypeFilter" class="input" style="max-width:140px;" onchange="filterOrders()">
+              <option value="all">All Types</option>
+              <option value="dine-in">🍽️ Dine-in</option>
+              <option value="delivery">🚚 Delivery</option>
+            </select>
             <input type="date" id="orderDateFilter" class="input" style="max-width:160px;" onchange="loadAllOrders()">
             <button class="btn btn-secondary btn-sm" onclick="exportOrdersCSV()">📥 Export</button>
           </div>
@@ -373,6 +378,7 @@
                 <tr>
                   <th>Branch</th>
                   <th>Order ID</th>
+                  <th>Type</th>
                   <th>Items</th>
                   <th>Total</th>
                   <th>Status</th>
@@ -1157,12 +1163,14 @@
       const search = document.getElementById('orderSearch')?.value?.toLowerCase() || '';
       const branch = document.getElementById('orderBranchFilter')?.value || 'all';
       const status = document.getElementById('orderStatusFilter')?.value || 'all';
+      const type   = document.getElementById('orderTypeFilter')?.value || 'all';
 
       filteredOrders = allOrders.filter(o => {
         const matchSearch = !search || o.order_id?.toLowerCase().includes(search) || o.customer_phone?.includes(search);
         const matchBranch = branch === 'all' || o.branch_id == branch;
         const matchStatus = status === 'all' || o.status === status || (status === 'delivered' && o.status === 'done');
-        return matchSearch && matchBranch && matchStatus;
+        const matchType   = type === 'all' || (o.order_type || 'dine-in') === type;
+        return matchSearch && matchBranch && matchStatus && matchType;
       });
 
       ordersPage = 1;
@@ -1176,7 +1184,7 @@
       const page = filteredOrders.slice(start, start + PAGE_SIZE);
 
       if (!page.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-dim);">No orders found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-dim);">No orders found.</td></tr>`;
         return;
       }
 
@@ -1188,6 +1196,9 @@
         return `<tr>
         <td style="font-size:0.85rem;color:var(--text-dim);">${o.branches?.name || '—'}</td>
         <td><span style="font-family:var(--font-mono);font-size:0.8rem;">${o.order_id}</span></td>
+        <td>${o.order_type === 'delivery'
+          ? `<span style="color:#00bcd4;font-weight:600;font-size:0.8rem;">🚚 Delivery</span>`
+          : `<span style="color:var(--text-dim);font-size:0.8rem;">🍽️ Dine-in</span>`}</td>
         <td style="font-size:0.8rem;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${summary}</td>
         <td><span style="font-family:var(--font-mono);color:var(--accent-bright);">Rs. ${parseFloat(o.total).toFixed(2)}</span></td>
         <td><span class="badge badge-${o.status}">${o.status}</span></td>

@@ -448,7 +448,9 @@
       <div class="pay-card-head">
         <div>
           <div class="pay-order-id">${o.order_id} ${o.invoice_no ? '· ' + o.invoice_no : ''}</div>
-          <div class="pay-table">${o.room_number ? '🛏️ Room ' + o.room_number : '🪑 Table ' + (o.table_number || '—')}</div>
+          <div class="pay-table">${o.order_type === 'delivery'
+            ? '🚚 Delivery'
+            : o.room_number ? '🛏️ Room ' + o.room_number : '🪑 Table ' + (o.table_number || '—')}</div>
           <div style="font-size:0.72rem;color:var(--text-dim);margin-top:2px;">🕐 ${time} ${o.customer_name ? '· ' + o.customer_name : ''} ${o.customer_phone ? '· 📱' + o.customer_phone : ''}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
@@ -490,7 +492,7 @@
     document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.toggle('active', b.dataset.method === 'cash'));
 
     const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-    document.getElementById('payModalTitle').textContent = `💳 Collect Payment — ${o.room_number ? 'Room ' + o.room_number : 'Table ' + (o.table_number||'—')}`;
+    document.getElementById('payModalTitle').textContent = `💳 Collect Payment — ${o.order_type === 'delivery' ? '🚚 Delivery' : o.room_number ? 'Room ' + o.room_number : 'Table ' + (o.table_number||'—')}`;
     document.getElementById('payOrderSummary').innerHTML = `
       <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
         <span style="color:var(--text-dim);">Order</span><strong>${o.order_id}</strong>
@@ -595,7 +597,7 @@
     currentRatingOrderId = orderId;
     selectedRating = 0;
     const order = allOrders.find(o => o.id === orderId) || currentPayOrder;
-    document.getElementById('ratingOrderInfo').textContent = `${order.order_id} · Table ${order.table_number||'—'} · Rs. ${parseFloat(order.total).toFixed(2)}`;
+    document.getElementById('ratingOrderInfo').textContent = `${order.order_id} · ${order.order_type === 'delivery' ? '🚚 Delivery' : 'Table ' + (order.table_number||'—')} · Rs. ${parseFloat(order.total).toFixed(2)}`;
     document.getElementById('ratingNote').value = '';
     document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
     document.getElementById('ratingLabel').textContent = 'Tap to rate';
@@ -677,7 +679,7 @@
     currentRatingOrderId = orderId;
     selectedRating = 0;
     const order = allOrders.find(o => o.id === orderId);
-    document.getElementById('ratingOrderInfo').textContent = `${order?.order_id} · ${order?.room_number ? 'Room ' + order.room_number : 'Table ' + (order?.table_number||'—')}`;
+    document.getElementById('ratingOrderInfo').textContent = `${order?.order_id} · ${order?.order_type === 'delivery' ? '🚚 Delivery' : order?.room_number ? 'Room ' + order.room_number : 'Table ' + (order?.table_number||'—')}`;
     document.getElementById('ratingNote').value = '';
     document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
     document.getElementById('ratingLabel').textContent = 'Tap to rate';
@@ -689,7 +691,7 @@
     assignCollectOrderId = orderId;
     const o = allOrders.find(x => x.id === orderId);
     document.getElementById('assignCollectInfo').innerHTML = `
-      <strong>${o?.order_id}</strong> — ${o?.room_number ? 'Room ' + o.room_number : 'Table ' + (o?.table_number||'—')}<br>
+      <strong>${o?.order_id}</strong> — ${o?.order_type === 'delivery' ? '🚚 Delivery' : o?.room_number ? 'Room ' + o.room_number : 'Table ' + (o?.table_number||'—')}<br>
       Amount: <strong style="color:var(--accent-bright)">Rs. ${parseFloat(o?.total||0).toFixed(2)}</strong>
     `;
     document.getElementById('assignCollectModal').style.display = 'flex';
